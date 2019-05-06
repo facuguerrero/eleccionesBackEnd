@@ -374,3 +374,5 @@ fabric.properties
 
 # Avoid pushing logs
 *.log
+
+data/
