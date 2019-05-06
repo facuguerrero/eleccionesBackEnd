@@ -12,5 +12,7 @@ class Scheduler(metaclass=Singleton):
 
     def set_up(self):
         self.scheduler.add_job(func=SchedulingExample.count, trigger='interval', seconds=10)
+        # Execute at 00:00:00 every day
+        # self.scheduler.add_job(func=SchedulingExample.count, trigger='cron', hour=0, minute=0, second=0)
         self.scheduler.start()
         atexit.register(lambda: self.scheduler.shutdown())
