@@ -1,6 +1,8 @@
 flask
 flask_pymongo
 flask_restful
+pymongo
+mongomock
 apscheduler
 twython
 numpy

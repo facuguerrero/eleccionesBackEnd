@@ -2,7 +2,8 @@ from flask import Flask
 from flask_restful import Api
 
 from src.api.PingResource import PingResource
-from src.db.database import mongo
+from src.db.Mongo import Mongo
+from src.db.db_initialization import create_indexes, create_base_entries
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
@@ -19,7 +20,10 @@ api.add_resource(PingResource, '/')
 def set_up_context():
     app.config['MONGO_DBNAME'] = DBNAME
     app.config['MONGO_URI'] = MONGO_URL
-    mongo.init_app(app)
+    Mongo().db.init_app(app)
+    with app.app_context():
+        create_indexes()
+        create_base_entries()
 
 
 if __name__ == '__main__':

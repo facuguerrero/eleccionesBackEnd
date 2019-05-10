@@ -375,4 +375,6 @@ fabric.properties
 # Avoid pushing logs
 *.log
 
+# Project specific
 data/
+twitter_credentials.json
