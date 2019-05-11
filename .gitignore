@@ -378,3 +378,4 @@ fabric.properties
 # Project specific
 data/
 twitter_credentials.json
+*_followers.csv

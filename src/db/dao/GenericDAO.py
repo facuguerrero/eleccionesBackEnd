@@ -54,15 +54,6 @@ class GenericDAO:
                                                    update={'$set': updated_fields_dict},
                                                    return_document=ReturnDocument.AFTER)
 
-    def add_fields_first(self, query, added_fields_dict):
-        """
-        Add given fields to first entry matching given query.
-            :returns Updated document
-        """
-        return self.collection.find_one_and_update(filter=query,
-                                                   update={'$push': added_fields_dict},
-                                                   return_document=ReturnDocument.AFTER)
-
     def remove_fields_first(self, query, removed_fields_dict):
         """
         Add given fields to first entry matching given query.
@@ -70,4 +61,14 @@ class GenericDAO:
         """
         return self.collection.find_one_and_update(filter=query,
                                                    update={'$unset': removed_fields_dict},
+                                                   return_document=ReturnDocument.AFTER)
+
+    def upsert(self, query, update_dict):
+        """
+        Creates entry if it doesn't exists and updates it if it does.
+            :returns Updated document
+        """
+        return self.collection.find_one_and_update(filter=query,
+                                                   update=update_dict,
+                                                   upsert=True,
                                                    return_document=ReturnDocument.AFTER)

@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_restful import Api
 
+from src.api.CSVLoadingResource import CSVLoadingResource
 from src.api.PingResource import PingResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries
@@ -15,6 +16,7 @@ api = Api(app)
 logger = Logger(__name__)
 
 api.add_resource(PingResource, '/')
+api.add_resource(CSVLoadingResource, '/csv/load')
 
 
 def set_up_context():

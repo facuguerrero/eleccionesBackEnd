@@ -9,7 +9,7 @@ from src.service.credentials.CredentialService import CredentialService
 from src.util.logging.Logger import Logger
 
 
-class FollowerUpdater:
+class FollowerUpdateService:
 
     LOGGER = Logger(__name__)
 
