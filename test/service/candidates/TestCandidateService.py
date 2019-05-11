@@ -8,7 +8,7 @@ from src.db.dao.CandidateDAO import CandidateDAO
 from src.exception.CandidateCurrentlyAvailableForUpdateError import CandidateCurrentlyAvailableForUpdateError
 from src.exception.FollowerUpdatingNotNecessaryError import FollowerUpdatingNotNecessaryError
 from src.service.candidates.CandidateService import CandidateService
-from src.service.candidates.model.Candidate import Candidate
+from src.model.Candidate import Candidate
 
 
 class TestCandidateService(TestCase):

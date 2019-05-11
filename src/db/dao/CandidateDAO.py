@@ -3,7 +3,8 @@ from os.path import abspath, join, dirname
 
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
-from src.service.candidates.model.Candidate import Candidate
+from src.exception.NonExistentCandidateError import NonExistentCandidateError
+from src.model.Candidate import Candidate
 from src.util.logging.Logger import Logger
 from src.util.meta.Singleton import Singleton
 
@@ -19,6 +20,8 @@ class CandidateDAO(GenericDAO, metaclass=Singleton):
     def find(self, screen_name):
         """ Get user with given screen name. """
         as_dict = self.get_first({'screen_name': screen_name})
+        if as_dict is None:
+            raise NonExistentCandidateError(screen_name)
         return Candidate(**as_dict)
 
     def overwrite(self, candidate):

@@ -3,7 +3,7 @@ from os.path import abspath, join, dirname
 
 from src.exception.CredentialCurrentlyAvailableError import CredentialCurrentlyAvailableError
 from src.exception.NoAvailableCredentialsError import NoAvailableCredentialsError
-from src.service.credentials.model.Credential import Credential
+from src.model.Credential import Credential
 from src.util.logging.Logger import Logger
 from src.util.meta.Singleton import Singleton
 

@@ -4,7 +4,8 @@ from unittest import TestCase
 from os.path import abspath, join, dirname
 from src.db.Mongo import Mongo
 from src.db.dao.CandidateDAO import CandidateDAO
-from src.service.candidates.model.Candidate import Candidate
+from src.exception.NonExistentCandidateError import NonExistentCandidateError
+from src.model.Candidate import Candidate
 
 
 class TestCandidateDAO(TestCase):
@@ -26,6 +27,12 @@ class TestCandidateDAO(TestCase):
         assert macri.nickname == 'macri'
         assert macri.screen_name == 'mauriciomacri'
         assert macri.last_updated_followers < datetime.now()
+
+    def test_find_by_non_existent_screen_name_raises_exception(self):
+        with self.assertRaises(NonExistentCandidateError) as context:
+            _ = CandidateDAO().find('mauriciomacri')
+        assert context.exception is not None
+        assert context.exception.message == "There is no candidate with screen name 'mauriciomacri' in the database."
 
     def test_all(self):
         CandidateDAO().save(Candidate(**{'screen_name': 'mauriciomacri', 'nickname': 'macri'}))
