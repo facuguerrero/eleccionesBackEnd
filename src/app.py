@@ -10,7 +10,10 @@ from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
 DBNAME = 'elections'
-MONGO_URL = f'mongodb://localhost:27017/{DBNAME}'
+# DBNAME = 'elecciones_twitter'  # This is the server's db name
+AUTH = ''
+# AUTH = 'elecciones:PASSWORD@'  # This is the server's auth data. Change PASSWORD for real password.
+MONGO_URL = f'mongodb://{AUTH}localhost:27017/{DBNAME}'
 
 app = Flask(__name__)
 api = Api(app)
@@ -33,4 +36,4 @@ def set_up_context():
 if __name__ == '__main__':
     set_up_context()
     Scheduler().set_up()
-    app.run(host='0.0.0.0', port=8080, threaded=True)
+    app.run(port=8080, threaded=True)
