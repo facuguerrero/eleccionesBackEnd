@@ -7,6 +7,7 @@ from src.service.followers.FollowerUpdateService import FollowerUpdateService
 
 
 class FollowerUpdatingResource(Resource):
+    """ This endpoint exists only to force updating. """
 
     @staticmethod
     def get():
