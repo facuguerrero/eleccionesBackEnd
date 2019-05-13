@@ -19,6 +19,7 @@ class AsyncThreadPoolExecutor:
         return await asyncio.gather(*futures)
 
     def run(self, executable, args):
+        """ Run executable concurrently as many times as elements in args list. """
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         Logger(self.__class__.__name__).info("Starting asynchronous thread pool.")

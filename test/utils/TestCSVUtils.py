@@ -5,7 +5,6 @@ import mongomock
 from src.db.Mongo import Mongo
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.model.Candidate import Candidate
-from src.service.candidates.CandidateService import CandidateService
 from src.util.CSVUtils import CSVUtils
 
 

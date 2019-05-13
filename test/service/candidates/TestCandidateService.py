@@ -9,6 +9,7 @@ from src.exception.CandidateCurrentlyAvailableForUpdateError import CandidateCur
 from src.exception.FollowerUpdatingNotNecessaryError import FollowerUpdatingNotNecessaryError
 from src.service.candidates.CandidateService import CandidateService
 from src.model.Candidate import Candidate
+from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
 
 
 class TestCandidateService(TestCase):
@@ -28,21 +29,31 @@ class TestCandidateService(TestCase):
         # This has to be done because we are testing a Singleton
         CandidateService._instances.clear()
 
-    def test_get_for_follower_updating_all_available_none_updated(self):
+    @mock.patch.object(ConcurrencyUtils, 'acquire_lock')
+    @mock.patch.object(ConcurrencyUtils, 'release_lock')
+    def test_get_for_follower_updating_all_available_none_updated(self, release_lock, acquire_lock):
         candidate = self.target.get_for_follower_updating()
         assert candidate is not None
         assert candidate.screen_name == 'sn1'
         assert candidate.nickname == 'n1'
+        assert acquire_lock.call_count == 1
+        assert release_lock.call_count == 1
 
-    def test_get_for_follower_updating_all_available_one_updated(self):
+    @mock.patch.object(ConcurrencyUtils, 'acquire_lock')
+    @mock.patch.object(ConcurrencyUtils, 'release_lock')
+    def test_get_for_follower_updating_all_available_one_updated(self, release_lock, acquire_lock):
         # Set first candidate as already updated
         self.target.candidates[0].last_updated_followers = datetime.now()
         candidate = self.target.get_for_follower_updating()
         assert candidate is not None
         assert candidate.screen_name == 'sn2'
         assert candidate.nickname == 'n2'
+        assert acquire_lock.call_count == 1
+        assert release_lock.call_count == 1
 
-    def test_get_for_follower_updating_all_available_all_updated(self):
+    @mock.patch.object(ConcurrencyUtils, 'acquire_lock')
+    @mock.patch.object(ConcurrencyUtils, 'release_lock')
+    def test_get_for_follower_updating_all_available_all_updated(self, release_lock, acquire_lock):
         # Set all candidates as already updated
         self.target.candidates[0].last_updated_followers = datetime.now()
         self.target.candidates[1].last_updated_followers = datetime.now()
@@ -50,21 +61,31 @@ class TestCandidateService(TestCase):
             _ = self.target.get_for_follower_updating()
         assert context.exception is not None
         assert context.exception.message == 'Followers have been updated for every candidate.'
+        assert acquire_lock.call_count == 1
+        assert release_lock.call_count == 1
 
-    def test_get_for_follower_updating_one_available(self):
+    @mock.patch.object(ConcurrencyUtils, 'acquire_lock')
+    @mock.patch.object(ConcurrencyUtils, 'release_lock')
+    def test_get_for_follower_updating_one_available(self, release_lock, acquire_lock):
         _ = self.target.get_for_follower_updating()
         candidate = self.target.get_for_follower_updating()
         assert candidate is not None
         assert candidate.screen_name == 'sn2'
         assert candidate.nickname == 'n2'
+        assert acquire_lock.call_count == 2
+        assert release_lock.call_count == 2
 
-    def test_get_for_follower_updating_none_available(self):
+    @mock.patch.object(ConcurrencyUtils, 'acquire_lock')
+    @mock.patch.object(ConcurrencyUtils, 'release_lock')
+    def test_get_for_follower_updating_none_available(self, release_lock, acquire_lock):
         _ = self.target.get_for_follower_updating()
         _ = self.target.get_for_follower_updating()
         with self.assertRaises(FollowerUpdatingNotNecessaryError) as context:
             _ = self.target.get_for_follower_updating()
         assert context.exception is not None
         assert context.exception.message == 'Followers have been updated for every candidate.'
+        assert acquire_lock.call_count == 3
+        assert release_lock.call_count == 3
 
     @mock.patch.object(CandidateDAO, 'overwrite')
     def test_finish_follower_updating_candidate_being_used(self, overwrite_mock):
