@@ -10,19 +10,19 @@ class GenericDAO:
         # Subclass responsibility
         pass
 
-    def get_first(self, query):
+    def get_first(self, query, projection_dict=None):
         """
         Get first entry matching the given query.
             :returns Full document
         """
-        return self.collection.find_one(query)
+        return self.collection.find_one(query, projection_dict)
 
-    def get_all(self, query=None):
+    def get_all(self, query=None, projection_dict=None):
         """
         Get all entries matching the given query. If there is no query, full collection is returned.
             :returns List of full documents
         """
-        return self.collection.find({} if query is None else query)
+        return self.collection.find({} if query is None else query, projection_dict)
 
     def insert(self, element):
         """

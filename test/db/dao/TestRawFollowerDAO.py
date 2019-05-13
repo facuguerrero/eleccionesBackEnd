@@ -1,11 +1,12 @@
 import mongomock
 from datetime import datetime
-from unittest import TestCase
+from unittest import TestCase, mock
 from src.db.Mongo import Mongo
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
 from src.model.followers.RawFollower import RawFollower
 from src.util.CSVUtils import CSVUtils
+from test.helpers.RawFollowerHelper import RawFollowerHelper
 
 
 class TestCandidateDAO(TestCase):
@@ -52,3 +53,9 @@ class TestCandidateDAO(TestCase):
     def test_candidate_was_loaded_false(self):
         assert not self.target.candidate_was_loaded('test')
 
+    @mock.patch.object(RawFollowerDAO, 'get_all', side_effect=RawFollowerHelper.create_many_followers_ids)
+    def test_get_candidates_followers_ids(self, get_all_mock):
+        result = self.target.get_candidate_followers_ids('bodart')
+        assert len(result) == 20
+        assert set([str(i) for i in range(20)]) == result
+        assert get_all_mock.call_count == 1

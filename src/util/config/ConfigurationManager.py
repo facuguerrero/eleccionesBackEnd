@@ -14,10 +14,13 @@ class ConfigurationManager(metaclass=Singleton):
             self.parser.read_file(fd)
 
     def get_int(self, config_key):
+        """ Get value associated to key as integer. """
         return int(self.get(config_key))
 
     def get_string(self, config_key):
+        """ Get value associated to key as string. """
         return self.get(config_key)
 
     def get(self, config_key):
+        """ Get value associated to key. """
         return self.parser.get('default', config_key)

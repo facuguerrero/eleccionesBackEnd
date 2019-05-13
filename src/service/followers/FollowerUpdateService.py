@@ -1,91 +1,134 @@
 import time
-import numpy as np
-import pandas as pd
-from twython import Twython
-from datetime import date
+from twython import Twython, TwythonRateLimitError
+from datetime import datetime
 
+from src.db.dao.CandidatesFollowersDAO import CandidatesFollowersDAO
+from src.db.dao.RawFollowerDAO import RawFollowerDAO
+from src.exception.CredentialsAlreadyInUseError import CredentialsAlreadyInUseError
+from src.exception.FollowerUpdatingNotNecessaryError import FollowerUpdatingNotNecessaryError
+from src.model.followers.RawFollower import RawFollower
 from src.service.candidates.CandidateService import CandidateService
 from src.service.credentials.CredentialService import CredentialService
+from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
+from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 
 
 class FollowerUpdateService:
 
-    LOGGER = Logger(__name__)
-
-    """
-    Create a polling system that locks credentials until all requests for a given candidate are made. Credentials
-    should be locked by kind of request (say, by service). For example, one credential should be available at the same
-    time for Tweet retrieval and Follower retrieval.
-    We have to poll candidates and mark them as used for the day. We could put an 'updated' field and check before
-    returning it. When all were used, the process ends.
-    We have to wait until some credential is free, supposing we still have candidates to work with.
-    Each active credential will work on a different thread, we should check how to join and make sure we are done.
-    This same logic can be replicated for all services.
-    """
+    LOGGER = Logger('FollowerUpdateService')
 
     @classmethod
     def update_followers(cls):
-        cls.LOGGER.info("Follower updating process started.")
-        # Create Twython instance with given credentials
-        credentials = CredentialService().get_credentials()
-        python_tweets = Twython(credentials['CONSUMER_KEY'], credentials['CONSUMER_SECRET'])
-        # Retrieve candidates
-        candidates = CandidateService.get_candidates()
-
-        for (screen_name, nickname) in candidates:
-            cls.LOGGER.info(f"Started updating {screen_name}'s followers.")
-            cls.update_followers_for(python_tweets, screen_name, nickname)
-            cls.LOGGER.info(f"Finished updating {screen_name}'s followers.")
-
-        # Cantidad de usuarios que tenemos hasta el momento
-        lista_listas_followers = list()
-        for (screen_name, nickname) in candidates:
-            Followers_Candidate = pd.read_csv("src/data/" + nickname + "_followers.csv")
-            lista_listas_followers.append(Followers_Candidate.user_id)
-
-        len(set(np.concatenate(lista_listas_followers)))
-
-        len(np.concatenate(lista_listas_followers))
+        """ Update all candidates' followers. """
+        # Get credentials for service
+        try:
+            credentials = CredentialService().get_all_credentials_for_service(cls.__name__)
+        except CredentialsAlreadyInUseError as caiue:
+            cls.LOGGER.error(caiue.message)
+            cls.LOGGER.warning('Follower updating process skipped.')
+            return
+        # Run follower update process
+        AsyncThreadPoolExecutor().run(cls.update_with_credential, credentials)
 
     @classmethod
-    def update_followers_for(cls, python_tweets, screen_name, nickname):
+    def update_with_credential(cls, credential):
+        """ Update followers with an specific Twitter API credential. """
+        cls.LOGGER.info(f'Starting follower updating with credential {credential.id}.')
+        # Create Twython instance for credential
+        twitter = cls.twitter(credential)
+        # While there are candidates to update, get and update
+        candidate = cls.next_candidate()
+        while candidate is not None:
+            # Update followers
+            cls.update_followers_for_candidate(twitter, candidate)
+            # Finish using candidate
+            CandidateService().finish_follower_updating(candidate)
+            # Get next candidate
+            candidate = cls.next_candidate()
+        # Unlock credential for this service
+        CredentialService().unlock_credential(credential.id, cls.__name__)
+        cls.LOGGER.info(f'Finished updating followers with credential {credential.id}')
 
-        # Lee la lista inicial de followers
-        Followers_Candidate = pd.read_csv("src/data/" + nickname + "_followers.csv")
-        t0_followers_list = set(Followers_Candidate.user_id)
+    @classmethod
+    def update_followers_for_candidate(cls, twitter, candidate):
+        """ Update followers of given candidate with the given Twython instance. """
+        cls.LOGGER.info(f'Follower updating started for candidate {candidate.screen_name}.')
+        # Get already stored candidates
+        candidate_followers_ids = RawFollowerDAO().get_candidate_followers_ids(candidate.screen_name)
+        # Retrieve new candidates
+        to_store_ids = cls.get_new_followers_ids(twitter, candidate, candidate_followers_ids)
+        cls.LOGGER.info(f'{len(to_store_ids)} new followers downloaded for candidate {candidate.screen_name}.')
+        # Once the downloading is done, we proceed to store the new followers
+        cls.store_new_followers(to_store_ids, candidate.screen_name)
+        cls.LOGGER.info(f'Finished updating followers for candidate {candidate.screen_name}.')
 
-        followers_usuario = python_tweets.get_followers_ids(screen_name=screen_name)
+    @classmethod
+    def get_new_followers_ids(cls, twitter, candidate, candidate_followers_ids):
+        """ Use Twitter API to get new followers for given candidate. Checking for overlaps with the already stored
+        followers. """
+        twitter_response = cls.do_request(twitter, candidate.screen_name, 0)
+        new_followers = set(twitter_response['ids'])
+        next_cursor = twitter_response['next_cursor']
+        while cls.should_retrieve_more_followers(candidate_followers_ids, new_followers) and next_cursor != -1:
+            twitter_response = cls.do_request(twitter, candidate.screen_name, next_cursor)
+            # Join this iteration's download with previous iteration's download
+            new_followers = new_followers.union(set([str(follower_id) for follower_id in twitter_response['ids']]))
+            next_cursor = twitter_response['next_cursor']
+        return new_followers.difference(candidate_followers_ids)
 
-        T = len(followers_usuario['ids'])
+    @classmethod
+    def store_new_followers(cls, ids, candidate_name):
+        """ Create RawFollower instances for the received data and store them in the database. Also, we will store
+         the number of new followers downloaded each day. """
+        today = datetime.today()
+        # Create and store raw followers
+        for follower_id in ids:
+            raw_follower = RawFollower(**{'id': follower_id,
+                                          'follows': candidate_name,
+                                          'downloaded_on': today})
+            RawFollowerDAO().put(raw_follower)
+        # Store the number of retrieved followers in the current day
+        count = len(ids)
+        CandidatesFollowersDAO().put_increase_for_candidate(candidate_name, count, today)
 
-        lista_listas_followers = list()
-        lista_listas_followers.append(followers_usuario['ids'])
+    @classmethod
+    def should_retrieve_more_followers(cls, previous, new):
+        """ Determines if the currently downloaded users already cover the needed update. """
+        return len(new.intersection(previous)) < ConfigurationManager().get_int('max_follower_overlap')
 
-        # Para asegurarnos de que no hay más seguidores nuevos, esperaremos hasta encontrar 100 repetidos
-        overlaps = len(set(followers_usuario['ids']).intersection(t0_followers_list))
+    @classmethod
+    def next_candidate(cls):
+        """ Retrieve a candidate whose followers should be updated. """
+        try:
+            candidate = CandidateService().get_for_follower_updating()
+        except FollowerUpdatingNotNecessaryError:
+            return None
+        return candidate
 
-        # Mientras no se acaben los seguidores, extraemos otro grupo. Cuando encontremos que los resultados
-        # se parecen mucho a lo que ya tenemos, paramos
-        while (followers_usuario["next_cursor"] != -1) & (followers_usuario["next_cursor"] != 0) & (overlaps < 100):
-            try:
-                followers_usuario = python_tweets.get_followers_ids(screen_name=screen_name,
-                                                                    cursor=followers_usuario["next_cursor_str"])
-                lista_listas_followers.append(followers_usuario['ids'])
-                T = T + len(followers_usuario['ids'])
-                # print("Evolución: " + str(T) + " followers descargados")
-                overlaps = len(set(followers_usuario['ids']).intersection(t0_followers_list))
-            except:
-                pass
-            time.sleep(60)
+    @classmethod
+    def do_request(cls, twitter, candidate_name, cursor=0):
+        """ Handle request to Twitter's API. """
+        try:
+            if cursor == 0:
+                return twitter.get_followers_ids(screen_name=candidate_name)
+            else:
+                return twitter.get_followers_ids(screen_name=candidate_name, cursor=str(cursor))
+        except TwythonRateLimitError:
+            cls.LOGGER.warning(f'Follower download limit reached for candidate {candidate_name}. Waiting.')
+            time.sleep(ConfigurationManager().get_int('follower_download_sleep_seconds'))
+            cls.LOGGER.info(f'Waiting done. Resuming follower updating for candidate {candidate_name}.')
+            # Once we finished waiting, we try again
+            return cls.do_request(twitter, candidate_name, cursor)
 
-        # Aquí tenemos ya a todos los nuevos
-        new_followers_usuario = set(np.concatenate(lista_listas_followers)) - t0_followers_list
-        print(len(new_followers_usuario), end='')
-
-        # Enviamos los nuevos datos a un archivo de texto
-        DF = pd.DataFrame(new_followers_usuario, columns=["user_id"])
-        DF["link_date"] = date.today()
-
-        # Hacemos append de los nuevos seguidores con la fecha de hoy
-        DF.to_csv("src/data/" + nickname + "_followers.csv", header=True, index=False, mode='a')
+    @classmethod
+    def twitter(cls, credential):
+        """ Create Twython instance depending on credential data. """
+        if credential.access_token is None:
+            twitter = Twython(app_key=credential.consumer_key, app_secret=credential.consumer_secret)
+        elif credential.consumer_key is None:
+            twitter = Twython(oauth_token=credential.access_token, oauth_token_secret=credential.access_secret)
+        else:
+            twitter = Twython(app_key=credential.consumer_key, app_secret=credential.consumer_secret,
+                              oauth_token=credential.access_token, oauth_token_secret=credential.access_secret)
+        return twitter

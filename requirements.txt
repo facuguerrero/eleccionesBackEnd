@@ -7,3 +7,5 @@ apscheduler
 twython
 numpy
 pandas
+asyncio
+mock

@@ -33,6 +33,12 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         """ Verify if a given candidate had its followers loaded. """
         return self.get_first({'id': candidate_name}) is not None
 
+    def get_candidate_followers_ids(self, candidate_name):
+        """ Retrieve all the ids of the users that follow a given candidate. """
+        ids = self.get_all({'follows': candidate_name}, {'id': 1, '_id': 0})
+        # We need to extract the element from the document because of the format they come in
+        return {document['id'] for document in ids}
+
     def create_indexes(self):
         self.logger.info('Creating id index.')
         Mongo().get().db.raw_followers.create_index('id')
