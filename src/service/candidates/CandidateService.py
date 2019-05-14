@@ -29,7 +29,7 @@ class CandidateService(metaclass=Singleton):
         ConcurrencyUtils().acquire_lock('candidate_for_update')
         for candidate in self.candidates:
             # We will only return a candidate if it was not updated today and is not being currently updated
-            if candidate not in self.updating_followers: #and not DateUtils.is_today(candidate.last_updated_followers):
+            if candidate not in self.updating_followers and not DateUtils.is_today(candidate.last_updated_followers):
                 self.logger.info(f'Returning candidate {candidate.screen_name} for follower retrieval.')
                 self.updating_followers.add(candidate)
                 # Unlock
