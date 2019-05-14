@@ -22,6 +22,7 @@ class FollowerUpdateService:
     def update_followers(cls):
         """ Update all candidates' followers. """
         # Get credentials for service
+        cls.LOGGER.info('Starting follower updating process.')
         try:
             credentials = CredentialService().get_all_credentials_for_service(cls.__name__)
         except CredentialsAlreadyInUseError as caiue:
@@ -30,6 +31,7 @@ class FollowerUpdateService:
             return
         # Run follower update process
         AsyncThreadPoolExecutor().run(cls.update_with_credential, credentials)
+        cls.LOGGER.info('Finished follower updating.')
 
     @classmethod
     def update_with_credential(cls, credential):
