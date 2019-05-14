@@ -1,5 +1,5 @@
 import atexit
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from src.service.followers.FollowerUpdateService import FollowerUpdateService
 from src.util.meta.Singleton import Singleton
@@ -8,7 +8,7 @@ from src.util.meta.Singleton import Singleton
 class Scheduler(metaclass=Singleton):
 
     def __init__(self):
-        self.scheduler = AsyncIOScheduler()
+        self.scheduler = BackgroundScheduler()
 
     def set_up(self):
         """ Configure scheduler's jobs. """
