@@ -23,13 +23,13 @@ class CandidateService(metaclass=Singleton):
         """ Returns all candidates currently in the list. """
         return self.candidates
 
-    def get_for_follower_updating(self):
+    async def get_for_follower_updating(self):
         """ Polls a candidate for updating its follower list. """
         # Lock to avoid concurrency issues when retrieving candidates across threads
         ConcurrencyUtils().acquire_lock('candidate_for_update')
         for candidate in self.candidates:
             # We will only return a candidate if it was not updated today and is not being currently updated
-            if candidate not in self.updating_followers: #and not DateUtils.is_today(candidate.last_updated_followers):
+            if candidate not in self.updating_followers and not DateUtils.is_today(candidate.last_updated_followers):
                 self.logger.info(f'Returning candidate {candidate.screen_name} for follower retrieval.')
                 self.updating_followers.add(candidate)
                 # Unlock
