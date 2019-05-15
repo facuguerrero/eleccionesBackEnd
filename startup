@@ -1,6 +1,16 @@
 #!/bin/bash
 
+# Read and assign program parameters
+db_name=""
+if [ $1 ]; then
+    db_name=${1:=""}
+fi
+auth=""
+if [ $2 ]; then
+    auth=${2:=""}
+fi
+# Start server
 . venv/bin/activate; \
 export PYTHONPATH=$PYTHONPATH:$(pwd); \
-nohup python3 src/app.py >/dev/null my.log 2>&1 &
+nohup python3 src/app.py $db_name $auth >/dev/null 2>&1 &
 echo $! > save_pid.txt

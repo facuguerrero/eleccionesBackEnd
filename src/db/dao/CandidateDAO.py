@@ -42,7 +42,7 @@ class CandidateDAO(GenericDAO, metaclass=Singleton):
         return candidates
 
     def create_indexes(self):
-        self.logger.info('Creating screen_name index.')
+        self.logger.info('Creating screen_name index for collection candidates.')
         Mongo().get().db.candidates.create_index('screen_name')
 
     def create_base_entries(self):

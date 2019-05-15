@@ -40,5 +40,5 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         return {document['id'] for document in ids}
 
     def create_indexes(self):
-        self.logger.info('Creating id index.')
+        self.logger.info('Creating id index for collection raw_followers.')
         Mongo().get().db.raw_followers.create_index('id')
