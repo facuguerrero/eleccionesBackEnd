@@ -93,7 +93,7 @@ class TestFollowerUpdateService(TestCase):
         assert retrieve_mock.call_count == 2
         assert request_mock.call_count == 2  # Once outside the while, once inside of it
         assert len(new_followers) == 4
-        assert new_followers == {'012', '324', '678', '055'}
+        assert new_followers == {'12', '324', '678', '55'}
 
     @mock.patch.object(RawFollowerDAO, 'put')
     @mock.patch.object(CandidatesFollowersDAO, 'put_increase_for_candidate')
@@ -134,7 +134,7 @@ class TestFollowerUpdateService(TestCase):
         twitter.get_followers_ids.side_effect = FollowerUpdateHelper.mock_get_followers_ids
         response = FollowerUpdateService.do_request(twitter, 'test', 0)
         assert response is not None
-        assert response == {'ids': ['012', '324'], 'next_cursor': 678}
+        assert response == {'ids': [12, 324], 'next_cursor': 678}
         assert twitter.get_followers_ids.call_count == 1
         assert time_mock.call_count == 0
 
@@ -144,7 +144,7 @@ class TestFollowerUpdateService(TestCase):
         twitter.get_followers_ids.side_effect = FollowerUpdateHelper.mock_get_followers_ids_with_exception
         response = FollowerUpdateService.do_request(twitter, 'test', 0)
         assert response is not None
-        assert response == {'ids': ['012', '324'], 'next_cursor': 678}
+        assert response == {'ids': [12, 324], 'next_cursor': 678}
         assert twitter.get_followers_ids.call_count == 2
         assert time_mock.call_count == 1
 

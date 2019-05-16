@@ -27,9 +27,9 @@ class FollowerUpdateHelper:
     def mock_do_request(twitter, screen_name, cursor=0):
         """ Returns a mock response for Twython's get_followers_ids. """
         if cursor == 0:
-            return {'ids': ['012', '324'], 'next_cursor': 678}
+            return {'ids': [12, 324], 'next_cursor': 678}
         else:
-            return {'ids': ['678', '055'], 'next_cursor': 901}
+            return {'ids': [678, 55], 'next_cursor': 901}
 
     @staticmethod
     def mock_get_followers_ids(screen_name, cursor=0):

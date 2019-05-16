@@ -70,12 +70,12 @@ class FollowerUpdateService:
         """ Use Twitter API to get new followers for given candidate. Checking for overlaps with the already stored
         followers. """
         twitter_response = cls.do_request(twitter, candidate.screen_name, 0)
-        new_followers = set(twitter_response['ids'])
+        new_followers = cls.ids_to_string_set(twitter_response['ids'])
         next_cursor = twitter_response['next_cursor']
         while cls.should_retrieve_more_followers(candidate_followers_ids, new_followers) and next_cursor != -1:
             twitter_response = cls.do_request(twitter, candidate.screen_name, next_cursor)
             # Join this iteration's download with previous iteration's download
-            new_followers = new_followers.union(set([str(follower_id) for follower_id in twitter_response['ids']]))
+            new_followers = new_followers.union(cls.ids_to_string_set(twitter_response['ids']))
             next_cursor = twitter_response['next_cursor']
         return new_followers.difference(candidate_followers_ids)
 
@@ -122,6 +122,10 @@ class FollowerUpdateService:
             cls.LOGGER.info(f'Waiting done. Resuming follower updating for candidate {candidate_name}.')
             # Once we finished waiting, we try again
             return cls.do_request(twitter, candidate_name, cursor)
+
+    @staticmethod
+    def ids_to_string_set(id_list):
+        return {str(follower_id) for follower_id in id_list}
 
     @classmethod
     def twitter(cls, credential):
