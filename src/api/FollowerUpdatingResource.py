@@ -10,7 +10,7 @@ class FollowerUpdatingResource(Resource):
     """ This endpoint exists only to force updating. """
 
     @staticmethod
-    def get():
+    def patch():
         thread = Thread(target=FollowerUpdateService.update_followers)
         thread.start()
         return make_response('Follower Updating Started', 200)

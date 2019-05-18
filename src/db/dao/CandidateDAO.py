@@ -56,3 +56,14 @@ class CandidateDAO(GenericDAO, metaclass=Singleton):
         # Store entries
         for candidate in candidates:
             self.insert(candidate)
+
+    def update_json_resource(self, candidate):
+        """ Add candidate to json file. """
+        self.logger.info(f'Storing candidate {candidate.screen_name} into file.')
+        with open(CandidateDAO.FILE_PATH, 'r') as file:
+            candidates = json.load(file)
+        # Append new candidate
+        candidates.append({'screen_name': candidate.screen_name, 'nickname': candidate.nickname})
+        # Write to file
+        with open(CandidateDAO.FILE_PATH, 'w') as file:
+            json.dump(candidates, file)

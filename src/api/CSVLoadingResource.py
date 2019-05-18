@@ -9,7 +9,7 @@ from src.util.CSVUtils import CSVUtils
 class CSVLoadingResource(Resource):
 
     @staticmethod
-    def get():
+    def post():
         thread = Thread(target=CSVUtils.read_followers)
         thread.start()
         return make_response('CSV Loading Started', 200)

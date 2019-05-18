@@ -4,11 +4,11 @@ from flask import Flask
 from flask_restful import Api
 
 from src.api.CSVLoadingResource import CSVLoadingResource
+from src.api.CandidateResource import CandidateResource
 from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries
-from src.util.ContextInitializer import ContextInitializer
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
@@ -22,13 +22,13 @@ logger = Logger(__name__)
 api.add_resource(PingResource, '/')
 api.add_resource(CSVLoadingResource, '/csv/load')
 api.add_resource(FollowerUpdatingResource, '/followers/update')
+api.add_resource(CandidateResource, '/candidates')
 
 
 def set_up_context(db_name, authorization):
     app.config['MONGO_DBNAME'] = db_name
     app.config['MONGO_URI'] = f'mongodb://{authorization}localhost:27017/{db_name}'
     Mongo().db.init_app(app)
-    ContextInitializer.initialize_context()
     with app.app_context():
         create_indexes()
         create_base_entries()

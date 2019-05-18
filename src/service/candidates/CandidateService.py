@@ -1,8 +1,11 @@
 from datetime import datetime
 
 from src.db.dao.CandidateDAO import CandidateDAO
+from src.exception.CandidateAlreadyExistsError import CandidateAlreadyExistsError
 from src.exception.CandidateCurrentlyAvailableForUpdateError import CandidateCurrentlyAvailableForUpdateError
 from src.exception.FollowerUpdatingNotNecessaryError import FollowerUpdatingNotNecessaryError
+from src.exception.NonExistentCandidateError import NonExistentCandidateError
+from src.model.Candidate import Candidate
 from src.util.DateUtils import DateUtils
 from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
 from src.util.logging.Logger import Logger
@@ -49,3 +52,19 @@ class CandidateService(metaclass=Singleton):
         CandidateDAO().overwrite(candidate)
         # Remove from set to not be polled again
         self.updating_followers.remove(candidate)
+
+    def add_candidate(self, screen_name, nickname=None):
+        """ Add a candidate with given screen name and nickname to the database and to the json file. """
+        try:
+            CandidateDAO().find(screen_name)
+        except NonExistentCandidateError:
+            self.logger.info(f'Adding candidate {screen_name} to database.')
+            candidate = Candidate(**{'screen_name': screen_name, 'nickname': nickname})
+            # Store in database
+            CandidateDAO().save(candidate)
+            # Update json resource
+            CandidateDAO().update_json_resource(candidate)
+            # Update current structure
+            self.candidates.append(candidate)
+            return
+        raise CandidateAlreadyExistsError(screen_name)
