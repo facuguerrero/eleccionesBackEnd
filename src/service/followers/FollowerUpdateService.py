@@ -72,7 +72,7 @@ class FollowerUpdateService:
         twitter_response = cls.do_request(twitter, candidate.screen_name, 0)
         new_followers = cls.ids_to_string_set(twitter_response['ids'])
         next_cursor = twitter_response['next_cursor']
-        while cls.should_retrieve_more_followers(candidate_followers_ids, new_followers) and next_cursor != -1:
+        while cls.should_retrieve_more_followers(candidate_followers_ids, new_followers) and next_cursor > 0:
             twitter_response = cls.do_request(twitter, candidate.screen_name, next_cursor)
             # Join this iteration's download with previous iteration's download
             new_followers = new_followers.union(cls.ids_to_string_set(twitter_response['ids']))
