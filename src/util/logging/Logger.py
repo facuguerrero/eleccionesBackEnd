@@ -1,7 +1,7 @@
 import logging
 
 LOGGING_FILE_NAME = 'elections.log'
-FORMATTING_STRING = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+FORMATTING_STRING = '%(asctime)s - [%(threadName)s] - %(levelname)s - %(name)s - %(message)s'
 LOGGING_LEVEL = logging.INFO
 
 

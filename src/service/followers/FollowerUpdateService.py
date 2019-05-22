@@ -125,6 +125,7 @@ class FollowerUpdateService:
 
     @staticmethod
     def ids_to_string_set(id_list):
+        """ Transform list of ids to set of strings of same ids. """
         return {str(follower_id) for follower_id in id_list}
 
     @classmethod

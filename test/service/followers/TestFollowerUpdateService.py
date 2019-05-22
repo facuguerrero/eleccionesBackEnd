@@ -23,8 +23,7 @@ class TestFollowerUpdateService(TestCase):
     def setUp(self) -> None:
         # We need this to avoid mocking some object creations
         Mongo().db = mongomock.database.Database(mongomock.MongoClient(), 'elections', _store=None)
-        FollowerUpdateHelper.ITERATIONS = 1
-        FollowerUpdateHelper.CURRENT_ITERATION = 0
+        FollowerUpdateHelper.restart_all_iterations()
 
     @mock.patch.object(CredentialService, 'get_all_credentials_for_service', return_value={})
     @mock.patch.object(AsyncThreadPoolExecutor, 'run')
@@ -172,3 +171,19 @@ class TestFollowerUpdateService(TestCase):
         assert twitter.app_secret is not None
         assert twitter.oauth_token is not None
         assert twitter.oauth_token_secret is not None
+
+    @mock.patch.object(FollowerUpdateService, 'should_retrieve_more_followers',
+                       side_effect=FollowerUpdateHelper.mock_should_retrieve)
+    @mock.patch('time.sleep', return_value=None)
+    @mock.patch.object(RawFollowerDAO, 'get_candidate_followers_ids', return_value=[])
+    @mock.patch.object(FollowerUpdateService, 'store_new_followers')
+    def test_update_followers_for_candidate_integration(self, store_mock, previous_mock, time_mock, continue_mock):
+        twitter = MagicMock()
+        twitter.get_followers_ids.side_effect = FollowerUpdateHelper.mock_get_followers_ids_with_exception
+        candidate = Candidate(**{'screen_name': 'test'})
+        FollowerUpdateService.update_followers_for_candidate(twitter, candidate)
+        assert store_mock.call_count == 1
+        assert previous_mock.call_count == 1
+        assert time_mock.call_count == 1
+        assert twitter.get_followers_ids.call_count == 3
+        assert continue_mock.call_count == 2
