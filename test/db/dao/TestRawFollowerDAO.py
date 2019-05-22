@@ -27,6 +27,7 @@ class TestCandidateDAO(TestCase):
         assert stored is not None
         assert stored.follows == ['bodart']
         assert stored.downloaded_on == date
+        assert not stored.is_private
 
     def test_update_raw_follower(self):
         date = datetime.strptime('1996-03-15', CSVUtils.DATE_FORMAT)
@@ -59,3 +60,35 @@ class TestCandidateDAO(TestCase):
         assert len(result) == 20
         assert set([str(i) for i in range(20)]) == result
         assert get_all_mock.call_count == 1
+
+    def test_put_public_on_private_user_stays_private(self):
+        private_follower = RawFollower(**{'id': 'test', 'is_private': True})
+        self.target.put(private_follower)
+        public_follower = RawFollower(**{'id': 'test'})
+        self.target.put(public_follower)
+        stored = self.target.get('test')
+        assert stored is not None
+        assert stored.is_private
+
+    def test_tag_as_private_ok(self):
+        public_follower = RawFollower(**{'id': 'test'})
+        self.target.put(public_follower)
+        self.target.tag_as_private(public_follower)
+        stored = self.target.get('test')
+        assert stored.is_private
+
+    def test_get_public_users(self):
+        private_follower = RawFollower(**{'id': 'test_1', 'is_private': True})
+        self.target.put(private_follower)
+        public_follower = RawFollower(**{'id': 'test_2'})
+        self.target.put(public_follower)
+        stored = self.target.get_public_users()
+        assert stored is not None
+        assert stored == {'test_2'}
+
+    def test_get_public_users_empty(self):
+        # This should never happen anyway
+        private_follower = RawFollower(**{'id': 'test_1', 'is_private': True})
+        self.target.put(private_follower)
+        stored = self.target.get_public_users()
+        assert not stored

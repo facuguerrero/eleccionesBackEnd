@@ -16,14 +16,27 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         """ Adds RawFollower to data base using upsert to update 'follows' list."""
         self.upsert({'id': raw_follower.id},
                     {'$addToSet': {'follows': raw_follower.follows},
-                     '$set': {'downloaded_on': raw_follower.downloaded_on}
+                     '$set': {'downloaded_on': raw_follower.downloaded_on},
+                     # This field is ignored if it already exists
+                     '$setOnInsert': {'is_private': raw_follower.is_private}
                      })
+
+    def tag_as_private(self, raw_follower):
+        """ Tags the given user as private in the database. """
+        self.upsert({'id': raw_follower.id},
+                    {'$set': {'is_private': True}})
 
     def get(self, follower_id):
         as_dict = self.get_first({'id': follower_id})
         if as_dict is None:
             raise NonExistentRawFollowerError(follower_id)
         return RawFollower(**as_dict)
+
+    def get_public_users(self):
+        """ Retrieve all the ids of the users that are not catalogued as private. """
+        documents = self.get_all({'is_private': False}, {'id': 1, '_id': 0})
+        # We need to extract the element from the dictionary
+        return {document['id'] for document in documents}
 
     def finish_candidate(self, candidate_name):
         """ Add entry to verify if a certain candidate had its followers loaded. """
@@ -35,10 +48,12 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
 
     def get_candidate_followers_ids(self, candidate_name):
         """ Retrieve all the ids of the users that follow a given candidate. """
-        ids = self.get_all({'follows': candidate_name}, {'id': 1, '_id': 0})
+        documents = self.get_all({'follows': candidate_name}, {'id': 1, '_id': 0})
         # We need to extract the element from the document because of the format they come in
-        return {document['id'] for document in ids}
+        return {document['id'] for document in documents}
 
     def create_indexes(self):
         self.logger.info('Creating id index for collection raw_followers.')
         Mongo().get().db.raw_followers.create_index('id')
+        self.logger.info('Creating is_private index for collection raw_followers.')
+        Mongo().get().db.raw_followers.create_index('is_private')
