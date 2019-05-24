@@ -3,6 +3,7 @@ import sys
 from flask import Flask
 from flask_restful import Api
 
+from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.api.CSVLoadingResource import CSVLoadingResource
 from src.api.CandidateResource import CandidateResource
 from src.api.FollowerUpdatingResource import FollowerUpdatingResource
@@ -23,6 +24,7 @@ api.add_resource(PingResource, '/')
 api.add_resource(CSVLoadingResource, '/csv/load')
 api.add_resource(FollowerUpdatingResource, '/followers/update')
 api.add_resource(CandidateResource, '/candidates')
+api.add_resource(TweetUpdatingResource, '/tweets')
 
 
 def set_up_context(db_name, authorization):
