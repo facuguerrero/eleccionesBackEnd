@@ -1,18 +1,19 @@
 import mongomock
 
-from unittest import TestCase
 from datetime import datetime
 
 from src.db.Mongo import Mongo
 from src.db.dao.CandidatesFollowersDAO import CandidatesFollowersDAO
 from src.exception.NoDocumentsFoundError import NoDocumentsFoundError
 from src.util.CSVUtils import CSVUtils
+from test.meta.CustomTestCase import CustomTestCase
 
 
-class TestCandidatesFollowersDAO(TestCase):
+class TestCandidatesFollowersDAO(CustomTestCase):
     """ This set of tests will be more integrating than unit. """
 
     def setUp(self) -> None:
+        super(TestCandidatesFollowersDAO, self).setUp()
         Mongo().db = mongomock.database.Database(mongomock.MongoClient(), 'elections', _store=None)
         self.target = CandidatesFollowersDAO()
 

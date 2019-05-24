@@ -1,15 +1,16 @@
-from unittest import TestCase
 from os.path import abspath, join, dirname
 
 from src.exception.CredentialCurrentlyAvailableError import CredentialCurrentlyAvailableError
 from src.exception.CredentialsAlreadyInUseError import CredentialsAlreadyInUseError
 from src.exception.NoAvailableCredentialsError import NoAvailableCredentialsError
 from src.service.credentials.CredentialService import CredentialService
+from test.meta.CustomTestCase import CustomTestCase
 
 
-class TestCredentialService(TestCase):
+class TestCredentialService(CustomTestCase):
 
     def setUp(self) -> None:
+        super(TestCredentialService, self).setUp()
         path = f"{abspath(join(dirname(__file__), '../..'))}/resources/test_credentials.json"
         CredentialService.CREDENTIALS_PATH = path
         self.target = CredentialService()

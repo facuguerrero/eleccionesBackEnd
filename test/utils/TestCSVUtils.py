@@ -1,4 +1,4 @@
-from unittest import TestCase, mock
+from unittest import mock
 from os.path import abspath, join, dirname
 import mongomock
 
@@ -6,11 +6,13 @@ from src.db.Mongo import Mongo
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.model.Candidate import Candidate
 from src.util.CSVUtils import CSVUtils
+from test.meta.CustomTestCase import CustomTestCase
 
 
-class TestCSVUtils(TestCase):
+class TestCSVUtils(CustomTestCase):
 
     def setUp(self) -> None:
+        super(TestCSVUtils, self).setUp()
         # Mocking the whole database is not unit testing but we don't care because this is done to only to
         # make some mocking easier
         Mongo().db = mongomock.database.Database(mongomock.MongoClient(), 'elections', _store=None)

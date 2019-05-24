@@ -10,7 +10,6 @@ from src.util.logging.Logger import Logger
 
 
 class CSVUtils:
-    LOGGER = Logger('CSVUtils')
     FOLLOWERS_PATH_FORMAT = f"{abspath(join(dirname(__file__), '../'))}/resources/followers/%s_followers.csv"
     DATE_FORMAT = '%Y-%m-%d'
 
@@ -30,9 +29,9 @@ class CSVUtils:
     def read_followers_for_candidate(cls, candidate):
         """ Read .csv file and load followers into database for specific candidate"""
         if RawFollowerDAO().candidate_was_loaded(candidate.screen_name):
-            cls.LOGGER.info(f'Candidate {candidate.screen_name} followers .csv file has already been loaded.')
+            cls.get_logger().info(f'Candidate {candidate.screen_name} followers .csv file has already been loaded.')
             return
-        cls.LOGGER.info(f'Loading .csv file for {candidate.screen_name}.')
+        cls.get_logger().info(f'Loading .csv file for {candidate.screen_name}.')
         # Generate file path and open file
         path = cls.FOLLOWERS_PATH_FORMAT % candidate.nickname
         with open(path, 'r') as fd:
@@ -49,4 +48,8 @@ class CSVUtils:
                 RawFollowerDAO().put(follower)
         # Mark this candidate as already loaded.
         RawFollowerDAO().finish_candidate(candidate.screen_name)
-        cls.LOGGER.info(f'Finished loading {candidate.screen_name} raw followers from .csv file.')
+        cls.get_logger().info(f'Finished loading {candidate.screen_name} raw followers from .csv file.')
+
+    @classmethod
+    def get_logger(cls):
+        return Logger('CSVUtils')

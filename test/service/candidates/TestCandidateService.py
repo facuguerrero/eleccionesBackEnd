@@ -1,7 +1,7 @@
 import mongomock
 
 from datetime import datetime
-from unittest import TestCase, mock
+from unittest import mock
 
 from src.db.Mongo import Mongo
 from src.db.dao.CandidateDAO import CandidateDAO
@@ -10,11 +10,13 @@ from src.exception.FollowerUpdatingNotNecessaryError import FollowerUpdatingNotN
 from src.service.candidates.CandidateService import CandidateService
 from src.model.Candidate import Candidate
 from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
+from test.meta.CustomTestCase import CustomTestCase
 
 
-class TestCandidateService(TestCase):
+class TestCandidateService(CustomTestCase):
 
     def setUp(self) -> None:
+        super(TestCandidateService, self).setUp()
         # Mocking the whole database is not unit testing but we don't care because this is done to only to
         # make target's initialization easier
         Mongo().db = mongomock.database.Database(mongomock.MongoClient(), 'elections', _store=None)

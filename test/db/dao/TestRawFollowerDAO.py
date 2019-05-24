@@ -1,17 +1,19 @@
 import mongomock
 from datetime import datetime
-from unittest import TestCase, mock
+from unittest import mock
 from src.db.Mongo import Mongo
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
 from src.model.followers.RawFollower import RawFollower
 from src.util.CSVUtils import CSVUtils
 from test.helpers.RawFollowerHelper import RawFollowerHelper
+from test.meta.CustomTestCase import CustomTestCase
 
 
-class TestCandidateDAO(TestCase):
+class TestCandidateDAO(CustomTestCase):
 
     def setUp(self) -> None:
+        super(TestCandidateDAO, self).setUp()
         Mongo().db = mongomock.database.Database(mongomock.MongoClient(), 'elections', _store=None)
         self.target = RawFollowerDAO()
 

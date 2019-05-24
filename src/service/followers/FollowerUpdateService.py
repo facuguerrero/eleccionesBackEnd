@@ -16,27 +16,25 @@ from src.util.logging.Logger import Logger
 
 class FollowerUpdateService:
 
-    LOGGER = Logger('FollowerUpdateService')
-
     @classmethod
     def update_followers(cls):
         """ Update all candidates' followers. """
         # Get credentials for service
-        cls.LOGGER.info('Starting follower updating process.')
+        cls.get_logger().info('Starting follower updating process.')
         try:
             credentials = CredentialService().get_all_credentials_for_service(cls.__name__)
         except CredentialsAlreadyInUseError as caiue:
-            cls.LOGGER.error(caiue.message)
-            cls.LOGGER.warning('Follower updating process skipped.')
+            cls.get_logger().error(caiue.message)
+            cls.get_logger().warning('Follower updating process skipped.')
             return
         # Run follower update process
         AsyncThreadPoolExecutor().run(cls.update_with_credential, credentials)
-        cls.LOGGER.info('Finished follower updating.')
+        cls.get_logger().info('Finished follower updating.')
 
     @classmethod
     def update_with_credential(cls, credential):
         """ Update followers with an specific Twitter API credential. """
-        cls.LOGGER.info(f'Starting follower updating with credential {credential.id}.')
+        cls.get_logger().info(f'Starting follower updating with credential {credential.id}.')
         # Create Twython instance for credential
         twitter = cls.twitter(credential)
         # While there are candidates to update, get and update
@@ -50,20 +48,20 @@ class FollowerUpdateService:
             candidate = cls.next_candidate()
         # Unlock credential for this service
         CredentialService().unlock_credential(credential.id, cls.__name__)
-        cls.LOGGER.info(f'Finished updating followers with credential {credential.id}')
+        cls.get_logger().info(f'Finished updating followers with credential {credential.id}')
 
     @classmethod
     def update_followers_for_candidate(cls, twitter, candidate):
         """ Update followers of given candidate with the given Twython instance. """
-        cls.LOGGER.info(f'Follower updating started for candidate {candidate.screen_name}.')
+        cls.get_logger().info(f'Follower updating started for candidate {candidate.screen_name}.')
         # Get already stored candidates
         candidate_followers_ids = RawFollowerDAO().get_candidate_followers_ids(candidate.screen_name)
         # Retrieve new candidates
         to_store_ids = cls.get_new_followers_ids(twitter, candidate, candidate_followers_ids)
-        cls.LOGGER.info(f'{len(to_store_ids)} new followers downloaded for candidate {candidate.screen_name}.')
+        cls.get_logger().info(f'{len(to_store_ids)} new followers downloaded for candidate {candidate.screen_name}.')
         # Once the downloading is done, we proceed to store the new followers
         cls.store_new_followers(to_store_ids, candidate.screen_name)
-        cls.LOGGER.info(f'Finished updating followers for candidate {candidate.screen_name}.')
+        cls.get_logger().info(f'Finished updating followers for candidate {candidate.screen_name}.')
 
     @classmethod
     def get_new_followers_ids(cls, twitter, candidate, candidate_followers_ids):
@@ -117,9 +115,9 @@ class FollowerUpdateService:
             else:
                 return twitter.get_followers_ids(screen_name=candidate_name, cursor=str(cursor))
         except TwythonRateLimitError:
-            cls.LOGGER.warning(f'Follower download limit reached for candidate {candidate_name}. Waiting.')
+            cls.get_logger().warning(f'Follower download limit reached for candidate {candidate_name}. Waiting.')
             time.sleep(ConfigurationManager().get_int('follower_download_sleep_seconds'))
-            cls.LOGGER.info(f'Waiting done. Resuming follower updating for candidate {candidate_name}.')
+            cls.get_logger().info(f'Waiting done. Resuming follower updating for candidate {candidate_name}.')
             # Once we finished waiting, we try again
             return cls.do_request(twitter, candidate_name, cursor)
 
@@ -139,3 +137,7 @@ class FollowerUpdateService:
             twitter = Twython(app_key=credential.consumer_key, app_secret=credential.consumer_secret,
                               oauth_token=credential.access_token, oauth_token_secret=credential.access_secret)
         return twitter
+
+    @classmethod
+    def get_logger(cls):
+        return Logger('FollowerUpdateService')

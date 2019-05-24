@@ -1,4 +1,4 @@
-from unittest import TestCase, mock
+from unittest import mock
 
 import mongomock
 from mock import MagicMock
@@ -16,11 +16,13 @@ from src.service.followers.FollowerUpdateService import FollowerUpdateService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
 from test.helpers.FollowerUpdateHelper import FollowerUpdateHelper
+from test.meta.CustomTestCase import CustomTestCase
 
 
-class TestFollowerUpdateService(TestCase):
+class TestFollowerUpdateService(CustomTestCase):
 
     def setUp(self) -> None:
+        super(TestFollowerUpdateService, self).setUp()
         # We need this to avoid mocking some object creations
         Mongo().db = mongomock.database.Database(mongomock.MongoClient(), 'elections', _store=None)
         FollowerUpdateHelper.restart_all_iterations()

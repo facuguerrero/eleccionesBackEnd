@@ -1,16 +1,17 @@
 import mongomock
 from datetime import datetime
-from unittest import TestCase
 from os.path import abspath, join, dirname
 from src.db.Mongo import Mongo
 from src.db.dao.CandidateDAO import CandidateDAO
 from src.exception.NonExistentCandidateError import NonExistentCandidateError
 from src.model.Candidate import Candidate
+from test.meta.CustomTestCase import CustomTestCase
 
 
-class TestCandidateDAO(TestCase):
+class TestCandidateDAO(CustomTestCase):
 
     def setUp(self) -> None:
+        super(TestCandidateDAO, self).setUp()
         Mongo().db = mongomock.database.Database(mongomock.MongoClient(), 'elections', _store=None)
         CandidateDAO.FILE_PATH = f"{abspath(join(dirname(__file__), '../../'))}/resources/candidates.json"
         self.target = CandidateDAO()

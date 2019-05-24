@@ -1,11 +1,12 @@
 import logging
 
-LOGGING_FILE_NAME = 'elections.log'
-FORMATTING_STRING = '%(asctime)s - [%(threadName)s] - %(levelname)s - %(name)s - %(message)s'
-LOGGING_LEVEL = logging.INFO
-
 
 class Logger:
+
+    LOGGING_FILE_NAME = 'elections.log'
+    FORMATTING_STRING = '%(asctime)s - [%(threadName)s] - %(levelname)s - %(name)s - %(message)s'
+    LOGGING_LEVEL = logging.INFO
+
     __initialized = False
 
     def __init__(self, class_name):
@@ -27,10 +28,10 @@ class Logger:
     def build_logger(cls, class_name):
         if not cls.__initialized:
             # Handler for file writing
-            file_handler = logging.FileHandler(LOGGING_FILE_NAME)
+            file_handler = logging.FileHandler(Logger.LOGGING_FILE_NAME)
             # Handler for console output
             console_handler = logging.StreamHandler()
             # Configure
-            logging.basicConfig(format=FORMATTING_STRING, level=LOGGING_LEVEL, handlers=[file_handler, console_handler])
+            logging.basicConfig(format=Logger.FORMATTING_STRING, level=Logger.LOGGING_LEVEL, handlers=[file_handler, console_handler])
             cls.__initialized = True
         return logging.getLogger(class_name)
