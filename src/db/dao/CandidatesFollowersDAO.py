@@ -25,13 +25,3 @@ class CandidatesFollowersDAO(GenericDAO, metaclass=Singleton):
             return document['increases']
         else:
             raise NoDocumentsFoundError(collection_name='candidates_followers', query=f'screen_name={candidate_name}')
-
-    def replace_ids_for_screen_names(self):
-        """ Utility method used to remove all unused _id in database """
-        candidates = self.get_all()
-        for candidate in candidates:
-            # Insert new document where _id = screen_name
-            self.insert({'_id': candidate['screen_name'],
-                         'increases': candidate['increases']})
-            # Remove old document
-            self.delete_first({'_id': candidate['_id']})

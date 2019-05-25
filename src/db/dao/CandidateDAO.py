@@ -77,16 +77,3 @@ class CandidateDAO(GenericDAO, metaclass=Singleton):
         # Write to file
         with open(CandidateDAO.FILE_PATH, 'w') as file:
             json.dump(candidates, file)
-
-    def replace_ids_for_screen_names(self):
-        """ Utility method used to remove all unused _id in database """
-        candidates = self.get_all()
-        for candidate in candidates:
-            # Insert new document where _id = screen_name
-            self.insert({'_id': candidate['screen_name'],
-                         'nickname': candidate['nickname'],
-                         'last_updated_followers': candidate['last_updated_followers']})
-            # Remove old document
-            self.delete_first({'_id': candidate['_id']})
-        # Remove old index as it is of no use anymore
-        self.collection.drop_index('screen_name')

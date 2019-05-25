@@ -6,7 +6,6 @@ from flask_restful import Api
 from src.api.CSVLoadingResource import CSVLoadingResource
 from src.api.CandidateResource import CandidateResource
 from src.api.FollowerUpdatingResource import FollowerUpdatingResource
-from src.api.ModifyDataBaseIndexesResource import ModifyDataBaseIndexesResource
 from src.api.PingResource import PingResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries
@@ -23,7 +22,6 @@ api = Api(app)
 api.add_resource(PingResource, '/')
 api.add_resource(CSVLoadingResource, '/csv/load')
 api.add_resource(FollowerUpdatingResource, '/followers/update')
-api.add_resource(ModifyDataBaseIndexesResource, '/database/modify_indexes')
 api.add_resource(CandidateResource, '/candidates')
 
 

@@ -59,23 +59,3 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
     def create_indexes(self):
         self.logger.info('Creating is_private index for collection raw_followers.')
         Mongo().get().db.raw_followers.create_index('is_private')
-
-    def replace_ids_for_twitter_id(self):
-        """ Utility method used to remove all unused _id in database """
-        followers = self.get_all({'id': {'$exists': True}})
-        for follower in followers:
-            try:
-                # Insert new document where _id = id
-                to_insert = {'_id': follower['id']}
-                # Utility documents (candidate id to tell the json file was loaded) have only _id field
-                if follower.get('follows', None) is not None:
-                    to_insert['follows'] = follower['follows']
-                    to_insert['downloaded_on'] = follower['downloaded_on']
-                    to_insert['is_private'] = follower['is_private']
-                self.insert(to_insert)
-            except DuplicateKeyError:
-                self.logger.error(f'Found duplicate key, ignoring insertion and deleting')
-            # Delete old document
-            self.delete_first({'_id': follower['_id']})
-        # Remove old index as it is not needed anymore
-        self.collection.drop_index('id')
