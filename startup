@@ -9,8 +9,12 @@ auth=""
 if [ $2 ]; then
     auth=${2:=""}
 fi
+environment=""
+if [ $3 ]; then
+    environment=${3:=""}
+fi
 # Start server
 . venv/bin/activate; \
 export PYTHONPATH=$PYTHONPATH:$(pwd); \
-nohup python3 src/app.py $db_name $auth >/dev/null 2>&1 &
+nohup python3 src/app.py --dbname $db_name --dbauth $auth --env $environment >/dev/null 2>&1 &
 echo $! > save_pid.txt
