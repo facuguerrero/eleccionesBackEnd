@@ -21,6 +21,9 @@ class ConfigurationManager(metaclass=Singleton):
         """ Get value associated to key as string. """
         return self.get(config_key)
 
+    def get_boolean(self, config_key):
+        return self.parser.getboolean(config_key, 'true')
+
     def get(self, config_key):
         """ Get value associated to key. """
         return self.parser.get('default', config_key)

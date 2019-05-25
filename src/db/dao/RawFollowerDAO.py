@@ -1,3 +1,5 @@
+from pymongo.errors import DuplicateKeyError
+
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
 from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
@@ -14,7 +16,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
 
     def put(self, raw_follower):
         """ Adds RawFollower to data base using upsert to update 'follows' list."""
-        self.upsert({'id': raw_follower.id},
+        self.upsert({'_id': raw_follower.id},
                     {'$addToSet': {'follows': raw_follower.follows},
                      '$set': {'downloaded_on': raw_follower.downloaded_on},
                      # This field is ignored if it already exists
@@ -23,37 +25,57 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
 
     def tag_as_private(self, raw_follower):
         """ Tags the given user as private in the database. """
-        self.upsert({'id': raw_follower.id},
+        self.upsert({'_id': raw_follower.id},
                     {'$set': {'is_private': True}})
 
     def get(self, follower_id):
-        as_dict = self.get_first({'id': follower_id})
+        as_dict = self.get_first({'_id': follower_id})
         if as_dict is None:
             raise NonExistentRawFollowerError(follower_id)
+        # Transform from DB format to DTO format
+        as_dict['id'] = as_dict['_id']
         return RawFollower(**as_dict)
 
     def get_public_users(self):
         """ Retrieve all the ids of the users that are not catalogued as private. """
-        documents = self.get_all({'is_private': False}, {'id': 1, '_id': 0})
+        documents = self.get_all({'is_private': False}, {'_id': 1})
         # We need to extract the element from the dictionary
-        return {document['id'] for document in documents}
+        return {document['_id'] for document in documents}
 
     def finish_candidate(self, candidate_name):
         """ Add entry to verify if a certain candidate had its followers loaded. """
-        self.insert({'id': candidate_name})
+        self.insert({'_id': candidate_name})
 
     def candidate_was_loaded(self, candidate_name):
         """ Verify if a given candidate had its followers loaded. """
-        return self.get_first({'id': candidate_name}) is not None
+        return self.get_first({'_id': candidate_name}) is not None
 
     def get_candidate_followers_ids(self, candidate_name):
         """ Retrieve all the ids of the users that follow a given candidate. """
-        documents = self.get_all({'follows': candidate_name}, {'id': 1, '_id': 0})
+        documents = self.get_all({'follows': candidate_name}, {'_id': 1})
         # We need to extract the element from the document because of the format they come in
-        return {document['id'] for document in documents}
+        return {document['_id'] for document in documents}
 
     def create_indexes(self):
-        self.logger.info('Creating id index for collection raw_followers.')
-        Mongo().get().db.raw_followers.create_index('id')
         self.logger.info('Creating is_private index for collection raw_followers.')
         Mongo().get().db.raw_followers.create_index('is_private')
+
+    def replace_ids_for_twitter_id(self):
+        """ Utility method used to remove all unused _id in database """
+        followers = self.get_all({'id': {'$exists': True}})
+        for follower in followers:
+            try:
+                # Insert new document where _id = id
+                to_insert = {'_id': follower['id']}
+                # Utility documents (candidate id to tell the json file was loaded) have only _id field
+                if follower.get('follows', None) is not None:
+                    to_insert['follows'] = follower['follows']
+                    to_insert['downloaded_on'] = follower['downloaded_on']
+                    to_insert['is_private'] = follower['is_private']
+                self.insert(to_insert)
+            except DuplicateKeyError:
+                self.logger.error(f'Found duplicate key, ignoring insertion and deleting')
+            # Delete old document
+            self.delete_first({'_id': follower['_id']})
+        # Remove old index as it is not needed anymore
+        self.collection.drop_index('id')

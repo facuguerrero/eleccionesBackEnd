@@ -14,14 +14,24 @@ class CandidatesFollowersDAO(GenericDAO, metaclass=Singleton):
     def put_increase_for_candidate(self, candidate_name, count, date):
         """ Add increase object to set of given candidate. """
         increase_object = {'date': date, 'count': count}
-        self.upsert({'screen_name': candidate_name},
+        self.upsert({'_id': candidate_name},
                     {'$addToSet': {'increases': increase_object}})
 
     def get_increases_for_candidate(self, candidate_name):
         """ Get all increases for a given candidate. """
-        document = self.get_first({'screen_name': candidate_name},
-                                  {'_id': 0, 'screen_name': 0})
+        document = self.get_first({'_id': candidate_name},
+                                  {'_id': 0})
         if document is not None:
             return document['increases']
         else:
             raise NoDocumentsFoundError(collection_name='candidates_followers', query=f'screen_name={candidate_name}')
+
+    def replace_ids_for_screen_names(self):
+        """ Utility method used to remove all unused _id in database """
+        candidates = self.get_all()
+        for candidate in candidates:
+            # Insert new document where _id = screen_name
+            self.insert({'_id': candidate['screen_name'],
+                         'increases': candidate['increases']})
+            # Remove old document
+            self.delete_first({'_id': candidate['_id']})
