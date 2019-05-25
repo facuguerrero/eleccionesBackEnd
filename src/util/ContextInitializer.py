@@ -8,6 +8,8 @@ from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
+from src.service.tweets.FollowersQueueService import FollowersQueueService
+from src.service.tweets.TweetUpdateService import TweetUpdateService
 
 
 class ContextInitializer:
@@ -27,3 +29,5 @@ class ContextInitializer:
         CredentialService()
         CandidateService()
         FollowerUpdateService()
+        TweetUpdateService()
+        FollowersQueueService()
