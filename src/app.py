@@ -34,7 +34,6 @@ def set_up_context(db_name, authorization, environment):
     # Configure database
     app.config['MONGO_DBNAME'] = db_name
     app.config['MONGO_URI'] = f'mongodb://{authorization}localhost:27017/{db_name}'
-    Logger(__name__).info(f"Initing app for dbname {app.config['MONGO_DBNAME']} and url {app.config['MONGO_URI']}")
     Mongo().db.init_app(app)
     with app.app_context():
         create_indexes()
@@ -51,7 +50,7 @@ def parse_arguments():
     # Get program arguments
     arguments = parser.parse_args()
     db_name = DBNAME if not arguments.dbname else arguments.dbname
-    db_auth = AUTH if not arguments.auth else arguments.auth
+    db_auth = AUTH if not arguments.auth else f'{arguments.auth}@'
     environment = ENV if not arguments.env else arguments.env
     return db_name, db_auth, environment
 
