@@ -37,6 +37,7 @@ def set_up_context(db_name, authorization, environment):
     app.config['MONGO_DBNAME'] = db_name
     app.config['MONGO_URI'] = f'mongodb://{authorization}localhost:27017/{db_name}'
     Mongo().db.init_app(app)
+    Logger(__name__).info(f'App inited')
     with app.app_context():
         create_indexes()
         create_base_entries()
