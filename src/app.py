@@ -32,12 +32,10 @@ def set_up_context(db_name, authorization, environment):
     Logger.set_up(environment)
     Logger(__name__).info(f'Starting application in environment {environment}')
     # Configure database
-    # TODO: REMOVE THIS LOG
-    Logger(__name__).info(f'Starting application with db {db_name} and auth {authorization}')
     app.config['MONGO_DBNAME'] = db_name
     app.config['MONGO_URI'] = f'mongodb://{authorization}localhost:27017/{db_name}'
+    Logger(__name__).info(f"Initing app for dbname {app.config['MONGO_DBNAME']} and url {app.config['MONGO_URI']}")
     Mongo().db.init_app(app)
-    Logger(__name__).info(f'App inited')
     with app.app_context():
         create_indexes()
         create_base_entries()
