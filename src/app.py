@@ -7,6 +7,7 @@ from src.api.CSVLoadingResource import CSVLoadingResource
 from src.api.CandidateResource import CandidateResource
 from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
+from src.api.RawFollowerResource import RawFollowerResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries
 from src.util.logging.Logger import Logger
@@ -19,10 +20,13 @@ ENV = 'dev'
 app = Flask(__name__)
 api = Api(app)
 
+# The first three are utility endpoints
 api.add_resource(PingResource, '/')
 api.add_resource(CSVLoadingResource, '/csv/load')
 api.add_resource(FollowerUpdatingResource, '/followers/update')
-api.add_resource(CandidateResource, '/candidates')
+# The following are endpoints used by the Front End application
+api.add_resource(RawFollowerResource, '/raw_followers', '/raw_followers/<candidate_name>')
+api.add_resource(CandidateResource, '/candidates', '/candidates/<screen_name>')
 
 
 def set_up_context(db_name, authorization, environment):

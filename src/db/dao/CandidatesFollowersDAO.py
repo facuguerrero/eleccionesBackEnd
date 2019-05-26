@@ -22,6 +22,18 @@ class CandidatesFollowersDAO(GenericDAO, metaclass=Singleton):
         document = self.get_first({'_id': candidate_name},
                                   {'_id': 0})
         if document is not None:
+            # Map date to timestamp to send inside a JSON object
+            document['increases'] = [{'count': increase['count'], 'date': increase['date'].timestamp()}
+                                     for increase in document['increases']]
             return document['increases']
         else:
             raise NoDocumentsFoundError(collection_name='candidates_followers', query=f'screen_name={candidate_name}')
+
+    def get_all_increases(self):
+        """ Get all increases for all candidates. """
+        documents = self.get_all()
+        # Rename _id field for every document and map date to timestamp
+        return [{'screen_name': document['_id'],
+                 'increases': [{'count': increase['count'], 'date': increase['date'].timestamp()}
+                               for increase in document['increases']]}
+                for document in documents]

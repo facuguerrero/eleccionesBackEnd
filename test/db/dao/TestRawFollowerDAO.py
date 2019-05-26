@@ -1,12 +1,11 @@
 import mongomock
 from datetime import datetime
-from unittest import mock
 from src.db.Mongo import Mongo
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
+from src.exception.NoDocumentsFoundError import NoDocumentsFoundError
 from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
 from src.model.followers.RawFollower import RawFollower
 from src.util.CSVUtils import CSVUtils
-from test.helpers.RawFollowerHelper import RawFollowerHelper
 from test.meta.CustomTestCase import CustomTestCase
 
 
@@ -56,12 +55,12 @@ class TestCandidateDAO(CustomTestCase):
     def test_candidate_was_loaded_false(self):
         assert not self.target.candidate_was_loaded('test')
 
-    @mock.patch.object(RawFollowerDAO, 'get_all', side_effect=RawFollowerHelper.create_many_followers_ids)
-    def test_get_candidates_followers_ids(self, get_all_mock):
+    def test_get_candidates_followers_ids(self):
+        for i in range(20):
+            self.target.put(RawFollower(**{'id': i, 'follows': 'bodart'}))
         result = self.target.get_candidate_followers_ids('bodart')
         assert len(result) == 20
-        assert set([str(i) for i in range(20)]) == result
-        assert get_all_mock.call_count == 1
+        assert {i for i in range(20)} == result
 
     def test_put_public_on_private_user_stays_private(self):
         private_follower = RawFollower(**{'id': 'test', 'is_private': True})
@@ -94,3 +93,43 @@ class TestCandidateDAO(CustomTestCase):
         self.target.put(private_follower)
         stored = self.target.get_public_users()
         assert not stored
+
+    def test_get_all_with_cursor(self):
+        # Add many followers
+        for i in range(0, 20):
+            self.target.put(RawFollower(**{'id': i}))
+        # Get first 10
+        first_10 = self.target.get_all_with_cursor(0, 10)
+        assert len(first_10) == 10
+        for follower in first_10:
+            assert follower.id < 10
+        # Get last 10
+        last_10 = self.target.get_all_with_cursor(10, 10)
+        assert len(last_10) == 10
+        for follower in last_10:
+            assert 10 <= follower.id < 20
+        # Check there are no overlaps
+        assert {follower.id for follower in last_10}.intersection({follower.id for follower in first_10}) == set()
+
+    def test_get_following_with_cursor(self):
+        # Add many followers
+        for i in range(0, 20):
+            if i % 2 == 0:
+                follower = RawFollower(**{'id': i, 'follows': 'bodart'})
+            else:
+                follower = RawFollower(**{'id': i, 'follows': 'the_commander'})
+            self.target.put(follower)
+        # Get first 10
+        first_10 = self.target.get_following_with_cursor('bodart', 0, 100)
+        assert len(first_10) == 10
+        assert {follower.id for follower in first_10} == {i for i in range(0, 20) if i % 2 == 0}
+        # Check there are only 10
+        next_followers = self.target.get_following_with_cursor('bodart', 10, 10)
+        assert len(next_followers) == 0
+
+    def test_get_following_with_cursor_non_existent_candidate_raises_exception(self):
+        with self.assertRaises(NoDocumentsFoundError) as context:
+            _ = self.target.get_following_with_cursor('bodart', 0, 100)
+        assert context.exception is not None
+        message = 'No documents found on collection raw_followers with query screen_name=bodart.'
+        assert context.exception.message == message
