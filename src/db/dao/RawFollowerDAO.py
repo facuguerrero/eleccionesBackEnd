@@ -57,7 +57,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
 
     def get_all_with_cursor(self, start, limit):
         """ Get all raw_follower documents using the received information as cursor. """
-        documents = self.get_all().sort('_id').skip(start).limit(limit)
+        documents = self.get_with_cursor(sort='_id', skip=start, limit=limit)
         # Map documents for return.
         return [RawFollower(**{'id': document['_id'],
                                'follows': document['follows'],
@@ -67,7 +67,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
 
     def get_following_with_cursor(self, candidate_name, start, limit):
         """ Retrieve all raw_followers who follow a given candidate with a cursor. """
-        documents = self.get_all({'follows': candidate_name}).sort('_id').skip(start).limit(limit)
+        documents = self.get_with_cursor({'follows': candidate_name}, sort='_id', skip=start, limit=limit)
         # Raise error if there are no documents for that candidate
         if documents.count() == 0:
             raise NoDocumentsFoundError(collection_name='raw_followers', query=f'screen_name={candidate_name}')
