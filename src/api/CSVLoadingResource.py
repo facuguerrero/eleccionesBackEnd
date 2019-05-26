@@ -1,9 +1,9 @@
 from threading import Thread
 
-from flask import make_response
 from flask_restful import Resource
 
 from src.util.CSVUtils import CSVUtils
+from src.util.ResponseBuilder import ResponseBuilder
 
 
 class CSVLoadingResource(Resource):
@@ -12,4 +12,4 @@ class CSVLoadingResource(Resource):
     def post():
         thread = Thread(target=CSVUtils.read_followers)
         thread.start()
-        return make_response('CSV Loading Started', 200)
+        return ResponseBuilder.build('CSV Loading Started', 200)

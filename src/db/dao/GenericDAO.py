@@ -24,6 +24,15 @@ class GenericDAO:
         """
         return self.collection.find({} if query is None else query, projection_dict)
 
+    def get_with_cursor(self, query=None, projection_dict=None, sort=None, skip=0, limit=0):
+        """
+         Get all entries matching the given query using a cursor formed by skip and limit parameters.
+         If there is no query, full collection is returned. Using no limit results in the same behaviour as get_all.
+         Using no sort conditions could result in an unexpected behaviour of the cursor
+            :returns List of full documents
+        """
+        return self.get_all(query, projection_dict).sort({} if sort is None else sort).skip(skip).limit(limit)
+
     def insert(self, element):
         """
         Insert given element into collection.

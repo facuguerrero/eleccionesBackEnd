@@ -1,9 +1,9 @@
 from threading import Thread
 
-from flask import make_response
 from flask_restful import Resource
 
 from src.service.followers.FollowerUpdateService import FollowerUpdateService
+from src.util.ResponseBuilder import ResponseBuilder
 
 
 class FollowerUpdatingResource(Resource):
@@ -13,4 +13,4 @@ class FollowerUpdatingResource(Resource):
     def patch():
         thread = Thread(target=FollowerUpdateService.update_followers)
         thread.start()
-        return make_response('Follower Updating Started', 200)
+        return ResponseBuilder.build('Follower Updating Started', 200)

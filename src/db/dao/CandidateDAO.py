@@ -19,31 +19,39 @@ class CandidateDAO(GenericDAO, metaclass=Singleton):
 
     def find(self, screen_name):
         """ Get user with given screen name. """
-        as_dict = self.get_first({'screen_name': screen_name})
+        as_dict = self.get_first({'_id': screen_name})
         if as_dict is None:
             raise NonExistentCandidateError(screen_name)
+        # Transform from DB format to DTO format
+        as_dict['screen_name'] = as_dict['_id']
         return Candidate(**as_dict)
 
     def overwrite(self, candidate):
         """ Update candidate's fields (except for screen name). """
-        self.update_first({'screen_name': candidate.screen_name},
+        self.update_first({'_id': candidate.screen_name},
                           {'nickname': candidate.nickname, 'last_updated_followers': candidate.last_updated_followers})
 
     def save(self, candidate):
         """ Store candidate. """
-        return self.insert(vars(candidate))
+        # Transform from DTO format to DB format
+        to_insert = {'_id': candidate.screen_name,
+                     'nickname': candidate.nickname,
+                     'last_updated_followers': candidate.last_updated_followers}
+        return self.insert(to_insert)
 
     def all(self):
         """ Get all currently stored candidates. """
         candidates = []
         as_dict_list = self.get_all()
         for as_dict in as_dict_list:
+            # Transform from DB format to DTO format
+            as_dict['screen_name'] = as_dict['_id']
             candidates.append(Candidate(**as_dict))
         return candidates
 
     def create_indexes(self):
-        self.logger.info('Creating screen_name index for collection candidates.')
-        Mongo().get().db.candidates.create_index('screen_name')
+        # There are no indexes to create for this collection
+        pass
 
     def create_base_entries(self):
         # Check if collection is empty
@@ -55,7 +63,9 @@ class CandidateDAO(GenericDAO, metaclass=Singleton):
             candidates = json.load(file)
         # Store entries
         for candidate in candidates:
-            self.insert(candidate)
+            # Transform for database format
+            to_insert = {'_id': candidate['screen_name'], 'nickname': candidate['nickname']}
+            self.insert(to_insert)
 
     def update_json_resource(self, candidate):
         """ Add candidate to json file. """
