@@ -7,14 +7,14 @@ from src.util.meta.Singleton import Singleton
 class RawTweetDAO(GenericDAO, metaclass=Singleton):
 
     def __init__(self):
-        super(RawTweetDAO, self).__init__(Mongo().get().db.raw_followers)
+        super(RawTweetDAO, self).__init__(Mongo().get().db.raw_tweets)
         self.logger = Logger(self.__class__.__name__)
 
     def put(self, raw_tweet):
         """ Adds RawTweet to data base using upsert to update 'follows' list."""
         self.upsert({'id': raw_tweet.id},
                     {'$set': {'text': raw_tweet.text,
-                              'created_on': raw_tweet.created_on,
+                              'created_at': raw_tweet.created_at,
                               'user_id': raw_tweet.user_id}
                      })
         #TODO crear un metodo para obtener y actualziar la cola

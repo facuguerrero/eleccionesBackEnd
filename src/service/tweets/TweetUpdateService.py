@@ -3,6 +3,7 @@ import datetime
 from twython import Twython, TwythonRateLimitError, TwythonError
 
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
+from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.exception import CredentialsAlreadyInUseError
 from src.model.followers.RawFollower import RawFollower
 
@@ -32,6 +33,7 @@ class TweetUpdateService:
             return
         # Run tweet update process
         AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        # cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -41,12 +43,11 @@ class TweetUpdateService:
         # Create Twython instance for credential
         twitter = cls.twitter(credential)
         # While there are followers to update
+        followers = cls.get_followers_to_update()
         while followers:
-            followers = cls.get_followers_to_update()
             for follower, last_update in followers.items():
                 follower_download_tweets = []
-                min_tweet_date = datetime.datetime.strptime(last_update, '%a %b %d %H:%M:%S %z %Y') \
-                    .astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
+                min_tweet_date = cls.get_formatted_date(last_update)
                 continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
                                                                         min_tweet_date, True)
                 while continue_downloading:
@@ -56,6 +57,7 @@ class TweetUpdateService:
                 cls.store_new_tweets(follower, follower_download_tweets, min_tweet_date)
                 if len(follower_download_tweets) != 0:
                     cls.update_follower(follower)
+            followers = cls.get_followers_to_update()
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential}.')
         CredentialService().unlock_credential(credential, cls.__name__)
 
@@ -77,7 +79,10 @@ class TweetUpdateService:
 
     @classmethod
     def do_download_tweets_request(cls, twitter, follower, is_first_request, max_id=None):
-        """ If is_first_request is True, max_id parameter is not included in the request. """
+        """
+        @is_first_request is True, max_id parameter is not included in the request.
+        @max_id is to get the maximum quantity of tweets per request.
+        """
         tweets = []
         try:
             if is_first_request:
@@ -100,38 +105,49 @@ class TweetUpdateService:
 
     @classmethod
     def update_follower_as_private(cls, follower):
+        """ When an error occurs, follower is tagged as private. """
         # Retrieve the follower from DB
         raw_follower = RawFollowerDAO().get(follower)
         RawFollowerDAO().tag_as_private(raw_follower)
 
     @classmethod
     def update_follower(cls, follower):
-        today = datetime.today()
+        """ Update follower's last download date. """
+        today = datetime.datetime.today().astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
         # Retrieve the follower from DB
         raw_follower = RawFollowerDAO().get(follower)
-        raw_follower['download_on'] = today
-        RawFollowerDAO().put(raw_follower)
-
-    @classmethod
-    def check_if_continue_downloading(cls, last_tweet, min_tweet_date):
-        """" Return True if the oldest download's tweet is greater than min_date required. """
-        last_tweet_date = datetime.datetime.strptime(last_tweet['created_at'], '%a %b %d %H:%M:%S %z %Y') \
-            .astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
-        return min_tweet_date < last_tweet_date
+        updated_raw_follower = RawFollower(**{'id': follower,
+                                              'follows': raw_follower.follows,
+                                              'downloaded_on': today})
+        RawFollowerDAO().put(updated_raw_follower)
 
     @classmethod
     def store_new_tweets(cls, follower, follower_download_tweets, min_tweet_date):
+        """ Store new follower's tweet since last update. """
         cls.get_logger().info(f'Storing new tweets of {follower}.')
         for tweet in follower_download_tweets:
-            tweet_date = tweet['created_at_datetime'] = datetime.datetime.strptime(tweet['created_at'],
-                                                                                   '%a %b %d %H:%M:%S %z %Y').astimezone(
-                pytz.timezone('America/Argentina/Buenos_Aires'))
+            tweet_date = tweet['created_at_datetime'] = cls.get_formatted_date(tweet['created_at'])
             if tweet_date >= min_tweet_date:
                 raw_tweet = RawTweet(**{'id': tweet['id'],
                                         'created_at': tweet_date,
                                         'text': tweet['text'],
                                         'user_id': tweet['user']['id']})
-                # TODO usar RawTweetDAO
+                RawTweetDAO().put(raw_tweet)
+
+    @classmethod
+    def check_if_continue_downloading(cls, last_tweet, min_tweet_date):
+        """" Return True if the oldest download's tweet is greater than min_date required. """
+        last_tweet_date = cls.get_formatted_date(last_tweet['created_at'])
+        return min_tweet_date < last_tweet_date
+
+    @classmethod
+    def get_formatted_date(cls, date):
+        """ Format date. """
+        try:
+            return datetime.datetime.strptime(date, '%a %b %d %H:%M:%S %z %Y').astimezone(
+                pytz.timezone('America/Argentina/Buenos_Aires'))
+        except ValueError as error:
+            cls.get_logger().error(f'Invalid date format {date}.')
 
     @classmethod
     def twitter(cls, credential):
@@ -147,4 +163,4 @@ class TweetUpdateService:
 
     @classmethod
     def get_logger(cls):
-        return Logger('FollowerUpdateService')
+        return Logger('TweetUpdateService')

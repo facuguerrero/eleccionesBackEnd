@@ -1,3 +1,7 @@
+import datetime
+
+import pytz
+
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
 from src.exception.NoDocumentsFoundError import NoDocumentsFoundError
@@ -39,6 +43,15 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         """ Retrieve all the ids of the users that are not catalogued as private. """
         documents = self.get_all({'is_private': False}, {'_id': 1})
         # We need to extract the element from the dictionary
+        return {document['_id'] for document in documents}
+
+    def get_public_and_not_updated_users(self):
+        """ Retrieve all the ids of the users that are not updated since one week catalogued as private
+        . """
+        """ Retrieve all the ids of the users that follow a given candidate. """
+        date = datetime.datetime.today() - datetime.timedelta(days=7)
+        # TODO terminar de chequear esta query, pero ya funciona!!!!!!!
+        documents = self.get_all({'is_private': False, 'downloaded_on': {'$lt': date}}, {'_id': 1})
         return {document['_id'] for document in documents}
 
     def finish_candidate(self, candidate_name):

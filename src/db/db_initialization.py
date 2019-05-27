@@ -1,5 +1,6 @@
 from src.db.dao.CandidateDAO import CandidateDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
+from src.db.dao.RawTweetDAO import RawTweetDAO
 
 
 def create_indexes():

@@ -1,4 +1,6 @@
 import random
+
+from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
 from src.util.logging.Logger import Logger
 from src.util.meta.Singleton import Singleton
@@ -16,6 +18,7 @@ class FollowersQueueService(metaclass=Singleton):
 
     def get_followers_to_update(self):
         self.logger.info('Getting followers to update their tweets.')
+        self.add_followers_to_be_updated()
         # followers_to_update = random.sample(self.updating_followers, 1500)
         # for follower in followers_to_update.keys():
         #     self.updating_followers.pop(follower)
@@ -26,8 +29,8 @@ class FollowersQueueService(metaclass=Singleton):
         # # return followers_to_update
         return {"278744817": "Fri May 21 02:43:14 +0000 2010"}
 
-    def add_followers_to_be_updated(self, new_followers):
+    def add_followers_to_be_updated(self):
         ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
-        # TODO new_followers tiene que agarrarse de la base de datos aca.
+        new_followers = RawFollowerDAO().get_public_and_not_updated_users()
         self.updating_followers.update(new_followers)
         ConcurrencyUtils().release_lock('followers_for_update_tweets')
