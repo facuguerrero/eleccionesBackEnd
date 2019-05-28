@@ -87,13 +87,41 @@ class TestTweetUpdateService(CustomTestCase):
         assert download_tweets_mock.call_count == 1
 
     @mock.patch.object(TweetUpdateService, 'do_download_tweets_request', return_value=[])
-    def test_download_tweets_with_no_results(self, download_tweets_mock):
+    def test_do_download_tweets_requests_with_no_results(self, download_tweets_mock):
         follower = TweetUpdateHelper().get_mock_follower_1()
         is_first_request = True
         max_id = None
 
-        TweetUpdateService.do_download_tweets_request(follower, is_first_request, max_id)
+        result = TweetUpdateService.do_download_tweets_request(follower, is_first_request, max_id)
 
+        assert download_tweets_mock.call_count == 1
+        assert len(result) == 0
+
+    @mock.patch.object(TweetUpdateService, 'do_download_tweets_request',
+                       return_value=[TweetUpdateHelper().get_mock_tweet_may_26_follower_1()])
+    def test_do_download_tweets_requests_with_no_results(self, download_tweets_mock):
+        follower = TweetUpdateHelper().get_mock_follower_1()
+        is_first_request = True
+        max_id = None
+
+        result = TweetUpdateService.do_download_tweets_request(follower, is_first_request, max_id)
+
+        assert download_tweets_mock.call_count == 1
+        assert len(result) == 1
+
+    @mock.patch.object(TweetUpdateService, 'twitter', return_value={})
+    @mock.patch.object(TweetUpdateService, 'do_download_tweets_request', return_value=[])
+    def test_download_tweets_and_validate_with_no_results(self, download_tweets_mock, twitter_mock):
+        follower = TweetUpdateHelper().get_mock_follower_1()
+        follower_download_tweets = []
+        min_tweet_date = TweetUpdateHelper().get_mock_min_date_may_25()
+        is_first_request = True
+        max_id = None
+
+        TweetUpdateService.download_tweets_and_validate(twitter_mock, follower, follower_download_tweets,
+                                                        min_tweet_date, is_first_request, max_id)
+
+        assert len(follower_download_tweets) == 0
         assert download_tweets_mock.call_count == 1
 
     @mock.patch.object(TweetUpdateService, 'twitter', return_value={})

@@ -49,10 +49,14 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         """ Retrieve all the ids of the users that are not updated since one week catalogued as private
         . """
         """ Retrieve all the ids of the users that follow a given candidate. """
+        # TODO llevar el tiempo a
         date = datetime.datetime.today() - datetime.timedelta(days=7)
-        # TODO terminar de chequear esta query, pero ya funciona!!!!!!!
-        documents = self.get_all({'is_private': False, 'downloaded_on': {'$lt': date}}, {'_id': 1})
-        return {document['_id'] for document in documents}
+        documents = self.get_with_limit({'is_private': False, 'downloaded_on': {'$lt': date}},
+                                        {'_id': 1, 'downloaded_on': 1})
+        followers_to_return = {}
+        for document in documents:
+            followers_to_return[document['_id']] = document['downloaded_on']
+        return followers_to_return
 
     def finish_candidate(self, candidate_name):
         """ Add entry to verify if a certain candidate had its followers loaded. """

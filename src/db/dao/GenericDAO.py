@@ -24,6 +24,14 @@ class GenericDAO:
         """
         return self.collection.find({} if query is None else query, projection_dict)
 
+    def get_with_limit(self, query=None, projection_dict=None):
+        """
+        Get entries matching the given query.
+        The maximum quantity of results are 5000
+        """
+        # TODO llevar el limte a
+        return self.collection.find({} if query is None else query, projection_dict).limit(5000)
+
     def get_with_cursor(self, query=None, projection_dict=None, sort=None, skip=0, limit=0):
         """
          Get all entries matching the given query using a cursor formed by skip and limit parameters.

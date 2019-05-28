@@ -17,6 +17,16 @@ class CSVUtils:
     __running = False
 
     @classmethod
+    def load_followers(cls):
+        with open('/home/facundoguerrero/prueba.csv', 'r') as fd:
+            reader = csv.reader(fd, delimiter=',')
+            for row in reader:
+                follower = RawFollower(**{'id': row[0],
+                                          'downloaded_on': datetime.strptime(row[1], CSVUtils.DATE_FORMAT),
+                                          'follows': 'prueba'})
+                RawFollowerDAO().put(follower)
+
+    @classmethod
     def read_followers(cls):
         """ Read al .csv files containing follower data for each candidate. """
         if cls.__running: return

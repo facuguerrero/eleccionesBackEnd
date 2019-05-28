@@ -5,6 +5,7 @@ from twython import Twython, TwythonRateLimitError, TwythonError
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.exception import CredentialsAlreadyInUseError
+from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
 from src.model.followers.RawFollower import RawFollower
 
 from src.model.tweets.RawTweet import RawTweet
@@ -32,8 +33,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        # cls.download_tweets_with_credential(credentials[0])
+        #AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -106,9 +107,13 @@ class TweetUpdateService:
     @classmethod
     def update_follower_as_private(cls, follower):
         """ When an error occurs, follower is tagged as private. """
-        # Retrieve the follower from DB
-        raw_follower = RawFollowerDAO().get(follower)
-        RawFollowerDAO().tag_as_private(raw_follower)
+        try:
+            # Retrieve the follower from DB
+            raw_follower = RawFollowerDAO().get(follower)
+            RawFollowerDAO().tag_as_private(raw_follower)
+            cls.get_logger().info(f'{follower} is tagged as private.')
+        except NonExistentRawFollowerError as error:
+            cls.get_logger().error(f'{follower} can not be tagged as private.')
 
     @classmethod
     def update_follower(cls, follower):
@@ -120,11 +125,11 @@ class TweetUpdateService:
                                               'follows': raw_follower.follows,
                                               'downloaded_on': today})
         RawFollowerDAO().put(updated_raw_follower)
+        cls.get_logger().info(f'{follower} is updated.')
 
     @classmethod
     def store_new_tweets(cls, follower, follower_download_tweets, min_tweet_date):
         """ Store new follower's tweet since last update. """
-        cls.get_logger().info(f'Storing new tweets of {follower}.')
         for tweet in follower_download_tweets:
             tweet_date = tweet['created_at_datetime'] = cls.get_formatted_date(tweet['created_at'])
             if tweet_date >= min_tweet_date:
@@ -133,6 +138,7 @@ class TweetUpdateService:
                                         'text': tweet['text'],
                                         'user_id': tweet['user']['id']})
                 RawTweetDAO().put(raw_tweet)
+        cls.get_logger().info(f'Tweets of {follower} are updated.')
 
     @classmethod
     def check_if_continue_downloading(cls, last_tweet, min_tweet_date):
@@ -148,6 +154,7 @@ class TweetUpdateService:
                 pytz.timezone('America/Argentina/Buenos_Aires'))
         except ValueError as error:
             cls.get_logger().error(f'Invalid date format {date}.')
+            cls.get_logger().error(f'{error}')
 
     @classmethod
     def twitter(cls, credential):
