@@ -13,11 +13,10 @@ class FollowersQueueService(metaclass=Singleton):
         self.logger = Logger(self.__class__.__name__)
         self.updating_followers = {}
         ConcurrencyUtils().create_lock('followers_for_update_tweets')
-        self.logger.info('Init FollowerQueueService.')
 
     def get_followers_to_update(self):
         self.logger.info('Getting followers to update their tweets.')
-        self.add_followers_to_be_updated()
+        #self.add_followers_to_be_updated()
 
         # Acquire lock for get the followers
         ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
@@ -26,19 +25,21 @@ class FollowersQueueService(metaclass=Singleton):
         followers_to_update = {}
         for follower in random_followers_keys:
             followers_to_update[follower] = self.updating_followers.pop(follower)
-        # TODO este unlock queda aca y volvemos a tomar el lock en add followers o liberamos luego de actualizar
-        ConcurrencyUtils().release_lock('followers_for_update_tweets')
 
         if len(self.updating_followers) < UMBRAL:
             # Retrieve more candidates from db
             self.logger.info('Adding new followers to update their tweets.')
             self.add_followers_to_be_updated()
-            
+        # TODO este unlock queda aca. Libero luego de la posible actualización de la lista ya que
+        # Puede haber problemas de concurrencia. Al liberar el lock antes, otro proceso puede
+        # Leer información vacia.
+        ConcurrencyUtils().release_lock('followers_for_update_tweets')
+
         # return {"278744817": "Fri May 21 02:43:14 +0000 2010"}
         return followers_to_update
 
     def add_followers_to_be_updated(self):
-        ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
+        #ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
         new_followers = RawFollowerDAO().get_public_and_not_updated_users()
         self.updating_followers.update(new_followers)
-        ConcurrencyUtils().release_lock('followers_for_update_tweets')
+        #ConcurrencyUtils().release_lock('followers_for_update_tweets')
