@@ -16,6 +16,7 @@ from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 
 from src.util.logging.Logger import Logger
 
+#TODO pasar esto al properties.cfg
 MAX_TWEETS = 200
 PRIVATE_USER_ERROR_CODE = 401
 
@@ -33,6 +34,7 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
+        # TODO cambuar esto antes de subirlo al servidor
         #AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
         cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
