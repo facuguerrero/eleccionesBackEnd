@@ -2,6 +2,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
+from src.exception.DuplicatedTweetError import DuplicatedTweetError
 from src.util.logging.Logger import Logger
 from src.util.meta.Singleton import Singleton
 
@@ -18,4 +19,5 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
         try:
             self.insert(raw_tweet)
         except DuplicateKeyError as error:
-            self.logger.info('duplicated tweet')
+            self.logger.warning('Trying to insert a duplicated tweet.')
+            raise DuplicatedTweetError

@@ -8,6 +8,7 @@ import pytz
 
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
+from src.exception.DuplicatedTweetError import DuplicatedTweetError
 from src.model.followers.RawFollower import RawFollower
 from src.util.logging.Logger import Logger
 
@@ -30,7 +31,7 @@ class PreProcessingTweetsUtil:
     @classmethod
     def load_tweets(cls):
         cls.get_logger().info(f'Inserting in DB pre download tweets ')
-        candidates = ["lavagna", "espert"]
+        candidates = ["urtubey", "massa"]
         min_tweet_date = datetime.datetime(2019,1,1).astimezone(
             pytz.timezone('America/Argentina/Buenos_Aires')) - datetime.timedelta()
         tweets_updated = 0
@@ -57,7 +58,10 @@ class PreProcessingTweetsUtil:
                             tweet['created_at'] = tweet_date
                             tweet['user_id'] = tweet['user']['id']
                             tweet.pop('user')
-                            RawTweetDAO().insert_tweet(tweet)
+                            try:
+                                RawTweetDAO().insert_tweet(tweet)
+                            except DuplicatedTweetError:
+                                break
                             tweets_updated += 1
                     cls.get_logger().info(f'{follower} updated')
             cls.get_logger().info(f'Tweets updated: {str(tweets_updated)}')

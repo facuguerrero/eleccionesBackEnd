@@ -6,6 +6,7 @@ from twython import Twython, TwythonRateLimitError, TwythonError
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.exception import CredentialsAlreadyInUseError
+from src.exception.DuplicatedTweetError import DuplicatedTweetError
 from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
 from src.model.followers.RawFollower import RawFollower
 
@@ -145,10 +146,16 @@ class TweetUpdateService:
             tweet_date = cls.get_formatted_date(tweet['created_at'])
             if tweet_date >= min_tweet_date:
                 # Clean tweet's information
+                tweet["_id"] = tweet['id_str']
+                tweet.pop('id')
+                tweet.pop('id_str')
                 tweet['created_at'] = tweet_date
                 tweet['user_id'] = tweet['user']['id']
                 tweet.pop('user')
-                RawTweetDAO().insert_tweet(tweet)
+                try:
+                    RawTweetDAO().insert_tweet(tweet)
+                except DuplicatedTweetError:
+                    break
         cls.get_logger().info(f'Tweets of {follower} are updated.')
 
     @classmethod
