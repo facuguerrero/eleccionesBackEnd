@@ -33,7 +33,7 @@ class PreProcessingTweetsUtil:
         tweets_updated = 0
         for candidate in candidates:
             try:
-                with open("../../../elecciones/data/lavagna.pickle", 'rb') as frb:
+                with open("~/elecciones/data/lavagna.pickle", 'rb') as frb:
                     download_tweets = pickle.load(frb)
                 frb.close()
             except IOError:
