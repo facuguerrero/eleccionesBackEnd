@@ -31,7 +31,7 @@ class PreProcessingTweetsUtil:
     @classmethod
     def load_tweets(cls):
         cls.get_logger().info(f'Inserting in DB pre download tweets ')
-        candidates = ["urtubey", "massa"]
+        candidates = ["massa"]
         min_tweet_date = datetime.datetime(2019,1,1).astimezone(
             pytz.timezone('America/Argentina/Buenos_Aires')) - datetime.timedelta()
         tweets_updated = 0
@@ -45,6 +45,7 @@ class PreProcessingTweetsUtil:
             except IOError:
                 cls.get_logger().error('Error opening the file')
             cls.get_logger().info(f'Inserting in db {candidate}\'s followers tweets.')
+            cls.get_logger().info(str(download_tweets.keys()))
             for follower, follower_tweets in download_tweets.items():
                 if len(follower_tweets) != 0:
                     cls.update_follower_with_first_tweet(follower, follower_tweets[0])
@@ -73,9 +74,13 @@ class PreProcessingTweetsUtil:
 
     @classmethod
     def update_follower_with_first_tweet(cls, follower, tweet):
+        cls.get_logger().info(f'Follower: {follower}')
+
         today = datetime.datetime.today()
         follower = RawFollowerDAO().get(follower)
         user_information = tweet['user']
+        cls.get_logger().info(f'Follower: {follower}')
+
         updated_raw_follower = RawFollower(**{'id': follower.id,
                                               'follows': follower.follows,
                                               'downloaded_on': today,
