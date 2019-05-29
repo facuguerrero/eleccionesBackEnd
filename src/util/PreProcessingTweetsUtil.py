@@ -32,7 +32,7 @@ class PreProcessingTweetsUtil:
             pytz.timezone('America/Argentina/Buenos_Aires')) - datetime.timedelta()
         tweets_updated = 0
         for candidate in candidates:
-            with open("lavagna.pickle", 'rb') as frb:
+            with open("../../../elecciones/data/lavagna.pickle", 'rb') as frb:
                 download_tweets = pickle.load(frb)
             frb.close()
             cls.get_logger().info(f'Inserting in db {candidate}\'s followers tweets.')
