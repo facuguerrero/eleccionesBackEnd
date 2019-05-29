@@ -43,17 +43,18 @@ class PreProcessingTweetsUtil:
                 cls.get_logger().error('Error opening the file')
             cls.get_logger().info(f'Inserting in db {candidate}\'s followers tweets.')
             for follower, follower_tweets in download_tweets.items():
-                cls.update_follower_with_first_tweet(follower, follower_tweets[0])
-                for tweet in follower_tweets:
-                    tweet_date = cls.get_formatted_date(tweet['created_at'])
-                    if tweet_date >= min_tweet_date:
-                        # Clean tweet's information
-                        tweet['created_at'] = tweet_date
-                        tweet['user_id'] = tweet['user']['id']
-                        tweet.pop('user')
-                        RawTweetDAO().insert_tweet(tweet)
-                        tweets_updated += 1
-                cls.get_logger().info(f'{follower} updated')
+                if len(follower_tweets) != 0:
+                    cls.update_follower_with_first_tweet(follower, follower_tweets[0])
+                    for tweet in follower_tweets:
+                        tweet_date = cls.get_formatted_date(tweet['created_at'])
+                        if tweet_date >= min_tweet_date:
+                            # Clean tweet's information
+                            tweet['created_at'] = tweet_date
+                            tweet['user_id'] = tweet['user']['id']
+                            tweet.pop('user')
+                            RawTweetDAO().insert_tweet(tweet)
+                            tweets_updated += 1
+                    cls.get_logger().info(f'{follower} updated')
             cls.get_logger().info(f'Tweets updated: {str(tweets_updated)}')
 
     @classmethod
