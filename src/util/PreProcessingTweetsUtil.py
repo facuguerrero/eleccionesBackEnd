@@ -14,7 +14,7 @@ from src.util.logging.Logger import Logger
 
 class PreProcessingTweetsUtil:
     DATE_FORMAT = '%Y-%m-%d'
-    FOLLOWERS_PATH_FORMAT = f"{abspath(join(dirname(__file__), '../../../'))}/data/lavagna.pickle"
+    FOLLOWERS_PATH_FORMAT = f"{abspath(join(dirname(__file__), '../../../'))}/elecciones/data/lavagna.pickle"
 
 
     @classmethod
