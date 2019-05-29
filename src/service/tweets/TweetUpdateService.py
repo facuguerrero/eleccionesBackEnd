@@ -122,22 +122,24 @@ class TweetUpdateService:
     @classmethod
     def update_follower(cls, follower, tweet):
         """ Update follower's last download date. """
-        today = datetime.datetime.today().astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
-        # Retrieve the follower from DB
-        raw_follower = RawFollowerDAO().get(follower)
-        user_information = tweet['user']
-        updated_raw_follower = RawFollower(**{'id': follower,
-                                              'follows': raw_follower.follows,
-                                              'downloaded_on': today,
-                                              'location': user_information['location'],
-                                              'followers_count': user_information['followers_count'],
-                                              'friends_count': user_information['friends_count'],
-                                              'listed_count': user_information['listed_count'],
-                                              'favourites_count': user_information['favourites_count'],
-                                              'statuses_count': user_information['statuses_count']
-                                              })
-        RawFollowerDAO().put(updated_raw_follower)
-        cls.get_logger().info(f'{follower} is updated.')
+        try:
+            follower_result = RawFollowerDAO().get(follower)
+            today = datetime.datetime.today()
+            user_information = tweet['user']
+            updated_raw_follower = RawFollower(**{'id': follower,
+                                                  'follows': follower_result.follows,
+                                                  'downloaded_on': today,
+                                                  'location': user_information['location'],
+                                                  'followers_count': user_information['followers_count'],
+                                                  'friends_count': user_information['friends_count'],
+                                                  'listed_count': user_information['listed_count'],
+                                                  'favourites_count': user_information['favourites_count'],
+                                                  'statuses_count': user_information['statuses_count']
+                                                  })
+            RawFollowerDAO().put(updated_raw_follower)
+            cls.get_logger().info(f'{follower} is updated.')
+        except NonExistentRawFollowerError:
+            cls.get_logger().error(f'Follower {follower} does not exists')
 
     @classmethod
     def store_new_tweets(cls, follower, follower_download_tweets, min_tweet_date):

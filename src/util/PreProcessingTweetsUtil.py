@@ -3,7 +3,6 @@ import pickle
 import datetime
 from os.path import join, abspath, dirname
 
-
 import pytz
 
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
@@ -18,22 +17,22 @@ class PreProcessingTweetsUtil:
     DATE_FORMAT = '%Y-%m-%d'
     FOLLOWERS_PATH_FORMAT = f"{abspath(join(dirname(__file__), '../../../'))}/elecciones/data/"
 
-
     @classmethod
     def load_followers(cls):
         with open('PUT PATH HERE', 'r') as fd:
             reader = csv.reader(fd, delimiter=',')
             for row in reader:
                 follower = RawFollower(**{'_id': row[0],
-                                          'downloaded_on': datetime.datetime.strptime(row[1], PreProcessingTweetsUtil.DATE_FORMAT),
+                                          'downloaded_on': datetime.datetime.strptime(row[1],
+                                                                                      PreProcessingTweetsUtil.DATE_FORMAT),
                                           'follows': 'prueba'})
                 RawFollowerDAO().put(follower)
 
     @classmethod
     def load_tweets(cls):
         cls.get_logger().info(f'Inserting in DB pre download tweets ')
-        candidates = ["massa"]
-        min_tweet_date = datetime.datetime(2019,1,1).astimezone(
+        candidates = ["cfk", "macri"]
+        min_tweet_date = datetime.datetime(2019, 1, 1).astimezone(
             pytz.timezone('America/Argentina/Buenos_Aires')) - datetime.timedelta()
         tweets_updated = 0
         for candidate in candidates:
@@ -92,8 +91,6 @@ class PreProcessingTweetsUtil:
             RawFollowerDAO().put(updated_raw_follower)
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
-
-
 
     @classmethod
     def get_logger(cls):
