@@ -3,7 +3,6 @@ from argparse import ArgumentParser
 from flask import Flask
 from flask_restful import Api
 
-from src.api.PreProcesingTweetsResource import PreProcessingTweetsResource
 from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.api.CSVLoadingResource import CSVLoadingResource
 from src.api.CandidateResource import CandidateResource
@@ -11,7 +10,7 @@ from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
 from src.api.RawFollowerResource import RawFollowerResource
 from src.db.Mongo import Mongo
-from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries, insert_preload_data
+from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
