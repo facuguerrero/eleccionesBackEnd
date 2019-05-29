@@ -14,7 +14,7 @@ from src.util.logging.Logger import Logger
 
 class PreProcessingTweetsUtil:
     DATE_FORMAT = '%Y-%m-%d'
-    FOLLOWERS_PATH_FORMAT = "{abspath(join(dirname(__file__), '../../../'))}/elecciones/data/"
+    FOLLOWERS_PATH_FORMAT = f"{abspath(join(dirname(__file__), '../../../'))}/elecciones/data/"
 
 
     @classmethod
@@ -29,7 +29,7 @@ class PreProcessingTweetsUtil:
 
     @classmethod
     def load_tweets(cls):
-        cls.get_logger().info('Inserting in DB pre download tweets for lavagna. ')
+        cls.get_logger().info(f'Inserting in DB pre download tweets ')
         candidates = ["cfk", "macri", "massa", "urtubey"]
         min_tweet_date = datetime.datetime(2019,1,1).astimezone(
             pytz.timezone('America/Argentina/Buenos_Aires')) - datetime.timedelta()
