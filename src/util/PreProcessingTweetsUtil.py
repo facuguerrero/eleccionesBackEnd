@@ -30,7 +30,7 @@ class PreProcessingTweetsUtil:
     @classmethod
     def load_tweets(cls):
         cls.get_logger().info(f'Inserting in DB pre download tweets ')
-        candidates = ["lavagna"]
+        candidates = ["lavagna", "espert"]
         min_tweet_date = datetime.datetime(2019,1,1).astimezone(
             pytz.timezone('America/Argentina/Buenos_Aires')) - datetime.timedelta()
         tweets_updated = 0
@@ -51,7 +51,9 @@ class PreProcessingTweetsUtil:
                         tweet_date = cls.get_formatted_date(tweet['created_at'])
                         if tweet_date >= min_tweet_date:
                             # Clean tweet's information
-                            tweet["_id"] = tweet['id']
+                            tweet["_id"] = tweet['id_str']
+                            tweet.pop('id')
+                            tweet.pop('id_str')
                             tweet['created_at'] = tweet_date
                             tweet['user_id'] = tweet['user']['id']
                             tweet.pop('user')
