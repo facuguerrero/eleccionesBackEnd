@@ -25,7 +25,6 @@ api = Api(app)
 # The first three are utility endpoints
 api.add_resource(PingResource, '/')
 api.add_resource(CSVLoadingResource, '/csv/load')
-api.add_resource(PreProcessingTweetsResource, '/load/preload/tweets')
 api.add_resource(FollowerUpdatingResource, '/followers/update')
 api.add_resource(TweetUpdatingResource, '/tweets')
 # The following are endpoints used by the Front End application
