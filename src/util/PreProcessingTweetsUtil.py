@@ -30,7 +30,7 @@ class PreProcessingTweetsUtil:
     @classmethod
     def load_tweets(cls):
         cls.get_logger().info(f'Inserting in DB pre download tweets ')
-        candidates = ["urtubey"]
+        candidates = ["cfk"]
         min_tweet_date = datetime.datetime(2019,1,1).astimezone(
             pytz.timezone('America/Argentina/Buenos_Aires')) - datetime.timedelta()
         tweets_updated = 0
