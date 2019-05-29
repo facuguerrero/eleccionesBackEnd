@@ -14,7 +14,7 @@ from src.util.logging.Logger import Logger
 
 class PreProcessingTweetsUtil:
     DATE_FORMAT = '%Y-%m-%d'
-    FOLLOWERS_PATH_FORMAT = f"{abspath(join(dirname(__file__), '../../../'))}/elecciones/data/%s.pickle"
+    FOLLOWERS_PATH_FORMAT = "{abspath(join(dirname(__file__), '../../../'))}/elecciones/data/"
 
 
     @classmethod
@@ -35,9 +35,9 @@ class PreProcessingTweetsUtil:
             pytz.timezone('America/Argentina/Buenos_Aires')) - datetime.timedelta()
         tweets_updated = 0
         for candidate in candidates:
-            path = cls.FOLLOWERS_PATH_FORMAT % candidate
+            path = cls.FOLLOWERS_PATH_FORMAT + candidate + ".pickle"
             try:
-                with open(cls.FOLLOWERS_PATH_FORMAT, 'rb') as frb:
+                with open(path, 'rb') as frb:
                     download_tweets = pickle.load(frb)
                 frb.close()
             except IOError:
