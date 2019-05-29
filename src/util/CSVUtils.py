@@ -1,8 +1,12 @@
 import csv
+import pickle
 from os.path import join, abspath, dirname
-from datetime import datetime
+import datetime
+
+import pytz
 
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
+from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.model.followers.RawFollower import RawFollower
 from src.service.candidates.CandidateService import CandidateService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
@@ -15,16 +19,6 @@ class CSVUtils:
 
     # Flag to avoid starting more than once the loading process
     __running = False
-
-    # @classmethod
-    # def load_followers(cls):
-    #     with open('/home/facundoguerrero/prueba.csv', 'r') as fd:
-    #         reader = csv.reader(fd, delimiter=',')
-    #         for row in reader:
-    #             follower = RawFollower(**{'id': row[0],
-    #                                       'downloaded_on': datetime.strptime(row[1], CSVUtils.DATE_FORMAT),
-    #                                       'follows': 'prueba'})
-    #             RawFollowerDAO().put(follower)
 
     @classmethod
     def read_followers(cls):

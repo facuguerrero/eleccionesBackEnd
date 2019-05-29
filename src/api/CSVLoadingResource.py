@@ -13,8 +13,3 @@ class CSVLoadingResource(Resource):
         thread = Thread(target=CSVUtils.read_followers)
         thread.start()
         return ResponseBuilder.build('CSV Loading Started', 200)
-
-    # @staticmethod
-    # def put():
-    #     CSVUtils.load_followers()
-    #     return ResponseBuilder.build('CSV Loading Started', 200)

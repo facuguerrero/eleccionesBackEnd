@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 from flask import Flask
 from flask_restful import Api
 
+from src.api.PreProcesingTweetsResource import PreProcessingTweetsResource
 from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.api.CSVLoadingResource import CSVLoadingResource
 from src.api.CandidateResource import CandidateResource
@@ -10,7 +11,7 @@ from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
 from src.api.RawFollowerResource import RawFollowerResource
 from src.db.Mongo import Mongo
-from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
+from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries, insert_preload_data
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
@@ -24,6 +25,7 @@ api = Api(app)
 # The first three are utility endpoints
 api.add_resource(PingResource, '/')
 api.add_resource(CSVLoadingResource, '/csv/load')
+api.add_resource(PreProcessingTweetsResource, '/load/preload/tweets')
 api.add_resource(FollowerUpdatingResource, '/followers/update')
 api.add_resource(TweetUpdatingResource, '/tweets')
 # The following are endpoints used by the Front End application
@@ -42,6 +44,7 @@ def set_up_context(db_name, authorization, environment):
     with app.app_context():
         create_indexes()
         create_base_entries()
+        insert_preload_data()
         create_queue_entries()
 
 

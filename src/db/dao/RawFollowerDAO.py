@@ -21,7 +21,14 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         """ Adds RawFollower to data base using upsert to update 'follows' list."""
         self.upsert({'_id': raw_follower.id},
                     {'$addToSet': {'follows': raw_follower.follows},
-                     '$set': {'downloaded_on': raw_follower.downloaded_on},
+                     '$set': {'downloaded_on': raw_follower.downloaded_on,
+                              'location': raw_follower.location,
+                              'followers_count': raw_follower.followers_count,
+                              'friends_count': raw_follower.friends_count,
+                              'listed_count': raw_follower.listed_count,
+                              'favourites_count': raw_follower.favourites_count,
+                              'statuses_count': raw_follower.statuses_count
+                              },
                      # This field is ignored if it already exists
                      '$setOnInsert': {'is_private': raw_follower.is_private}
                      })
@@ -46,10 +53,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         return {document['_id'] for document in documents}
 
     def get_public_and_not_updated_users(self):
-        """ Retrieve all the ids of the users that are not updated since one week catalogued as private
-        . """
-        """ Retrieve all the ids of the users that follow a given candidate. """
-        # TODO llevar el tiempo a
+        """ Retrieve all the ids of the users that are not updated since one week catalogued as private. """
         date = datetime.datetime.today() - datetime.timedelta(days=7)
         documents = self.get_with_limit({'is_private': False, 'downloaded_on': {'$lt': date}},
                                         {'_id': 1, 'downloaded_on': 1})
