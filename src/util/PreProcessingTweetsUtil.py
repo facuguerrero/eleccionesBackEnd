@@ -1,6 +1,7 @@
 import csv
 import pickle
 import datetime
+from os.path import join, abspath, dirname
 
 
 import pytz
@@ -13,6 +14,8 @@ from src.util.logging.Logger import Logger
 
 class PreProcessingTweetsUtil:
     DATE_FORMAT = '%Y-%m-%d'
+    FOLLOWERS_PATH_FORMAT = f"{abspath(join(dirname(__file__), '../../../'))}elecciones/data/lavagna.pickle"
+
 
     @classmethod
     def load_followers(cls):
@@ -33,7 +36,7 @@ class PreProcessingTweetsUtil:
         tweets_updated = 0
         for candidate in candidates:
             try:
-                with open("~/elecciones/data/lavagna.pickle", 'rb') as frb:
+                with open(cls.FOLLOWERS_PATH_FORMAT, 'rb') as frb:
                     download_tweets = pickle.load(frb)
                 frb.close()
             except IOError:
