@@ -77,9 +77,13 @@ class PreProcessingTweetsUtil:
         cls.get_logger().info(f'Follower: {follower}')
 
         today = datetime.datetime.today()
+        cls.get_logger().info(f'Follower2: {follower}')
+
         follower = RawFollowerDAO().get(follower)
+        cls.get_logger().info(f'Follower3: {follower}')
+
         user_information = tweet['user']
-        cls.get_logger().info(f'Follower: {follower}')
+        cls.get_logger().info(f'Follower4: {follower}')
 
         updated_raw_follower = RawFollower(**{'id': follower.id,
                                               'follows': follower.follows,
