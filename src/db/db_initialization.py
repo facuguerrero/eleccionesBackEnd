@@ -1,8 +1,6 @@
 from src.db.dao.CandidateDAO import CandidateDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
-from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.service.tweets.FollowersQueueService import FollowersQueueService
-from src.util.PreProcessingTweetsUtil import PreProcessingTweetsUtil
 
 
 def create_indexes():
@@ -19,8 +17,3 @@ def create_base_entries():
 def create_queue_entries():
     """ Add followers to download's queue. """
     FollowersQueueService().add_followers_to_be_updated()
-
-
-def insert_preload_data():
-    """ Add followers to download's queue. """
-    PreProcessingTweetsUtil().load_tweets()

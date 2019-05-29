@@ -43,7 +43,6 @@ def set_up_context(db_name, authorization, environment):
     with app.app_context():
         create_indexes()
         create_base_entries()
-        insert_preload_data()
         create_queue_entries()
 
 

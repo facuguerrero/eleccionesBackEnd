@@ -7,11 +7,9 @@ from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.exception import CredentialsAlreadyInUseError
 from src.exception.DuplicatedTweetError import DuplicatedTweetError
+from src.exception.NoMoreFollowersToUpdateTweetsError import NoMoreFollowersToUpdateTweetsError
 from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
 from src.model.followers.RawFollower import RawFollower
-
-from src.model.tweets.RawTweet import RawTweet
-
 from src.service.credentials.CredentialService import CredentialService
 from src.service.tweets.FollowersQueueService import FollowersQueueService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
@@ -55,8 +53,8 @@ class TweetUpdateService:
                     max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
                     continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
                                                                             min_tweet_date, False, max_id)
-                cls.store_new_tweets(follower, follower_download_tweets, min_tweet_date)
                 if len(follower_download_tweets) != 0:
+                    cls.store_new_tweets(follower, follower_download_tweets, min_tweet_date)
                     cls.update_follower(follower, follower_download_tweets[0])
             followers = cls.get_followers_to_update()
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential}.')
@@ -65,7 +63,10 @@ class TweetUpdateService:
     @classmethod
     def get_followers_to_update(cls):
         """ Get the followers to be updated from FollowersQueueService. """
-        return FollowersQueueService().get_followers_to_update()
+        try:
+            return FollowersQueueService().get_followers_to_update()
+        except NoMoreFollowersToUpdateTweetsError:
+            return None
 
     @classmethod
     def download_tweets_and_validate(cls, twitter, follower, follower_download_tweets, min_tweet_date,
@@ -126,16 +127,17 @@ class TweetUpdateService:
             follower_result = RawFollowerDAO().get(follower)
             today = datetime.datetime.today()
             user_information = tweet['user']
-            updated_raw_follower = RawFollower(**{'id': follower,
-                                                  'follows': follower_result.follows,
-                                                  'downloaded_on': today,
-                                                  'location': user_information['location'],
-                                                  'followers_count': user_information['followers_count'],
-                                                  'friends_count': user_information['friends_count'],
-                                                  'listed_count': user_information['listed_count'],
-                                                  'favourites_count': user_information['favourites_count'],
-                                                  'statuses_count': user_information['statuses_count']
-                                                  })
+            updated_raw_follower = RawFollower(**{
+                'id': follower,
+                'follows': follower_result.follows,
+                'downloaded_on': today,
+                'location': user_information['location'],
+                'followers_count': user_information['followers_count'],
+                'friends_count': user_information['friends_count'],
+                'listed_count': user_information['listed_count'],
+                'favourites_count': user_information['favourites_count'],
+                'statuses_count': user_information['statuses_count']
+            })
             RawFollowerDAO().put(updated_raw_follower)
             cls.get_logger().info(f'{follower} is updated.')
         except NonExistentRawFollowerError:

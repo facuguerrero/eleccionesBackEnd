@@ -1,5 +1,6 @@
 import random
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
+from src.exception.NoMoreFollowersToUpdateTweetsError import NoMoreFollowersToUpdateTweetsError
 from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
@@ -21,6 +22,10 @@ class FollowersQueueService(metaclass=Singleton):
 
         # Acquire lock for get the followers
         ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
+        if len(self.updating_followers) == 0:
+            self.logger.error('There are not followers to update their tweets.')
+            raise NoMoreFollowersToUpdateTweetsError()
+
         random_followers_keys = random.sample(self.updating_followers.keys(), max_users_per_window)
         # Remove selected followers
         for follower in random_followers_keys:
@@ -36,4 +41,8 @@ class FollowersQueueService(metaclass=Singleton):
         # TODO Analizar productor y consumidor en python.
         self.logger.info('Adding new followers to update their tweets.')
         new_followers = RawFollowerDAO().get_public_and_not_updated_users()
+        if len(new_followers) == 0:
+            # If there are no new results
+            self.logger.error('Can\'t retrieve followers to update their tweets. ')
+            raise NoMoreFollowersToUpdateTweetsError()
         self.updating_followers.update(new_followers)
