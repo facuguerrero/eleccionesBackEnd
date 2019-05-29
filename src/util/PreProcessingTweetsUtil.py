@@ -38,7 +38,7 @@ class PreProcessingTweetsUtil:
             path = cls.FOLLOWERS_PATH_FORMAT + candidate + ".pickle"
             download_tweets = {}
             try:
-                with open('/home/facundoguerrero/prueba.pickle', 'rb') as frb:
+                with open(path, 'rb') as frb:
                     download_tweets = pickle.load(frb)
                 frb.close()
             except IOError:
