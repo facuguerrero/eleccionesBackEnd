@@ -31,8 +31,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        # cls.download_tweets_with_credential(credentials[0])
+        #AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -46,7 +46,7 @@ class TweetUpdateService:
         while followers:
             for follower, last_update in followers.items():
                 follower_download_tweets = []
-                min_tweet_date = cls.get_formatted_date(last_update)
+                min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
                 continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
                                                                         min_tweet_date, True)
                 while continue_downloading:
@@ -54,8 +54,8 @@ class TweetUpdateService:
                     continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
                                                                             min_tweet_date, False, max_id)
                 if len(follower_download_tweets) != 0:
-                    cls.store_new_tweets(follower, follower_download_tweets, min_tweet_date)
                     cls.update_follower(follower, follower_download_tweets[0])
+                    cls.store_new_tweets(follower, follower_download_tweets, min_tweet_date)
             followers = cls.get_followers_to_update()
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential}.')
         CredentialService().unlock_credential(credential, cls.__name__)
@@ -126,19 +126,20 @@ class TweetUpdateService:
         try:
             follower_result = RawFollowerDAO().get(follower)
             today = datetime.datetime.today()
-            user_information = tweet['user']
-            updated_raw_follower = RawFollower(**{
-                'id': follower,
-                'follows': follower_result.follows,
-                'downloaded_on': today,
-                'location': user_information['location'],
-                'followers_count': user_information['followers_count'],
-                'friends_count': user_information['friends_count'],
-                'listed_count': user_information['listed_count'],
-                'favourites_count': user_information['favourites_count'],
-                'statuses_count': user_information['statuses_count']
-            })
-            RawFollowerDAO().put(updated_raw_follower)
+            if 'user' in tweet:
+                user_information = tweet['user']
+                updated_raw_follower = RawFollower(**{
+                    'id': follower,
+                    'follows': follower_result.follows,
+                    'downloaded_on': today,
+                    'location': user_information['location'],
+                    'followers_count': user_information['followers_count'],
+                    'friends_count': user_information['friends_count'],
+                    'listed_count': user_information['listed_count'],
+                    'favourites_count': user_information['favourites_count'],
+                    'statuses_count': user_information['statuses_count']
+                })
+                RawFollowerDAO().put(updated_raw_follower)
             cls.get_logger().info(f'{follower} is updated.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
