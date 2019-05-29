@@ -9,6 +9,7 @@ import pytz
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.exception.DuplicatedTweetError import DuplicatedTweetError
+from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
 from src.model.followers.RawFollower import RawFollower
 from src.util.logging.Logger import Logger
 
@@ -74,28 +75,25 @@ class PreProcessingTweetsUtil:
 
     @classmethod
     def update_follower_with_first_tweet(cls, follower, tweet):
-        cls.get_logger().info(f'Follower: {follower}')
+        try:
+            follower_result = RawFollowerDAO().get(follower)
+            today = datetime.datetime.today()
+            user_information = tweet['user']
+            updated_raw_follower = RawFollower(**{'id': follower,
+                                                  'follows': follower_result.follows,
+                                                  'downloaded_on': today,
+                                                  'location': user_information['location'],
+                                                  'followers_count': user_information['followers_count'],
+                                                  'friends_count': user_information['friends_count'],
+                                                  'listed_count': user_information['listed_count'],
+                                                  'favourites_count': user_information['favourites_count'],
+                                                  'statuses_count': user_information['statuses_count']
+                                                  })
+            RawFollowerDAO().put(updated_raw_follower)
+        except NonExistentRawFollowerError:
+            cls.get_logger().error(f'Follower {follower} does not exists')
 
-        today = datetime.datetime.today()
-        cls.get_logger().info(f'Follower2: {follower}')
 
-        follower = RawFollowerDAO().get(follower)
-        cls.get_logger().info(f'Follower3: {follower}')
-
-        user_information = tweet['user']
-        cls.get_logger().info(f'Follower4: {follower}')
-
-        updated_raw_follower = RawFollower(**{'id': follower.id,
-                                              'follows': follower.follows,
-                                              'downloaded_on': today,
-                                              'location': user_information['location'],
-                                              'followers_count': user_information['followers_count'],
-                                              'friends_count': user_information['friends_count'],
-                                              'listed_count': user_information['listed_count'],
-                                              'favourites_count': user_information['favourites_count'],
-                                              'statuses_count': user_information['statuses_count']
-                                              })
-        RawFollowerDAO().put(updated_raw_follower)
 
     @classmethod
     def get_logger(cls):
