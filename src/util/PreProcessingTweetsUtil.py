@@ -30,14 +30,15 @@ class PreProcessingTweetsUtil:
     @classmethod
     def load_tweets(cls):
         cls.get_logger().info(f'Inserting in DB pre download tweets ')
-        candidates = ["massa"]
+        candidates = ["lavagna"]
         min_tweet_date = datetime.datetime(2019,1,1).astimezone(
             pytz.timezone('America/Argentina/Buenos_Aires')) - datetime.timedelta()
         tweets_updated = 0
         for candidate in candidates:
             path = cls.FOLLOWERS_PATH_FORMAT + candidate + ".pickle"
+            download_tweets = {}
             try:
-                with open(path, 'rb') as frb:
+                with open('/home/facundoguerrero/prueba.pickle', 'rb') as frb:
                     download_tweets = pickle.load(frb)
                 frb.close()
             except IOError:
@@ -50,6 +51,7 @@ class PreProcessingTweetsUtil:
                         tweet_date = cls.get_formatted_date(tweet['created_at'])
                         if tweet_date >= min_tweet_date:
                             # Clean tweet's information
+                            tweet["_id"] = tweet['id']
                             tweet['created_at'] = tweet_date
                             tweet['user_id'] = tweet['user']['id']
                             tweet.pop('user')

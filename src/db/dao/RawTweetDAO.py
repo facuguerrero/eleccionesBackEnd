@@ -1,3 +1,5 @@
+from pymongo.errors import DuplicateKeyError
+
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
 from src.util.logging.Logger import Logger
@@ -13,4 +15,7 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
 
     def insert_tweet(self, raw_tweet):
         """ Adds RawTweet to data base using upsert to update 'follows' list."""
-        self.insert(raw_tweet)
+        try:
+            self.insert(raw_tweet)
+        except DuplicateKeyError as error:
+            self.logger.info('duplicated tweet')
