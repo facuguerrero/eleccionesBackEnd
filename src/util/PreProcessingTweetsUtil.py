@@ -32,9 +32,12 @@ class PreProcessingTweetsUtil:
             pytz.timezone('America/Argentina/Buenos_Aires')) - datetime.timedelta()
         tweets_updated = 0
         for candidate in candidates:
-            with open("../../../elecciones/data/lavagna.pickle", 'rb') as frb:
-                download_tweets = pickle.load(frb)
-            frb.close()
+            try:
+                with open("../../../elecciones/data/lavagna.pickle", 'rb') as frb:
+                    download_tweets = pickle.load(frb)
+                frb.close()
+            except IOError:
+                cls.get_logger().error('Error opening the file')
             cls.get_logger().info(f'Inserting in db {candidate}\'s followers tweets.')
             for follower, follower_tweets in download_tweets.items():
                 cls.update_follower_with_first_tweet(follower, follower_tweets[0])
