@@ -28,7 +28,7 @@ class CredentialService(metaclass=Singleton):
 
     def get_all_credentials_for_service(self, service_id):
         """ Return all credentials for a given service. """
-        self.logger.info(f'Returning all credentials for service {service_id}.')
+        self.logger.info(f'ASDDASs for service {service_id}.')
         self.logger.info("HOLAAAA")
         # Check if some credential has already been assigned
         for credential in self.credentials:
