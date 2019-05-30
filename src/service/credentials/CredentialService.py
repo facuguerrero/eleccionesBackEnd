@@ -30,10 +30,14 @@ class CredentialService(metaclass=Singleton):
         for credential in self.credentials:
             if f"{credential.id}-{service_id}" in self.in_use:
                 raise CredentialsAlreadyInUseError(service_id)
+        self.logger.info('Checked credentials')
         # Store in the in use set. We iterate twice because the number of credentials is small and it is easier than
         # doing rollbacks with the already stored credentials if we need to raise an exception
         for credential in self.credentials:
             self.in_use.add(f"{credential.id}-{service_id}")
+
+        self.logger.info(self.credentials)
+
         return self.credentials
 
     def get_credential_for_service(self, service_id):
