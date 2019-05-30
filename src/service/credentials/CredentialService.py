@@ -27,6 +27,7 @@ class CredentialService(metaclass=Singleton):
         """ Return all credentials for a given service. """
         self.logger.info(f'Returning all credentials for service {service_id}.')
         # Check if some credential has already been assigned
+        self.logger.info(self.credentials)
         for credential in self.credentials:
             if f"{credential.id}-{service_id}" in self.in_use:
                 raise CredentialsAlreadyInUseError(service_id)
