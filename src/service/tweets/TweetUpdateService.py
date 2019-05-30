@@ -41,14 +41,18 @@ class TweetUpdateService:
         cls.get_logger().info(f'Starting follower updating with credential {credential.id}.')
         # Create Twython instance for credential
         twitter = cls.twitter(credential)
+        cls.get_logger().info('Instance of twython created')
         # While there are followers to update
         followers = cls.get_followers_to_update()
+        cls.get_logger().info('Obtained followers correctly')
         while followers:
             for follower, last_update in followers.items():
+                cls.get_logger().info(f'Follower for procesing: {follower}')
                 follower_download_tweets = []
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
                 continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
                                                                         min_tweet_date, True)
+                cls.get_logger().info('First download')
                 while continue_downloading:
                     max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
                     continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
