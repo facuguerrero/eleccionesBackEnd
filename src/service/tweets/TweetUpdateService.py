@@ -32,6 +32,7 @@ class TweetUpdateService:
             return
         # Run tweet update process
         #AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        cls.get_logger().info(credentials[0])
         cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
