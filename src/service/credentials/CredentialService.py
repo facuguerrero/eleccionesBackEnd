@@ -18,16 +18,18 @@ class CredentialService(metaclass=Singleton):
         self.in_use = set()
         self.credentials = []
         # Load credentials file and create objects to access their elements
-        with open(CredentialService.CREDENTIALS_PATH, 'r') as file:
-            loaded = json.load(file)
-            for value in loaded:
-                self.credentials.append(Credential(**value))
+        try:
+            with open(CredentialService.CREDENTIALS_PATH, 'r') as file:
+                loaded = json.load(file)
+                for value in loaded:
+                    self.credentials.append(Credential(**value))
+        except IOError:
+            self.logger.error('Credentials file do not found')
 
     def get_all_credentials_for_service(self, service_id):
         """ Return all credentials for a given service. """
         self.logger.info(f'Returning all credentials for service {service_id}.')
         # Check if some credential has already been assigned
-        self.logger.info(self.credentials)
         for credential in self.credentials:
             if f"{credential.id}-{service_id}" in self.in_use:
                 raise CredentialsAlreadyInUseError(service_id)
