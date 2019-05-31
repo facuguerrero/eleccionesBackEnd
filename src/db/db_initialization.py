@@ -22,9 +22,9 @@ def create_queue_entries():
 def fix_int_ids():
     int_users = RawFollowerDAO().get_all({"_id": {"$type": 16}})
     for user_information in int_users:
-        id = user_information.pop('_id')
+        id_int = user_information.pop('_id')
         f = RawFollower(**{
-                    'id': str(id),
+                    'id': str(id_int),
                     'follows': user_information['follows'],
                     'downloaded_on': user_information['downloaded_on'],
                     'location': user_information['location'],
@@ -34,6 +34,7 @@ def fix_int_ids():
                     'favourites_count': user_information['favourites_count'],
                     'statuses_count': user_information['statuses_count']
                 })
-        RawFollowerDAO().delete_first({"_id": id})
+        RawFollowerDAO().delete_first({"_id": id_int})
         RawFollowerDAO().put(f)
+        return
 
