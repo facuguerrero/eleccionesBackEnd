@@ -31,9 +31,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        #AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        cls.get_logger().info(credentials[0])
-        cls.download_tweets_with_credential(credentials[0])
+        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        #cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -42,13 +41,10 @@ class TweetUpdateService:
         cls.get_logger().info(f'Starting follower updating with credential {credential.id}.')
         # Create Twython instance for credential
         twitter = cls.twitter(credential)
-        cls.get_logger().info('Instance of twython created')
         # While there are followers to update
         followers = cls.get_followers_to_update()
-        cls.get_logger().info('Obtained followers correctly')
         while followers:
             for follower, last_update in followers.items():
-                cls.get_logger().info(f'Follower for procesing: {follower}')
                 follower_download_tweets = []
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
                 continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
