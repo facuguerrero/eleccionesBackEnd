@@ -10,7 +10,7 @@ from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
 from src.api.RawFollowerResource import RawFollowerResource
 from src.db.Mongo import Mongo
-from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
+from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries, fix_int_ids
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
@@ -43,6 +43,7 @@ def set_up_context(db_name, authorization, environment):
         create_indexes()
         create_base_entries()
         create_queue_entries()
+        fix_int_ids()
 
 
 def parse_arguments():

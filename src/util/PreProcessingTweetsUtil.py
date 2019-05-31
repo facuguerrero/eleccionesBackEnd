@@ -3,6 +3,8 @@ import pickle
 import datetime
 from os.path import join, abspath, dirname
 
+import pytz
+
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.exception.DuplicatedTweetError import DuplicatedTweetError
@@ -54,6 +56,8 @@ class PreProcessingTweetsUtil:
                             tweet["_id"] = tweet['id_str']
                             tweet.pop('id')
                             tweet.pop('id_str')
+                            tweet['text'] = tweet['full_text']
+                            tweet.pop('full_text')
                             tweet['created_at'] = tweet_date
                             tweet['user_id'] = tweet['user']['id']
                             tweet.pop('user')

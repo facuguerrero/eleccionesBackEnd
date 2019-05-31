@@ -31,8 +31,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        #cls.download_tweets_with_credential(credentials[0])
+        #AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -90,7 +90,7 @@ class TweetUpdateService:
         try:
             max_tweets_request_parameter = ConfigurationManager().get_int('max_tweets_parameter')
             if is_first_request:
-                tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
+                tweets = twitter.get_user_timeline(user_id='4823354054', include_rts=True, tweet_mode='extended',
                                                    count=max_tweets_request_parameter)
             else:
                 tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
@@ -152,14 +152,19 @@ class TweetUpdateService:
             tweet_date = cls.get_formatted_date(tweet['created_at'])
             if tweet_date >= min_tweet_date:
                 # Clean tweet's information
-                tweet["_id"] = tweet['id_str']
-                tweet.pop('id')
-                tweet.pop('id_str')
-                tweet['created_at'] = tweet_date
-                tweet['user_id'] = tweet['user']['id']
-                tweet.pop('user')
                 try:
+                    tweet["_id"] = tweet['id_str']
+                    tweet.pop('id')
+                    tweet.pop('id_str')
+                    tweet["text"] = tweet['full_text']
+                    tweet.pop('full_text')
+                    tweet['created_at'] = tweet_date
+                    tweet['user_id'] = tweet['user']['id_str']
+                    tweet.pop('user')
                     RawTweetDAO().insert_tweet(tweet)
+                except KeyError:
+                    RawTweetDAO().insert_tweet(tweet)
+                    cls.get_logger().error(f'Key error in tweet with id {tweet["_id"]}')
                 except DuplicatedTweetError:
                     break
         #cls.get_logger().info(f'Tweets of {follower} are updated.')

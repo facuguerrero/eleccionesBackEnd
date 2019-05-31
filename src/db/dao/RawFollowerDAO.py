@@ -30,6 +30,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                      # This field is ignored if it already exists
                      '$setOnInsert': {'is_private': raw_follower.is_private}
                      })
+        self.logger.info(f'replaced correctly {raw_follower.id}')
 
     def update_follower_data(self, raw_follower):
         self.upsert({'_id': raw_follower.id},
@@ -43,6 +44,11 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                               'is_private': raw_follower.is_private
                               }
                      })
+
+    def update_follower_id(self, int_id):
+        self.upsert({'_id': int_id},
+                    {'$set': {'_id': str(int_id)}})
+        self.logger.info(f'user updated: {str(int_id)}')
 
     def tag_as_private(self, raw_follower):
         """ Tags the given user as private in the database. """
