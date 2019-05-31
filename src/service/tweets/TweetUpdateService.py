@@ -44,15 +44,16 @@ class TweetUpdateService:
         # While there are followers to update
         followers = cls.get_followers_to_update()
         while followers:
+            start_time = time.time()
             for follower, last_update in followers.items():
                 follower_download_tweets = []
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
                 continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
-                                                                        min_tweet_date, True)
+                                                                        min_tweet_date, start_time, True)
                 while continue_downloading:
                     max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
                     continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
-                                                                            min_tweet_date, False, max_id)
+                                                                            min_tweet_date, start_time, False, max_id)
                 if len(follower_download_tweets) != 0:
                     cls.update_follower(follower, follower_download_tweets[0])
                     cls.store_new_tweets(follower, follower_download_tweets, min_tweet_date)
@@ -70,9 +71,9 @@ class TweetUpdateService:
 
     @classmethod
     def download_tweets_and_validate(cls, twitter, follower, follower_download_tweets, min_tweet_date,
-                                     is_first_request, max_id=None):
+                                     start_time, is_first_request, max_id=None):
         """ Download tweets. If there are not new results, return false to end the download. """
-        download_tweets = cls.do_download_tweets_request(twitter, follower, is_first_request, max_id)
+        download_tweets = cls.do_download_tweets_request(twitter, follower, start_time, is_first_request, max_id)
         if len(download_tweets) != 0:
             last_tweet = download_tweets[len(download_tweets) - 1]
             follower_download_tweets += download_tweets
@@ -80,7 +81,7 @@ class TweetUpdateService:
         return False
 
     @classmethod
-    def do_download_tweets_request(cls, twitter, follower, is_first_request, max_id=None):
+    def do_download_tweets_request(cls, twitter, follower, start_time, is_first_request, max_id=None):
         """
         @is_first_request is True, max_id parameter is not included in the request.
         @max_id is to get the maximum quantity of tweets per request.
@@ -95,8 +96,9 @@ class TweetUpdateService:
                 tweets = twitter.get_user_timeline(user_id=follower, include_rts=True,
                                                    count=max_tweets_request_parameter, max_id=max_id)
         except TwythonRateLimitError:
-            cls.get_logger().warning('Tweets download limit reached. Waiting.')
-            time.sleep(ConfigurationManager().get_int('tweets_download_sleep_seconds'))
+            duration = int(time.time() - start_time) + 1
+            cls.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
+            time.sleep(ConfigurationManager().get_int('tweets_download_sleep_seconds') - duration)
             cls.get_logger().info('Waiting done. Resuming follower updating.')
         except TwythonError as error:
             if error.error_code == ConfigurationManager().get_int('private_user_error_code'):
@@ -161,7 +163,7 @@ class TweetUpdateService:
                     RawTweetDAO().insert_tweet(tweet)
                 except DuplicatedTweetError:
                     break
-        cls.get_logger().info(f'Tweets of {follower} are updated.')
+        #cls.get_logger().info(f'Tweets of {follower} are updated.')
 
     @classmethod
     def check_if_continue_downloading(cls, last_tweet, min_tweet_date):
