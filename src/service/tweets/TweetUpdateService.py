@@ -31,8 +31,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        #cls.download_tweets_with_credential(credentials[0])
+        #AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -127,13 +127,11 @@ class TweetUpdateService:
     def update_follower(cls, follower, tweet):
         """ Update follower's last download date. """
         try:
-            follower_result = RawFollowerDAO().get(follower)
             today = datetime.datetime.today()
             if 'user' in tweet:
                 user_information = tweet['user']
                 updated_raw_follower = RawFollower(**{
                     'id': follower,
-                    'follows': follower_result.follows,
                     'downloaded_on': today,
                     'location': user_information['location'],
                     'followers_count': user_information['followers_count'],
@@ -142,8 +140,8 @@ class TweetUpdateService:
                     'favourites_count': user_information['favourites_count'],
                     'statuses_count': user_information['statuses_count']
                 })
-                RawFollowerDAO().put(updated_raw_follower)
-            #cls.get_logger().info(f'{follower} is updated.')
+                RawFollowerDAO().update_follower_data(updated_raw_follower)
+            cls.get_logger().info(f'{follower} is updated.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
 
