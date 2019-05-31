@@ -99,7 +99,8 @@ class TweetUpdateService:
             duration = int(time.time() - start_time) + 1
             cls.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
             time.sleep(ConfigurationManager().get_int('tweets_download_sleep_seconds') - duration)
-            cls.get_logger().info('Waiting done. Resuming follower updating.')
+            start_time = time.time()
+            cls.get_logger().info(f'Waiting done. Resuming follower updating. Starting at: {str(start_time)}')
         except TwythonError as error:
             if error.error_code == ConfigurationManager().get_int('private_user_error_code'):
                 cls.get_logger().warning(f'User with id {follower} is private.')
