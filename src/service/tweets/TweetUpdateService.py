@@ -49,7 +49,6 @@ class TweetUpdateService:
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
                 continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
                                                                         min_tweet_date, True)
-                cls.get_logger().info('First download')
                 while continue_downloading:
                     max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
                     continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
@@ -141,7 +140,7 @@ class TweetUpdateService:
                     'statuses_count': user_information['statuses_count']
                 })
                 RawFollowerDAO().put(updated_raw_follower)
-            cls.get_logger().info(f'{follower} is updated.')
+            #cls.get_logger().info(f'{follower} is updated.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
 
