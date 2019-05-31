@@ -31,8 +31,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        # cls.download_tweets_with_credential(credentials[0])
+        # AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -43,6 +43,7 @@ class TweetUpdateService:
         twitter = cls.twitter(credential)
         # While there are followers to update
         followers = cls.get_followers_to_update()
+        cls.get_logger().info(str(followers))
         while followers:
             start_time = time.time()
             for follower, last_update in followers.items():
