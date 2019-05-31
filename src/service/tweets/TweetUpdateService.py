@@ -91,7 +91,7 @@ class TweetUpdateService:
         try:
             max_tweets_request_parameter = ConfigurationManager().get_int('max_tweets_parameter')
             if is_first_request:
-                tweets = twitter.get_user_timeline(user_id='4823354054', include_rts=True, tweet_mode='extended',
+                tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
                                                    count=max_tweets_request_parameter)
             else:
                 tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
