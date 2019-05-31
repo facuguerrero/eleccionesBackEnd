@@ -43,7 +43,6 @@ class TweetUpdateService:
         twitter = cls.twitter(credential)
         # While there are followers to update
         followers = cls.get_followers_to_update()
-        cls.get_logger().info(str(followers))
         while followers:
             start_time = time.time()
             for follower, last_update in followers.items():
@@ -105,6 +104,9 @@ class TweetUpdateService:
         except TwythonError as error:
             if error.error_code == ConfigurationManager().get_int('private_user_error_code'):
                 cls.get_logger().warning(f'User with id {follower} is private.')
+                cls.update_follower_as_private(follower)
+            if error.error_code == ConfigurationManager().get_int('not_found_user_error_code'):
+                cls.get_logger().warning(f'User with id {follower} does not exists.')
                 cls.update_follower_as_private(follower)
             else:
                 cls.get_logger().error(
