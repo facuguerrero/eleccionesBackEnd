@@ -90,10 +90,10 @@ class TweetUpdateService:
         try:
             max_tweets_request_parameter = ConfigurationManager().get_int('max_tweets_parameter')
             if is_first_request:
-                tweets = twitter.get_user_timeline(user_id=follower, include_rts=True,
+                tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
                                                    count=max_tweets_request_parameter)
             else:
-                tweets = twitter.get_user_timeline(user_id=follower, include_rts=True,
+                tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
                                                    count=max_tweets_request_parameter, max_id=max_id)
         except TwythonRateLimitError:
             duration = int(time.time() - start_time) + 1
