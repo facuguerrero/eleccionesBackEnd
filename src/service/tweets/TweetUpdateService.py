@@ -38,6 +38,7 @@ class TweetUpdateService:
     @classmethod
     def download_tweets_with_credential(cls, credential):
         """ Update followers' tweets with an specific Twitter Api Credential. """
+        global continue_downloading
         cls.get_logger().info(f'Starting follower updating with credential {credential.id}.')
         # Create Twython instance for credential
         twitter = cls.twitter(credential)
@@ -48,12 +49,24 @@ class TweetUpdateService:
             for follower, last_update in followers.items():
                 follower_download_tweets = []
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
-                continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
-                                                                        min_tweet_date, start_time, True)
-                while continue_downloading:
-                    max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
+                try:
                     continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
+                                                                        min_tweet_date, start_time, True)
+                except TwythonRateLimitError:
+                    duration = int(time.time() - start_time) + 1
+                    time.sleep(ConfigurationManager().get_int('tweets_download_sleep_seconds') - duration)
+                    cls.get_logger().info(f'Waiting done. Resuming follower updating. ')
+                    start_time = time.time()
+                while continue_downlgitoading:
+                    max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
+                    try:
+                        continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
                                                                             min_tweet_date, start_time, False, max_id)
+                    except TwythonRateLimitError:
+                        duration = int(time.time() - start_time) + 1
+                        time.sleep(ConfigurationManager().get_int('tweets_download_sleep_seconds') - duration)
+                        cls.get_logger().info(f'Waiting done. Resuming follower updating. ')
+                        start_time = time.time()
                 if len(follower_download_tweets) != 0:
                     cls.update_follower(follower, follower_download_tweets[0])
                     cls.store_new_tweets(follower, follower_download_tweets, min_tweet_date)
@@ -98,9 +111,7 @@ class TweetUpdateService:
         except TwythonRateLimitError:
             duration = int(time.time() - start_time) + 1
             cls.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
-            time.sleep(ConfigurationManager().get_int('tweets_download_sleep_seconds') - duration)
-            start_time = time.time()
-            cls.get_logger().info(f'Waiting done. Resuming follower updating. Starting at: {str(start_time)}')
+            raise TwythonRateLimitError
         except TwythonError as error:
             if error.error_code == ConfigurationManager().get_int('private_user_error_code'):
                 cls.get_logger().warning(f'User with id {follower} is private.')
