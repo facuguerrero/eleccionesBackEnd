@@ -32,7 +32,7 @@ class TweetUpdateService:
             return
         # Run tweet update process
         AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        #cls.download_tweets_with_credential(credentials[0])
+        # cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -102,11 +102,8 @@ class TweetUpdateService:
             start_time = time.time()
             cls.get_logger().info(f'Waiting done. Resuming follower updating. ')
         except TwythonError as error:
-            if error.error_code == ConfigurationManager().get_int('private_user_error_code'):
-                cls.get_logger().error(f'User with id {follower} is private.')
-                cls.update_follower_as_private(follower)
-            elif error.error_code == ConfigurationManager().get_int('not_found_user_error_code'):
-                cls.get_logger().error(f'User with id {follower} does not exists.')
+            if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
+                    error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
                 cls.update_follower_as_private(follower)
             else:
                 cls.get_logger().error(
@@ -121,7 +118,7 @@ class TweetUpdateService:
             # Retrieve the follower from DB
             raw_follower = RawFollowerDAO().get(follower)
             RawFollowerDAO().tag_as_private(raw_follower)
-            # cls.get_logger().info(f'{follower} is tagged as private.')
+            cls.get_logger().info(f'{follower} is tagged as private.')
         except NonExistentRawFollowerError as error:
             cls.get_logger().error(f'{follower} can not be tagged as private because does not exists.')
             cls.get_logger().error(error)
