@@ -57,7 +57,7 @@ class TweetUpdateService:
                     time.sleep(ConfigurationManager().get_int('tweets_download_sleep_seconds') - duration)
                     cls.get_logger().info(f'Waiting done. Resuming follower updating. ')
                     start_time = time.time()
-                while continue_downlgitoading:
+                while continue_downloading:
                     max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
                     try:
                         continue_downloading = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
