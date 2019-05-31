@@ -73,7 +73,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         """ Retrieve all the ids of the users that are not updated since one month catalogued as private.
             Returns {'id': 'last_update'}
         """
-        date = datetime.datetime.today() - datetime.timedelta(days=7)
+        date = datetime.datetime.today() - datetime.timedelta(days=21)
         documents = self.get_with_limit({'is_private': False, 'downloaded_on': {'$lt': date}},
                                         {'_id': 1, 'downloaded_on': 1})
         followers_to_return = {}
