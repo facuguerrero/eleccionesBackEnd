@@ -37,6 +37,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         """ Adds RawFollower to data base using upsert to update 'follows' list."""
         self.upsert({'_id': follower_id},
                     { '$set': {'follows': follows_list} })
+        self.logger(f'Follower updated {str(follows_list)}')
 
     def tag_as_private(self, raw_follower):
         """ Tags the given user as private in the database. """

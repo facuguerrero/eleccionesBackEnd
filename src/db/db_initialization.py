@@ -22,7 +22,7 @@ def create_queue_entries():
 
 
 def fix_followers_update():
-    followers = RawFollowerDAO().get_all( {'downloaded_on': {'$gt': datetime.datetime(2019, 5, 20)}} )
+    followers = RawFollowerDAO().get_all( {'downloaded_on': {'$gt': datetime.datetime(2019, 5, 29, 0, 0, 0)}} )
     for follower in followers:
         real_follows = []
         for seguido in follower['follows']:
