@@ -1,7 +1,5 @@
 import datetime
 
-import pytz
-
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
 from src.exception.NoDocumentsFoundError import NoDocumentsFoundError
