@@ -10,7 +10,7 @@ from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
 from src.api.RawFollowerResource import RawFollowerResource
 from src.db.Mongo import Mongo
-from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries, fix_followers_update
+from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
