@@ -48,7 +48,7 @@ class TestTweetUpdateService(CustomTestCase):
         download_tweets = [tweet2]
         min_date = TweetUpdateHelper().get_mock_min_date_may_25()
 
-        TweetUpdateService.store_new_tweets(follower, download_tweets, min_date)
+        TweetUpdateService.store_new_tweets( download_tweets, min_date)
 
         assert put_mock.call_count == 0
 
@@ -60,7 +60,7 @@ class TestTweetUpdateService(CustomTestCase):
         download_tweets = [tweet1, tweet2]
         min_date = TweetUpdateHelper().get_mock_min_date_may_25()
 
-        TweetUpdateService.store_new_tweets(follower, download_tweets, min_date)
+        TweetUpdateService.store_new_tweets( download_tweets, min_date)
 
         assert put_mock.call_count == 1
 
@@ -72,7 +72,7 @@ class TestTweetUpdateService(CustomTestCase):
         download_tweets = [tweet1, tweet2]
         min_date = TweetUpdateHelper().get_mock_min_date_may_24()
 
-        TweetUpdateService.store_new_tweets(follower, download_tweets, min_date)
+        TweetUpdateService.store_new_tweets( download_tweets, min_date)
 
         assert put_mock.call_count == 2
 

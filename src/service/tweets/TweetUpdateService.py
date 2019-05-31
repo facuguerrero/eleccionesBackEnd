@@ -31,8 +31,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        #AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        cls.download_tweets_with_credential(credentials[0])
+         AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        #cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -56,7 +56,7 @@ class TweetUpdateService:
                                                                             min_tweet_date, start_time, False, max_id)
                 if len(follower_download_tweets) != 0:
                     cls.update_follower(follower, follower_download_tweets[0])
-                    cls.store_new_tweets(follower, follower_download_tweets, min_tweet_date)
+                    cls.store_new_tweets(follower_download_tweets, min_tweet_date)
             followers = cls.get_followers_to_update()
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential}.')
         CredentialService().unlock_credential(credential, cls.__name__)
@@ -141,12 +141,12 @@ class TweetUpdateService:
                     'statuses_count': user_information['statuses_count']
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
-            #cls.get_logger().info(f'{follower} is updated.')
+            # cls.get_logger().info(f'{follower} is updated.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
 
     @classmethod
-    def store_new_tweets(cls, follower, follower_download_tweets, min_tweet_date):
+    def store_new_tweets(cls, follower_download_tweets, min_tweet_date):
         """ Store new follower's tweet since last update. """
         for tweet in follower_download_tweets:
             tweet_date = cls.get_formatted_date(tweet['created_at'])
@@ -167,7 +167,7 @@ class TweetUpdateService:
                     cls.get_logger().error(f'Key error in tweet with id {tweet["_id"]}')
                 except DuplicatedTweetError:
                     break
-        #cls.get_logger().info(f'Tweets of {follower} are updated.')
+        # cls.get_logger().info(f'Tweets of {follower} are updated.')
 
     @classmethod
     def check_if_continue_downloading(cls, last_tweet, min_tweet_date):
