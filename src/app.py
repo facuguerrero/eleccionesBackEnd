@@ -43,7 +43,10 @@ def set_up_context(db_name, authorization, environment):
         create_indexes()
         create_base_entries()
         create_queue_entries()
+        Logger(__name__).info('Starting update')
         fix_followers_update()
+        Logger(__name__).info('End update')
+
 
 
 def parse_arguments():
