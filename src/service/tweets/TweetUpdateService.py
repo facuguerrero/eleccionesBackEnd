@@ -43,19 +43,21 @@ class TweetUpdateService:
         twitter = cls.twitter(credential)
         # While there are followers to update
         followers = cls.get_followers_to_update()
+        start_time = time.time()
         while followers:
-            start_time = time.time()
             for follower, last_update in followers.items():
                 follower_download_tweets = []
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
+                # TODO cuando termine la primera ronda poner el parametro trim_user = true para
+                # que no devuelva todo el usuario. tambien sacar el update_follower
                 result = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
-                                                                        min_tweet_date, start_time, True)
+                                                          min_tweet_date, start_time, True)
                 continue_downloading = result[0]
                 start_time = result[1]
                 while continue_downloading:
                     max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
                     result = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
-                                                                            min_tweet_date, start_time, False, max_id)
+                                                              min_tweet_date, start_time, False, max_id)
                     continue_downloading = result[0]
                     start_time = result[1]
                 if len(follower_download_tweets) != 0:
@@ -105,7 +107,7 @@ class TweetUpdateService:
         except TwythonRateLimitError:
             duration = int(time.time() - start_time) + 1
             cls.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
-            time.sleep(ConfigurationManager().get_int('tweets_download_sleep_seconds'))
+            time.sleep(ConfigurationManager().get_int('tweets_download_sleep_seconds') - duration)
             time_to_return = time.time()
             cls.get_logger().info(f'Waiting done. Resuming follower updating. ')
         except TwythonError as error:
