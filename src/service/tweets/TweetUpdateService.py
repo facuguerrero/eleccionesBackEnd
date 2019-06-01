@@ -109,7 +109,8 @@ class TweetUpdateService:
             cls.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
             time.sleep(ConfigurationManager().get_int('tweets_download_sleep_seconds') - duration)
             time_to_return = time.time()
-            cls.get_logger().info(f'Waiting done. Resuming follower updating. ')
+            duration += time_to_return - start_time
+            cls.get_logger().info(f'Waiting done. Resuming follower updating. Wait for: {duration}')
         except TwythonError as error:
             if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                     error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
