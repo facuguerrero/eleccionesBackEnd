@@ -22,6 +22,10 @@ class FollowersQueueService(metaclass=Singleton):
 
         # Acquire lock for get the followers
         ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
+        if len(self.updating_followers) <= max_users_per_window:
+            # Retrieve more candidates from db
+            self.add_followers_to_be_updated()
+
         if len(self.updating_followers) == 0:
             self.logger.error('There are not followers to update their tweets.')
             raise NoMoreFollowersToUpdateTweetsError()
@@ -31,15 +35,13 @@ class FollowersQueueService(metaclass=Singleton):
         for follower in random_followers_keys:
             followers_to_update[follower] = self.updating_followers.pop(follower)
 
-        if len(self.updating_followers) <= max_users_per_window:
-            # Retrieve more candidates from db
-            self.add_followers_to_be_updated()
         ConcurrencyUtils().release_lock('followers_for_update_tweets')
         return followers_to_update
 
     def add_followers_to_be_updated(self):
         # TODO Analizar productor y consumidor en python.
-        self.logger.info('Adding new followers to update their tweets.')
+        self.logger.info(
+            f'Adding new followers to update their tweets. Actual size: {str(len(self.updating_followers))}')
         new_followers = RawFollowerDAO().get_public_and_not_updated_users()
         if len(new_followers) == 0:
             # If there are no new results
