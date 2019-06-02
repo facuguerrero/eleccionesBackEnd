@@ -6,6 +6,7 @@ from src.db.Mongo import Mongo
 from src.db.dao.CandidatesFollowersDAO import CandidatesFollowersDAO
 from src.exception.NoDocumentsFoundError import NoDocumentsFoundError
 from src.util.CSVUtils import CSVUtils
+from src.util.DateUtils import DateUtils
 from test.meta.CustomTestCase import CustomTestCase
 
 
@@ -54,18 +55,20 @@ class TestCandidatesFollowersDAO(CustomTestCase):
         # Set Up
         old_date = datetime.strptime("1996-03-15", CSVUtils.DATE_FORMAT)
         self.target.put_increase_for_candidate('test1', 1000, old_date)
+        self.target.put_increase_for_candidate('test2', 2400, old_date)
         new_date = datetime.strptime("1901-05-25", CSVUtils.DATE_FORMAT)
+        self.target.put_increase_for_candidate('test1', 3000, new_date)
         self.target.put_increase_for_candidate('test2', 4000, new_date)
         # New test
         increases = self.target.get_all_increases()
         assert len(increases) == 2
         test1_increases = increases[0]
-        assert test1_increases['screen_name'] == 'test1'
-        assert len(test1_increases['increases']) == 1
-        assert test1_increases['increases'][0]['count'] == 1000
-        assert test1_increases['increases'][0]['date'] == old_date.timestamp()
+        assert test1_increases['date'] == DateUtils.date_to_timestamp(old_date.date())
+        assert len(test1_increases['counts']) == 2
+        assert test1_increases['counts']['test1'] == 1000
+        assert test1_increases['counts']['test2'] == 2400
         test2_increases = increases[1]
-        assert test2_increases['screen_name'] == 'test2'
-        assert len(test2_increases['increases']) == 1
-        assert test2_increases['increases'][0]['count'] == 4000
-        assert test2_increases['increases'][0]['date'] == new_date.timestamp()
+        assert test2_increases['date'] == DateUtils.date_to_timestamp(new_date.date())
+        assert len(test2_increases['counts']) == 2
+        assert test2_increases['counts']['test1'] == 3000
+        assert test2_increases['counts']['test2'] == 4000
