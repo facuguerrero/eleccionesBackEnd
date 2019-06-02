@@ -64,10 +64,10 @@ class TweetUpdateService:
                     follower_download_tweets = result[1]
                     start_time = result[2]
                 if len(follower_download_tweets) != 0:
-                    cls.update_follower(follower, follower_download_tweets[0])
+                    cls.update_complete_follower(follower, follower_download_tweets[0])
                     cls.store_new_tweets(follower_download_tweets, min_tweet_date)
                 else:
-                    cls.get_logger().info(f"{follower} not saved. {follower_download_tweets}")
+                    cls.update_follower_with_no_tweets(follower)
             followers = cls.get_followers_to_update()
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential}.')
         CredentialService().unlock_credential(credential, cls.__name__)
@@ -141,7 +141,7 @@ class TweetUpdateService:
             cls.get_logger().error(error)
 
     @classmethod
-    def update_follower(cls, follower, tweet):
+    def update_complete_follower(cls, follower, tweet):
         """ Update follower's last download date. """
         try:
             today = datetime.datetime.today()
@@ -158,7 +158,25 @@ class TweetUpdateService:
                     'statuses_count': user_information['statuses_count']
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
-            # cls.get_logger().info(f'{follower} is updated.')
+                cls.get_logger().info(f'{follower} is completely updated.')
+            else:
+                cls.update_follower_with_no_tweets(follower)
+        except NonExistentRawFollowerError:
+            cls.get_logger().error(f'Follower {follower} does not exists')
+
+    @classmethod
+    def update_follower_with_no_tweets(cls, follower):
+        """ Update follower's last download date. """
+        try:
+            raw_follower = RawFollowerDAO().get(follower)
+            if not raw_follower.is_private:
+                today = datetime.datetime.today()
+                updated_raw_follower = RawFollower(**{
+                    'id': follower,
+                    'downloaded_on': today,
+                })
+                RawFollowerDAO().update_follower_data(updated_raw_follower)
+                cls.get_logger().info(f'{follower} is updated with 0 tweets.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
 
