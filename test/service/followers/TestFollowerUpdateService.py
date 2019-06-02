@@ -149,31 +149,6 @@ class TestFollowerUpdateService(CustomTestCase):
         assert twitter.get_followers_ids.call_count == 2
         assert time_mock.call_count == 1
 
-    def test_twython_instance_creation_consumer_data(self):
-        credential = Credential(**{'ID': 'test', 'CONSUMER_KEY': 'test', 'CONSUMER_SECRET': 'test'})
-        twitter = FollowerUpdateService.twitter(credential)
-        assert twitter.app_key is not None
-        assert twitter.app_secret is not None
-        assert twitter.oauth_token is None
-        assert twitter.oauth_token_secret is None
-
-    def test_twython_instance_creation_oauth_data(self):
-        credential = Credential(**{'ID': 'test', 'ACCESS_TOKEN': 'test', 'ACCESS_SECRET': 'test'})
-        twitter = FollowerUpdateService.twitter(credential)
-        assert twitter.app_key is None
-        assert twitter.app_secret is None
-        assert twitter.oauth_token is not None
-        assert twitter.oauth_token_secret is not None
-
-    def test_twython_instance_creation_all_fields(self):
-        credential = Credential(**{'ID': 'test', 'ACCESS_TOKEN': 'test', 'ACCESS_SECRET': 'test',
-                                   'CONSUMER_KEY': 'test', 'CONSUMER_SECRET': 'test'})
-        twitter = FollowerUpdateService.twitter(credential)
-        assert twitter.app_key is not None
-        assert twitter.app_secret is not None
-        assert twitter.oauth_token is not None
-        assert twitter.oauth_token_secret is not None
-
     @mock.patch.object(FollowerUpdateService, 'should_retrieve_more_followers',
                        side_effect=FollowerUpdateHelper.mock_should_retrieve)
     @mock.patch('time.sleep', return_value=None)
