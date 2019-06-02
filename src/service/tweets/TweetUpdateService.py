@@ -158,7 +158,7 @@ class TweetUpdateService:
                     'statuses_count': user_information['statuses_count']
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
-                cls.get_logger().info(f'{follower} is completely updated.')
+                #cls.get_logger().info(f'{follower} is completely updated.')
             else:
                 cls.update_follower_with_no_tweets(follower)
         except NonExistentRawFollowerError:
@@ -176,7 +176,7 @@ class TweetUpdateService:
                     'downloaded_on': today,
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
-                cls.get_logger().info(f'{follower} is updated with 0 tweets.')
+                #cls.get_logger().info(f'{follower} is updated with 0 tweets.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
 
@@ -204,11 +204,10 @@ class TweetUpdateService:
                     RawTweetDAO().insert_tweet(tweet_copy)
                     cls.get_logger().error(f'Key error in tweet with id {tweet_copy["_id"]}')
                 except DuplicatedTweetError:
-                    cls.get_logger().info(
-                        f'{updated_tweets} tweets of {tweet_copy["user_id"]} are updated. Actual date: {tweet_date}')
+                    continue
             else:
-                cls.get_logger().info(
-                    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
+                #cls.get_logger().info(
+                #    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
                 return
 
     @classmethod
