@@ -31,8 +31,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        # cls.download_tweets_with_credential(credentials[0])
+        # AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -44,25 +44,30 @@ class TweetUpdateService:
         # While there are followers to update
         followers = cls.get_followers_to_update()
         start_time = time.time()
+        min_tweet_date = datetime.datetime(2018, 12, 31, 23, 59, 59).astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
         while followers:
             for follower, last_update in followers.items():
-                follower_download_tweets = []
-                min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
+                # TODO descomentar luego de la primera pasada
+                # min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
                 # TODO cuando termine la primera ronda poner el parametro trim_user = true para
                 # que no devuelva todo el usuario. tambien sacar el update_follower
-                result = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
+                result = cls.download_tweets_and_validate(twitter, follower,
                                                           min_tweet_date, start_time, True)
                 continue_downloading = result[0]
-                start_time = result[1]
+                follower_download_tweets = result[1]
+                start_time = result[2]
                 while continue_downloading:
                     max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
-                    result = cls.download_tweets_and_validate(twitter, follower, follower_download_tweets,
+                    result = cls.download_tweets_and_validate(twitter, follower,
                                                               min_tweet_date, start_time, False, max_id)
                     continue_downloading = result[0]
-                    start_time = result[1]
+                    follower_download_tweets = result[1]
+                    start_time = result[2]
                 if len(follower_download_tweets) != 0:
                     cls.update_follower(follower, follower_download_tweets[0])
                     cls.store_new_tweets(follower_download_tweets, min_tweet_date)
+                else:
+                    cls.get_logger().info(f"{follower} not saved. {follower_download_tweets}")
             followers = cls.get_followers_to_update()
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential}.')
         CredentialService().unlock_credential(credential, cls.__name__)
@@ -76,17 +81,19 @@ class TweetUpdateService:
             return None
 
     @classmethod
-    def download_tweets_and_validate(cls, twitter, follower, follower_download_tweets, min_tweet_date,
+    def download_tweets_and_validate(cls, twitter, follower, min_tweet_date,
                                      start_time, is_first_request, max_id=None):
         """ Download tweets. If there are not new results, return false to end the download. """
         result = cls.do_download_tweets_request(twitter, follower, start_time, is_first_request, max_id)
+        follower_download_tweets = []
         download_tweets = result[0]
         time_to_return = result[1]
         if len(download_tweets) != 0:
             last_tweet = download_tweets[len(download_tweets) - 1]
             follower_download_tweets += download_tweets
-            return (cls.check_if_continue_downloading(last_tweet, min_tweet_date), time_to_return)
-        return (False, time_to_return)
+            return (
+            cls.check_if_continue_downloading(last_tweet, min_tweet_date), follower_download_tweets, time_to_return)
+        return (False, follower_download_tweets, time_to_return)
 
     @classmethod
     def do_download_tweets_request(cls, twitter, follower, start_time, is_first_request, max_id=None):
@@ -164,26 +171,27 @@ class TweetUpdateService:
             if tweet_date >= min_tweet_date:
                 # Clean tweet's information
                 try:
-                    tweet["_id"] = tweet['id_str']
-                    tweet.pop('id')
-                    tweet.pop('id_str')
-                    tweet["text"] = tweet['full_text']
-                    tweet.pop('full_text')
-                    tweet['created_at'] = tweet_date
-                    tweet['user_id'] = tweet['user']['id_str']
-                    tweet.pop('user')
-                    RawTweetDAO().insert_tweet(tweet)
+                    tweet_copy = tweet.copy()
+                    tweet_copy["_id"] = tweet['id_str']
+                    tweet_copy.pop('id')
+                    tweet_copy.pop('id_str')
+                    tweet_copy["text"] = tweet['full_text']
+                    tweet_copy.pop('full_text')
+                    tweet_copy['created_at'] = tweet_date
+                    tweet_copy['user_id'] = tweet['user']['id_str']
+                    tweet_copy.pop('user')
+                    RawTweetDAO().insert_tweet(tweet_copy)
                     updated_tweets += 1
                 except KeyError:
-                    RawTweetDAO().insert_tweet(tweet)
-                    cls.get_logger().error(f'Key error in tweet with id {tweet["_id"]}')
+                    RawTweetDAO().insert_tweet(tweet_copy)
+                    cls.get_logger().error(f'Key error in tweet with id {tweet_copy["_id"]}')
                 except DuplicatedTweetError:
                     cls.get_logger().info(
-                        f'{updated_tweets} tweets of {tweet["user_id"]} are updated. Actual date: {tweet_date}')
-                    return
+                        f'{updated_tweets} tweets of {tweet_copy["user_id"]} are updated. Actual date: {tweet_date}')
             else:
                 cls.get_logger().info(
-                    f'{updated_tweets} tweets of {tweet["user_id"]} are updated. Actual date: {tweet_date}')
+                    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
+                return
 
     @classmethod
     def check_if_continue_downloading(cls, last_tweet, min_tweet_date):
