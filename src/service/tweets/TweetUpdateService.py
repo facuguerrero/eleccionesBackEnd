@@ -114,7 +114,9 @@ class TweetUpdateService:
         except TwythonRateLimitError:
             duration = int(time.time() - start_time) + 1
             cls.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
-            time.sleep(ConfigurationManager().get_int('tweets_download_sleep_seconds') - duration)
+            time_default = ConfigurationManager().get_int('tweets_download_sleep_seconds')
+            time_to_sleep = (time_default >= duration) if (time_default - duration) else time_default
+            time.sleep(time_to_sleep)
             time_to_return = time.time()
             duration = time_to_return - start_time
             cls.get_logger().info(f'Waiting done. Resuming follower updating. Wait for: {duration}')
