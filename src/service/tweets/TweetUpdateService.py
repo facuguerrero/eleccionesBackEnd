@@ -206,7 +206,7 @@ class TweetUpdateService:
                     RawTweetDAO().insert_tweet(tweet_copy)
                     cls.get_logger().error(f'Key error in tweet with id {tweet_copy["_id"]}')
                 except DuplicatedTweetError:
-                    continue
+                    return
             else:
                 #cls.get_logger().info(
                 #    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
