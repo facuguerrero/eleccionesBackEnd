@@ -181,7 +181,9 @@ class TweetUpdateService:
                     cls.get_logger().info(
                         f'{updated_tweets} tweets of {tweet["user_id"]} are updated. Actual date: {tweet_date}')
                     return
-        # cls.get_logger().info(f'Tweets of {follower} are updated.')
+            else:
+                cls.get_logger().info(
+                    f'{updated_tweets} tweets of {tweet["user_id"]} are updated. Actual date: {tweet_date}')
 
     @classmethod
     def check_if_continue_downloading(cls, last_tweet, min_tweet_date):
