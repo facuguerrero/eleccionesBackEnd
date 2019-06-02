@@ -31,8 +31,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        # cls.download_tweets_with_credential(credentials[0])
+        # AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -155,7 +155,8 @@ class TweetUpdateService:
                     'friends_count': user_information['friends_count'],
                     'listed_count': user_information['listed_count'],
                     'favourites_count': user_information['favourites_count'],
-                    'statuses_count': user_information['statuses_count']
+                    'statuses_count': user_information['statuses_count'],
+                    'has_tweets': True
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
                 #cls.get_logger().info(f'{follower} is completely updated.')
@@ -174,6 +175,7 @@ class TweetUpdateService:
                 updated_raw_follower = RawFollower(**{
                     'id': follower,
                     'downloaded_on': today,
+                    'has_tweets': False
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
                 #cls.get_logger().info(f'{follower} is updated with 0 tweets.')
