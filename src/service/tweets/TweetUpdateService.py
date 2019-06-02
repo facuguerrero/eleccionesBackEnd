@@ -135,7 +135,7 @@ class TweetUpdateService:
             # Retrieve the follower from DB
             raw_follower = RawFollowerDAO().get(follower)
             RawFollowerDAO().tag_as_private(raw_follower)
-            cls.get_logger().info(f'{follower} is tagged as private.')
+            # cls.get_logger().info(f'{follower} is tagged as private.')
         except NonExistentRawFollowerError as error:
             cls.get_logger().error(f'{follower} can not be tagged as private because does not exists.')
             cls.get_logger().error(error)
