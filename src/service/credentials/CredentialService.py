@@ -38,9 +38,6 @@ class CredentialService(metaclass=Singleton):
         # doing rollbacks with the already stored credentials if we need to raise an exception
         for credential in self.credentials:
             self.in_use.add(f"{credential.id}-{service_id}")
-
-        self.logger.info(self.credentials)
-
         return self.credentials
 
     def get_credential_for_service(self, service_id):

@@ -31,8 +31,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        # AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        cls.download_tweets_with_credential(credentials[0])
+        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        # cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -230,14 +230,7 @@ class TweetUpdateService:
     @classmethod
     def twitter(cls, credential):
         """ Create Twython instance depending on credential data. """
-        if credential.access_token is None:
-            twitter = Twython(app_key=credential.consumer_key, app_secret=credential.consumer_secret)
-        elif credential.consumer_key is None:
-            twitter = Twython(oauth_token=credential.access_token, oauth_token_secret=credential.access_secret)
-        else:
-            twitter = Twython(app_key=credential.consumer_key, app_secret=credential.consumer_secret,
-                              oauth_token=credential.access_token, oauth_token_secret=credential.access_secret)
-        return twitter
+        return Twython(app_key=credential.consumer_key, app_secret=credential.consumer_secret)
 
     @classmethod
     def get_logger(cls):
