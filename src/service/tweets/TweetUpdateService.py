@@ -31,8 +31,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        #cls.download_tweets_with_credential(credentials[0])
+        #AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
 
     @classmethod
@@ -114,8 +114,12 @@ class TweetUpdateService:
         except TwythonRateLimitError:
             duration = int(time.time() - start_time) + 1
             cls.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
+            # By default, wait 900 segs
             time_default = ConfigurationManager().get_int('tweets_download_sleep_seconds')
-            time_to_sleep = (time_default >= duration) if (time_default - duration) else time_default
+            time_to_sleep = time_default
+            # If 900 >= execution time
+            if time_default >= duration:
+                time_to_sleep = time_default - duration
             time.sleep(time_to_sleep)
             time_to_return = time.time()
             duration = time_to_return - start_time
