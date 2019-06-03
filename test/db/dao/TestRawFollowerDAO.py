@@ -102,14 +102,14 @@ class TestCandidateDAO(CustomTestCase):
         first_10 = self.target.get_all_with_cursor(0, 10)
         assert len(first_10) == 10
         for follower in first_10:
-            assert follower.id < 10
+            assert follower['id'] < 10
         # Get last 10
         last_10 = self.target.get_all_with_cursor(10, 10)
         assert len(last_10) == 10
         for follower in last_10:
-            assert 10 <= follower.id < 20
+            assert 10 <= follower['id'] < 20
         # Check there are no overlaps
-        assert {follower.id for follower in last_10}.intersection({follower.id for follower in first_10}) == set()
+        assert {follower['id'] for follower in last_10}.intersection({follower['id'] for follower in first_10}) == set()
 
     def test_get_following_with_cursor(self):
         # Add many followers
@@ -122,7 +122,7 @@ class TestCandidateDAO(CustomTestCase):
         # Get first 10
         first_10 = self.target.get_following_with_cursor('bodart', 0, 100)
         assert len(first_10) == 10
-        assert {follower.id for follower in first_10} == {i for i in range(0, 20) if i % 2 == 0}
+        assert {follower['id'] for follower in first_10} == {i for i in range(0, 20) if i % 2 == 0}
         # Check there are only 10
         next_followers = self.target.get_following_with_cursor('bodart', 10, 10)
         assert len(next_followers) == 0
