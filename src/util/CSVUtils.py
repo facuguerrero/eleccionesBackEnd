@@ -1,12 +1,8 @@
 import csv
-import pickle
 from os.path import join, abspath, dirname
-import datetime
-
-import pytz
+from datetime import datetime
 
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
-from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.model.followers.RawFollower import RawFollower
 from src.service.candidates.CandidateService import CandidateService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor

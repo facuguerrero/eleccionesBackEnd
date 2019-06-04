@@ -7,6 +7,7 @@ from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.service.credentials.CredentialService import CredentialService
 from src.service.tweets.TweetUpdateService import TweetUpdateService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
+from src.util.twitter.TwitterUtils import TwitterUtils
 from test.helpers.TweetUpdateHelper import TweetUpdateHelper
 from test.meta.CustomTestCase import CustomTestCase
 
@@ -109,7 +110,7 @@ class TestTweetUpdateService(CustomTestCase):
         assert download_tweets_mock.call_count == 1
         assert len(result) == 1
 
-    @mock.patch.object(TweetUpdateService, 'twitter', return_value={})
+    @mock.patch.object(TwitterUtils, 'twitter', return_value={})
     @mock.patch.object(TweetUpdateService, 'do_download_tweets_request', return_value=[])
     def test_download_tweets_and_validate_with_no_results(self, download_tweets_mock, twitter_mock):
         follower = TweetUpdateHelper().get_mock_follower_1()
@@ -124,7 +125,7 @@ class TestTweetUpdateService(CustomTestCase):
         assert len(follower_download_tweets) == 0
         assert download_tweets_mock.call_count == 1
 
-    @mock.patch.object(TweetUpdateService, 'twitter', return_value={})
+    @mock.patch.object(TwitterUtils, 'twitter', return_value={})
     @mock.patch.object(TweetUpdateService, 'do_download_tweets_request',
                        return_value=[TweetUpdateHelper().get_mock_tweet_may_26_follower_1()])
     def test_download_tweets_and_validate_with_results(self, download_tweets_mock, twitter_mock):

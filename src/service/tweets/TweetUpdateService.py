@@ -1,7 +1,7 @@
 import pytz
 import datetime
 import time
-from twython import Twython, TwythonRateLimitError, TwythonError
+from twython import TwythonRateLimitError, TwythonError
 
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
@@ -17,6 +17,7 @@ from src.util.config.ConfigurationManager import ConfigurationManager
 
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
+from src.util.twitter.TwitterUtils import TwitterUtils
 
 
 class TweetUpdateService:
@@ -43,7 +44,7 @@ class TweetUpdateService:
         """ Update followers' tweets with an specific Twitter Api Credential. """
         cls.get_logger().info(f'Starting follower updating with credential {credential.id}.')
         # Create Twython instance for credential
-        twitter = cls.twitter(credential)
+        twitter = TwitterUtils.twitter_with_app_auth(credential)
         # While there are followers to update
         followers = cls.get_followers_to_update()
         start_time = time.time()
@@ -239,11 +240,6 @@ class TweetUpdateService:
         except ValueError as error:
             cls.get_logger().error(f'Invalid date format {date}.')
             cls.get_logger().error(f'{error}')
-
-    @classmethod
-    def twitter(cls, credential):
-        """ Create Twython instance depending on credential data. """
-        return Twython(app_key=credential.consumer_key, app_secret=credential.consumer_secret)
 
     @classmethod
     def get_logger(cls):

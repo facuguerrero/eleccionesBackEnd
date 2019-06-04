@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from src.util.EnvironmentUtils import EnvironmentUtils
@@ -8,6 +9,8 @@ class Logger:
     LOGGING_FILE_NAME = 'elections.log'
     FORMATTING_STRING = '%(asctime)s - [%(threadName)s] - %(levelname)s - %(name)s - %(message)s'
     LOGGING_LEVEL = logging.INFO
+    MAX_BYTES = (1024**2)*100  # 100MB
+    BACKUP_COUNT = 5  # Keep up to elections.log.1
 
     __initialized = False
 
@@ -18,7 +21,7 @@ class Logger:
         else:
             file_name = cls.LOGGING_FILE_NAME
         # Handler for file writing
-        file_handler = logging.FileHandler(file_name)
+        file_handler = RotatingFileHandler(file_name, maxBytes=cls.MAX_BYTES, backupCount=cls.BACKUP_COUNT)
         # Handler for console output
         console_handler = logging.StreamHandler()
         # Configure

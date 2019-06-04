@@ -4,6 +4,7 @@ from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
 from src.exception.NoDocumentsFoundError import NoDocumentsFoundError
 from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
+from src.mapper.response.RawFollowerResponseMapper import RawFollowerResponseMapper
 from src.model.followers.RawFollower import RawFollower
 from src.util.logging.Logger import Logger
 from src.util.meta.Singleton import Singleton
@@ -103,12 +104,12 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
     def get_all_with_cursor(self, start, limit):
         """ Get all raw_follower documents using the received information as cursor. """
         documents = self.get_with_cursor(sort='_id', skip=start, limit=limit)
-        # Map documents for return.
-        return [RawFollower(**{'id': document['_id'],
-                               'follows': document['follows'],
-                               'downloaded_on': document['downloaded_on'],
-                               'is_private': document['is_private']})
-                for document in documents]
+        # Create DTO from JSON data
+        return RawFollowerResponseMapper.map([RawFollower(**{'id': document['_id'],
+                                                             'follows': document['follows'],
+                                                             'downloaded_on': document['downloaded_on'],
+                                                             'is_private': document['is_private']})
+                                              for document in documents])
 
     def get_following_with_cursor(self, candidate_name, start, limit):
         """ Retrieve all raw_followers who follow a given candidate with a cursor. """
@@ -116,12 +117,12 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         # Raise error if there are no documents for that candidate
         if documents.count() == 0:
             raise NoDocumentsFoundError(collection_name='raw_followers', query=f'screen_name={candidate_name}')
-        # Map documents for return and remove downloaded date.
-        return [RawFollower(**{'id': document['_id'],
-                               'follows': document['follows'],
-                               'downloaded_on': document['downloaded_on'],
-                               'is_private': document['is_private']})
-                for document in documents]
+        # Create DTO from JSON data
+        return RawFollowerResponseMapper.map([RawFollower(**{'id': document['_id'],
+                                                             'follows': document['follows'],
+                                                             'downloaded_on': document['downloaded_on'],
+                                                             'is_private': document['is_private']})
+                                              for document in documents])
 
     def create_indexes(self):
         self.logger.info('Creating is_private index for collection raw_followers.')
