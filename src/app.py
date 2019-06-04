@@ -63,4 +63,6 @@ if __name__ == '__main__':
     db, auth, env = parse_arguments()
     set_up_context(db, auth, env)
     Scheduler().set_up()
+    while True:
+        Logger(__name__).info(f'Random shit')
     app.run(port=8080, threaded=True)

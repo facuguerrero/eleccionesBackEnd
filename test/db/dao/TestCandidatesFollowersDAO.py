@@ -63,12 +63,12 @@ class TestCandidatesFollowersDAO(CustomTestCase):
         increases = self.target.get_all_increases()
         assert len(increases) == 2
         test1_increases = increases[0]
+        assert len(test1_increases) == 3
         assert test1_increases['date'] == DateUtils.date_to_timestamp(old_date.date())
-        assert len(test1_increases['counts']) == 2
-        assert test1_increases['counts']['test1'] == 1000
-        assert test1_increases['counts']['test2'] == 2400
+        assert test1_increases['test1'] == 1000
+        assert test1_increases['test2'] == 2400
         test2_increases = increases[1]
+        assert len(test2_increases) == 3
         assert test2_increases['date'] == DateUtils.date_to_timestamp(new_date.date())
-        assert len(test2_increases['counts']) == 2
-        assert test2_increases['counts']['test1'] == 3000
-        assert test2_increases['counts']['test2'] == 4000
+        assert test2_increases['test1'] == 3000
+        assert test2_increases['test2'] == 4000

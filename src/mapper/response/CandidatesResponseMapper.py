@@ -22,7 +22,7 @@ class CandidatesResponseMapper:
                          for increase in document['increases']]
             for increase in increases:
                 cls.__add_to_dictionary_map(by_date, increase['date'], screen_name, increase['count'])
-        return [{'date': DateUtils.date_to_timestamp(key), 'counts': value} for key, value in by_date.items()]
+        return [cls.__make_date_dict(key, value) for key, value in by_date.items()]
 
     @staticmethod
     def __add_to_dictionary_map(dictionary, key, map_key, map_value):
@@ -30,3 +30,11 @@ class CandidatesResponseMapper:
         if key not in dictionary.keys():
             dictionary[key] = dict()
         dictionary[key][map_key] = map_value
+
+    @staticmethod
+    def __make_date_dict(key, value):
+        """ Create a dictionary adding first entry {'date': key} and flatten value, which is a map. """
+        dictionary = {'date': DateUtils.date_to_timestamp(key)}
+        for screen_name, count in value.items():
+            dictionary[screen_name] = count
+        return dictionary
