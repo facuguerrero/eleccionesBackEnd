@@ -16,6 +16,7 @@ from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
 
 from src.util.logging.Logger import Logger
+from src.util.slack.SlackHelper import SlackHelper
 
 
 class TweetUpdateService:
@@ -32,8 +33,10 @@ class TweetUpdateService:
             return
         # Run tweet update process
         AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        #cls.download_tweets_with_credential(credentials[0])
+        # cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
+        SlackHelper().post_message_to_channel(
+            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.")
 
     @classmethod
     def download_tweets_with_credential(cls, credential):
@@ -44,7 +47,8 @@ class TweetUpdateService:
         # While there are followers to update
         followers = cls.get_followers_to_update()
         start_time = time.time()
-        min_tweet_date = datetime.datetime(2018, 12, 31, 23, 59, 59).astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
+        min_tweet_date = datetime.datetime(2018, 12, 31, 23, 59, 59).astimezone(
+            pytz.timezone('America/Argentina/Buenos_Aires'))
         while followers:
             for follower, last_update in followers.items():
                 # TODO descomentar luego de la primera pasada
@@ -71,6 +75,8 @@ class TweetUpdateService:
             followers = cls.get_followers_to_update()
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential}.')
         CredentialService().unlock_credential(credential, cls.__name__)
+        SlackHelper().post_message_to_channel(
+            "Un thread del servicio TweetUpdateService dejo de funcionar. No se obtuvieron más usuarios a actualizar.")
 
     @classmethod
     def get_followers_to_update(cls):
@@ -92,7 +98,7 @@ class TweetUpdateService:
             last_tweet = download_tweets[len(download_tweets) - 1]
             follower_download_tweets += download_tweets
             return (
-            cls.check_if_continue_downloading(last_tweet, min_tweet_date), follower_download_tweets, time_to_return)
+                cls.check_if_continue_downloading(last_tweet, min_tweet_date), follower_download_tweets, time_to_return)
         return (False, follower_download_tweets, time_to_return)
 
     @classmethod
@@ -165,7 +171,7 @@ class TweetUpdateService:
                     'has_tweets': True
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
-                #cls.get_logger().info(f'{follower} is completely updated.')
+                # cls.get_logger().info(f'{follower} is completely updated.')
             else:
                 cls.update_follower_with_no_tweets(follower)
         except NonExistentRawFollowerError:
@@ -184,7 +190,7 @@ class TweetUpdateService:
                     'has_tweets': False
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
-                #cls.get_logger().info(f'{follower} is updated with 0 tweets.')
+                # cls.get_logger().info(f'{follower} is updated with 0 tweets.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
 
@@ -214,7 +220,7 @@ class TweetUpdateService:
                 except DuplicatedTweetError:
                     return
             else:
-                #cls.get_logger().info(
+                # cls.get_logger().info(
                 #    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
                 return
 

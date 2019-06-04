@@ -24,6 +24,13 @@ class GenericDAO:
         """
         return self.collection.find({} if query is None else query, projection_dict)
 
+    def get_count(self, query=None, projection_dict=None):
+        """
+        Get all entries matching the given query. If there is no query, full collection is returned.
+            :returns List of full documents
+        """
+        return self.collection.find({} if query is None else query, projection_dict).count()
+
     def get_with_limit(self, query=None, projection_dict=None):
         """
         Get entries matching the given query.
