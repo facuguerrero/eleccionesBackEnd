@@ -135,6 +135,11 @@ class TweetUpdateService:
             if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                     error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
                 cls.update_follower_as_private(follower)
+            if error.error_code >= 500:
+                # Twitter API error
+                # More information: https://developer.twitter.com/en/docs/basics/response-codes.html
+                cls.get_logger().info('Twitter API error. Try again later.')
+
             else:
                 cls.get_logger().error(
                     f'An unknown error occurred while trying to download tweets from: {follower}.')
