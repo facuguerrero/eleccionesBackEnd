@@ -138,7 +138,7 @@ class TweetUpdateService:
             if error.error_code >= 500:
                 # Twitter API error
                 # More information: https://developer.twitter.com/en/docs/basics/response-codes.html
-                cls.get_logger().info('Twitter API error. Try again later.')
+                cls.get_logger().error('Twitter API error. Try again later.')
 
             else:
                 cls.get_logger().error(
