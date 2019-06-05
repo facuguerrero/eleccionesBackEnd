@@ -11,7 +11,7 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
 
     def __init__(self):
         super(RawTweetDAO, self).__init__(Mongo().get().db.raw_tweets)
-        #self.__dict__.update(**kwargs)
+        # self.__dict__.update(**kwargs)
         self.logger = Logger(self.__class__.__name__)
 
     def insert_tweet(self, raw_tweet):
@@ -19,5 +19,5 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
         try:
             self.insert(raw_tweet)
         except DuplicateKeyError as error:
-            #self.logger.warning(f'Trying to insert a duplicated tweet {raw_tweet["user_id"]}.')
+            # self.logger.warning(f'Trying to insert a duplicated tweet {raw_tweet["user_id"]}.')
             raise DuplicatedTweetError

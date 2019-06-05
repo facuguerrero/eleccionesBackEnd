@@ -5,7 +5,7 @@ class TweetUpdateHelper:
 
     @staticmethod
     def get_mock_tweet_may_26_follower_1():
-        return {'id': '1',
+        return {'_id': '1',
                 'created_at': 'Sun May 26 02:43:14 +0000 2019',
                 'text': '',
                 'user': {'id': '1'}
@@ -13,7 +13,7 @@ class TweetUpdateHelper:
 
     @staticmethod
     def get_mock_tweet_may_24_follower_1():
-        return {'id': '1',
+        return {'_id': '1',
                 'created_at': 'Fri May 24 02:43:14 +0000 2019',
                 'text': '',
                 'user': {'id': '1'}
