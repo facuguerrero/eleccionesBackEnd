@@ -10,7 +10,7 @@ class Logger:
     FORMATTING_STRING = '%(asctime)s - [%(threadName)s] - %(levelname)s - %(name)s - %(message)s'
     LOGGING_LEVEL = logging.INFO
     MAX_BYTES = (1024**2)*100  # 100MB
-    BACKUP_COUNT = 5  # Keep up to elections.log.1
+    BACKUP_COUNT = 5  # Keep up to elections.log.5
 
     __initialized = False
 

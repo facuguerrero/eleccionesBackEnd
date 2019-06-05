@@ -44,6 +44,7 @@ def set_up_context(db_name, authorization, environment):
         create_base_entries()
         create_queue_entries()
 
+
 def parse_arguments():
     """ Read program arguments, which should be db_name and authentication data. The auth data is username:password. """
     parser = ArgumentParser()
