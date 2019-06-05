@@ -19,5 +19,5 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
         try:
             self.insert(raw_tweet)
         except DuplicateKeyError as error:
-            self.logger.warning(f'Trying to insert a duplicated tweet {raw_tweet["user_id"]}.')
+            #self.logger.warning(f'Trying to insert a duplicated tweet {raw_tweet["user_id"]}.')
             raise DuplicatedTweetError
