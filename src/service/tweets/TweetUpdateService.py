@@ -34,7 +34,7 @@ class TweetUpdateService:
             return
         # Run tweet update process
         AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        # cls.download_tweets_with_credential(credentials[0])
+        #cls.download_tweets_with_credential(credentials[2])
         cls.get_logger().info('Stoped tweet updating')
         SlackHelper().post_message_to_channel(
             "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.")
@@ -74,6 +74,8 @@ class TweetUpdateService:
                 else:
                     cls.update_follower_with_no_tweets(follower)
             followers = cls.get_followers_to_update()
+            cls.get_logger().warning(f'Follower updated {follower}.')
+
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential}.')
         CredentialService().unlock_credential(credential, cls.__name__)
         SlackHelper().post_message_to_channel(
