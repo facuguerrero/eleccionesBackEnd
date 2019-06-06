@@ -30,6 +30,7 @@ class FollowersQueueService(metaclass=Singleton):
             self.logger.error('There are not followers to update their tweets.')
             raise NoMoreFollowersToUpdateTweetsError()
 
+        # TODO Chequear el limite
         random_followers_keys = random.sample(self.updating_followers.keys(), max_users_per_window)
         # Remove selected followers
         for follower in random_followers_keys:
