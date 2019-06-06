@@ -33,8 +33,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        # AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        cls.download_tweets_with_credential(credentials[2])
+        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        # cls.download_tweets_with_credential(credentials[2])
         cls.get_logger().info('Stoped tweet updating')
         SlackHelper().post_message_to_channel(
             "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.")
@@ -137,7 +137,7 @@ class TweetUpdateService:
             if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                     error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
                 cls.update_follower_as_private(follower)
-            if error.error_code <= 199 or error.error_code >= 500:
+            elif error.error_code <= 199 or error.error_code >= 500:
                 # Twitter API error
                 # More information: https://developer.twitter.com/en/docs/basics/response-codes.html
                 #  ConnectionResetError(104, 'Connection reset by peer')
@@ -180,7 +180,7 @@ class TweetUpdateService:
                     'has_tweets': True
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
-                cls.get_logger().info(f'{follower} is completely updated.')
+                # cls.get_logger().info(f'{follower} is completely updated.')
             else:
                 cls.update_follower_with_no_tweets(follower)
         except NonExistentRawFollowerError:
@@ -199,7 +199,7 @@ class TweetUpdateService:
                     'has_tweets': False
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
-                cls.get_logger().info(f'{follower} is updated with 0 tweets.')
+                # cls.get_logger().info(f'{follower} is updated with 0 tweets.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
 
