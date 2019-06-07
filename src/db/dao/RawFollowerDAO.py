@@ -74,7 +74,6 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
     def get_users_updated_since_date(self, date):
         return self.get_count({'downloaded_on': {'$gt': date}}, {'_id': 1})
 
-
     def get_public_and_not_updated_users(self):
         """ Retrieve all the ids of the users that are not updated since one month catalogued as private.
             Returns {'id': 'last_update'}
