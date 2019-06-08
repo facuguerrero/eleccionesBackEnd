@@ -100,28 +100,6 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         # We need to extract the element from the document because of the format they come in
         return {document['_id'] for document in documents}
 
-    def get_users_to_update(self, query):
-        self.logger.info('getting users to be updated.')
-        documents = self.collection.find({} if query is None else query)
-        self.logger.info('users to be updated ready to process.')
-        return RawFollowerResponseMapper.map([RawFollower(**{'id': document['_id'],
-                                                             'follows': document['follows'],
-                                                             'downloaded_on': document['downloaded_on'],
-                                                             'is_private': document['is_private'],
-                                                             'location': self.get_if_value(document, 'location'),
-                                                             'followers_count': self.get_if_value(document,
-                                                                                                  'followers_count'),
-                                                             'friends_count': self.get_if_value(document,
-                                                                                                'friends_count'),
-                                                             'listed_count': self.get_if_value(document,
-                                                                                               'listed_count'),
-                                                             'favourites_count': self.get_if_value(document,
-                                                                                                   'favourites_count'),
-                                                             'statuses_count': self.get_if_value(document,
-                                                                                                 'statuses_count')
-                                                             })
-                                              for document in documents])
-
     def get_if_value(self, document, key):
         if key in document:
             return document[key]
