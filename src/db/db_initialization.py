@@ -26,4 +26,3 @@ def update_tweets_user_id():
     for tweet_id, user_id in tweets_to_update.items():
         RawTweetDAO().upsert({'_id': tweet_id},
                              {'$set': {'user_id': str(user_id)}})
-        return
