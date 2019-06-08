@@ -23,8 +23,11 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
             raise DuplicatedTweetError
 
     def get_tweets_to_update(self, query):
+        self.logger.info('getting tweets to be updated.')
         doc = self.collection.find({} if query is None else query)
         tweets_to_return = {}
+        self.logger.info('tweets to be updated ready to process.')
         for document in doc:
             tweets_to_return[document['_id']] = document['user_id']
+        self.logger.info('returning tweets')
         return tweets_to_return
