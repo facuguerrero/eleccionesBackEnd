@@ -48,6 +48,7 @@ class TweetUpdateService:
         try:
             cls.tweets_update_process(twitter, credential.id)
         except Exception as e:
+            cls.get_logger().error(e)
             cls.send_stopped_tread_notification(credential.id)
 
     @classmethod
