@@ -22,12 +22,6 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
             # self.logger.warning(f'Trying to insert a duplicated tweet {raw_tweet["user_id"]}.')
             raise DuplicatedTweetError
 
-    def get_tweets_to_update(self, query):
-        self.logger.info('getting tweets to be updated.')
-        doc = self.collection.find({} if query is None else query)
-        tweets_to_return = {}
-        self.logger.info('tweets to be updated ready to process.')
-        for document in doc:
-            tweets_to_return[document['_id']] = document['user_id']
-        self.logger.info('returning tweets')
-        return tweets_to_return
+    def create_indexes(self):
+        self.logger.info('Creating is_private index for collection raw_tweets.')
+        Mongo().get().db.raw_followers.create_index('user_id')
