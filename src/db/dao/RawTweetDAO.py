@@ -28,6 +28,7 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
         tweets_to_return = {}
         self.logger.info('tweets to be updated ready to process.')
         for document in doc:
+            self.logger.info(document)
             tweets_to_return[document['_id']] = document['user_id']
-        self.logger.info('returning tweets')
-        return tweets_to_return
+            self.logger.info('returning tweets')
+            return tweets_to_return
