@@ -77,9 +77,9 @@ class TweetUpdateService:
             followers = cls.get_followers_to_update()
 
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential}.')
-        CredentialService().unlock_credential(credential, cls.__name__)
         SlackHelper().post_message_to_channel(
             "Un thread del servicio TweetUpdateService dejo de funcionar. No se obtuvieron más usuarios a actualizar.")
+        CredentialService().unlock_credential(credential, cls.__name__)
 
     @classmethod
     def get_followers_to_update(cls):
