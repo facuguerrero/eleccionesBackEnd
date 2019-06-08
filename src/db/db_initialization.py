@@ -21,9 +21,9 @@ def create_queue_entries():
 
 def update_user_id():
     tweets_to_update = RawFollowerDAO().get_users_to_update(
-        {'$or': [{'_id': {'$type': 16}}, {'_id': {'$type': 18}}]})
+        {'_id': {'$type': 7}})
     for document in tweets_to_update:
-        RawFollowerDAO().insert({'id': str(document['id']),
+        RawFollowerDAO().insert({'_id': str(document['id']),
                                  'follows': document['follows'],
                                  'downloaded_on': document['downloaded_on'],
                                  'is_private': document['is_private'],
