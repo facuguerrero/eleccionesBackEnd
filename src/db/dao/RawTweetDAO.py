@@ -23,5 +23,5 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
             raise DuplicatedTweetError
 
     def create_indexes(self):
-        self.logger.info('Creating is_private index for collection raw_tweets.')
+        self.logger.info('Creating user_id index for collection raw_tweets.')
         Mongo().get().db.raw_followers.create_index('user_id')
