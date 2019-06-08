@@ -3,14 +3,14 @@ from argparse import ArgumentParser
 from flask import Flask
 from flask_restful import Api
 
-from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.api.CSVLoadingResource import CSVLoadingResource
 from src.api.CandidateResource import CandidateResource
 from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
 from src.api.RawFollowerResource import RawFollowerResource
+from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.db.Mongo import Mongo
-from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
+from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries, update_tweets_user_id
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
@@ -43,6 +43,8 @@ def set_up_context(db_name, authorization, environment):
         create_indexes()
         create_base_entries()
         create_queue_entries()
+        update_tweets_user_id()
+        Logger(__name__).info('All user\'s id are updated')
 
 
 def parse_arguments():

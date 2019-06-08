@@ -21,3 +21,10 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
         except DuplicateKeyError as error:
             # self.logger.warning(f'Trying to insert a duplicated tweet {raw_tweet["user_id"]}.')
             raise DuplicatedTweetError
+
+    def get_tweets_to_update(self, query):
+        doc = self.collection.find({} if query is None else query)
+        tweets_to_return = {}
+        for document in doc:
+            tweets_to_return[document['_id']] = document['user_id']
+        return tweets_to_return
