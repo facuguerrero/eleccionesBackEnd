@@ -45,6 +45,14 @@ class TweetUpdateService:
         cls.get_logger().info(f'Starting follower updating with credential {credential.id}.')
         # Create Twython instance for credential
         twitter = TwitterUtils.twitter_with_app_auth(credential)
+        try:
+            cls.tweets_update_process(twitter, credential.id)
+        except Exception as e:
+            cls.send_stopped_tread_notification(credential.id)
+
+    @classmethod
+    def tweets_update_process(cls, twitter, credential_id):
+        """ Method to catch any exception """
         # While there are followers to update
         followers = cls.get_followers_to_update()
         start_time = time.time()
@@ -73,13 +81,16 @@ class TweetUpdateService:
                     cls.store_new_tweets(follower_download_tweets, min_tweet_date)
                 else:
                     cls.update_follower_with_no_tweets(follower)
-                #cls.get_logger().warning(f'Follower updated {follower}.')
+                # cls.get_logger().warning(f'Follower updated {follower}.')
             followers = cls.get_followers_to_update()
+        cls.send_stopped_tread_notification(credential_id)
 
-        cls.get_logger().warning(f'Stoping follower updating proccess with {credential}.')
+    @classmethod
+    def send_stopped_tread_notification(cls, credential_id):
+        cls.get_logger().warning(f'Stoping follower updating proccess with {credential_id}.')
         SlackHelper().post_message_to_channel(
             "Un thread del servicio TweetUpdateService dejo de funcionar.")
-        CredentialService().unlock_credential(credential, cls.__name__)
+        CredentialService().unlock_credential(credential_id, cls.__name__)
 
     @classmethod
     def get_followers_to_update(cls):
