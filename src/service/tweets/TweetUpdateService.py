@@ -1,6 +1,7 @@
-import pytz
 import datetime
 import time
+
+import pytz
 from twython import TwythonRateLimitError, TwythonError
 
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
@@ -14,7 +15,6 @@ from src.service.credentials.CredentialService import CredentialService
 from src.service.tweets.FollowersQueueService import FollowersQueueService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
-
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
 from src.util.twitter.TwitterUtils import TwitterUtils
@@ -78,7 +78,7 @@ class TweetUpdateService:
 
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential}.')
         SlackHelper().post_message_to_channel(
-            "Un thread del servicio TweetUpdateService dejo de funcionar. No se obtuvieron más usuarios a actualizar.")
+            "Un thread del servicio TweetUpdateService dejo de funcionar.")
         CredentialService().unlock_credential(credential, cls.__name__)
 
     @classmethod
