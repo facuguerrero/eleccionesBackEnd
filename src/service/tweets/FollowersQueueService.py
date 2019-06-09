@@ -21,6 +21,7 @@ class FollowersQueueService(metaclass=Singleton):
         ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
 
         self.logger.info(f'Getting followers to update their tweets. Queue\'s size: {len(self.updating_followers)} ')
+
         max_users_per_window = ConfigurationManager().get_int('max_users_per_window')
         followers_to_update = {}
 
