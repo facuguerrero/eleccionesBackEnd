@@ -37,7 +37,7 @@ class TweetUpdateService:
         # cls.download_tweets_with_credential(credentials[2])
         cls.get_logger().info('Stoped tweet updating')
         SlackHelper().post_message_to_channel(
-            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.")
+            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
 
     @classmethod
     def download_tweets_with_credential(cls, credential):
@@ -90,7 +90,7 @@ class TweetUpdateService:
     def send_stopped_tread_notification(cls, credential_id):
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential_id}.')
         SlackHelper().post_message_to_channel(
-            "Un thread del servicio TweetUpdateService dejo de funcionar.")
+            "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
         CredentialService().unlock_credential(credential_id, cls.__name__)
 
     @classmethod
@@ -149,10 +149,14 @@ class TweetUpdateService:
             if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                     error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
                 cls.update_follower_as_private(follower)
-            elif error.error_code <= 199 or error.error_code >= 500:
+            elif not error.error_code or error.error_code < 199 or error.error_code >= 500:
                 # Twitter API error
                 # More information: https://developer.twitter.com/en/docs/basics/response-codes.html
                 #  ConnectionResetError(104, 'Connection reset by peer')
+                SlackHelper().post_message_to_channel(
+                    "Verificar el error, fue:", "#errors")
+                SlackHelper().post_message_to_channel(
+                    error, "#errors")
                 cls.get_logger().error('Twitter API error. Try again later.')
 
             else:

@@ -24,7 +24,7 @@ class FollowersQueueService(metaclass=Singleton):
 
         # Acquire lock for get the followers
         ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
-        if len(self.updating_followers) <= max_users_per_window:
+        if len(self.updating_followers) <= 2 * max_users_per_window:
             # Retrieve more candidates from db
             self.add_followers_to_be_updated()
 

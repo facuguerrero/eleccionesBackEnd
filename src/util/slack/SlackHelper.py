@@ -2,7 +2,6 @@ import datetime
 
 from slack import WebClient
 
-from src.db.dao.CandidatesFollowersDAO import CandidatesFollowersDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.util.meta.Singleton import Singleton
@@ -23,10 +22,10 @@ class SlackHelper(metaclass=Singleton):
         cls.post_message_to_channel(message)
 
     @classmethod
-    def post_message_to_channel(cls, message):
+    def post_message_to_channel(cls, message, channel="#reports"):
         cls.web_client.api_call(
             api_method="chat.postMessage",
-            json={'channel': '#reports',
+            json={'channel': channel,
                   'text': message
                   }
         )
