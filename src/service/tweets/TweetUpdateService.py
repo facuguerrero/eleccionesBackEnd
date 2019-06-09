@@ -161,7 +161,7 @@ class TweetUpdateService:
                 cls.get_logger().error(
                     f'An unknown error occurred while trying to download tweets from: {follower}.')
                 cls.get_logger().error(error)
-        except ProtocolError as error:
+        except (ProtocolError, ConnectionResetError):
             # ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
             cls.get_logger().error('Connection error. Try again later.')
         return (tweets, time_to_return)
