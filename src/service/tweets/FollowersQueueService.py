@@ -17,13 +17,13 @@ class FollowersQueueService(metaclass=Singleton):
         ConcurrencyUtils().create_lock('followers_for_update_tweets')
 
     def get_followers_to_update(self):
-        self.logger.info(f'Getting followers to update their tweets. Queue\'s size: {len(self.updating_followers)} ')
+        # Acquire lock for get the followers
+        ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
 
+        self.logger.info(f'Getting followers to update their tweets. Queue\'s size: {len(self.updating_followers)} ')
         max_users_per_window = ConfigurationManager().get_int('max_users_per_window')
         followers_to_update = {}
 
-        # Acquire lock for get the followers
-        ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
         if len(self.updating_followers) <= 2 * max_users_per_window:
             # Retrieve more candidates from db
             self.add_followers_to_be_updated()
