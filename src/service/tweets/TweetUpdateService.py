@@ -126,6 +126,9 @@ class TweetUpdateService:
         tweets = []
         time_to_return = start_time
         try:
+            # Sleep to avoid (104, 'Connection reset by peer')
+            # https://stackoverflow.com/questions/383738/104-connection-reset-by-peer-socket-error-or-when-does-closing-a-socket-resu
+            time.sleep(0.01)
             max_tweets_request_parameter = ConfigurationManager().get_int('max_tweets_parameter')
             if is_first_request:
                 tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
@@ -134,7 +137,7 @@ class TweetUpdateService:
                 tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
                                                    count=max_tweets_request_parameter, max_id=max_id)
         except TwythonRateLimitError:
-            duration = int(time.time() - start_time) + 1
+            duration = int(time.time() - start_time)
             cls.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
             # By default, wait 900 segs
             time_default = ConfigurationManager().get_int('tweets_download_sleep_seconds')
@@ -161,7 +164,6 @@ class TweetUpdateService:
         except ProtocolError as error:
             # ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
             cls.get_logger().error('Connection error. Try again later.')
-
         return (tweets, time_to_return)
 
     @classmethod
