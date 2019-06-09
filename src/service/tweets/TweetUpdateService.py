@@ -3,6 +3,7 @@ import time
 
 import pytz
 from twython import TwythonRateLimitError, TwythonError
+from urllib3.exceptions import ProtocolError
 
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
@@ -149,20 +150,18 @@ class TweetUpdateService:
             if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                     error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
                 cls.update_follower_as_private(follower)
-            elif not error.error_code or error.error_code < 199 or error.error_code >= 500:
+            elif not error or not error.error_code or error.error_code < 199 or error.error_code >= 500:
                 # Twitter API error
                 # More information: https://developer.twitter.com/en/docs/basics/response-codes.html
-                #  ConnectionResetError(104, 'Connection reset by peer')
-                SlackHelper().post_message_to_channel(
-                    "Verificar el error, fue:", "#errors")
-                SlackHelper().post_message_to_channel(
-                    error, "#errors")
                 cls.get_logger().error('Twitter API error. Try again later.')
-
             else:
                 cls.get_logger().error(
                     f'An unknown error occurred while trying to download tweets from: {follower}.')
                 cls.get_logger().error(error)
+        except ProtocolError as error:
+            # ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
+            cls.get_logger().error('Connection error. Try again later.')
+
         return (tweets, time_to_return)
 
     @classmethod
