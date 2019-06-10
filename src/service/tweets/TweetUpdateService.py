@@ -3,6 +3,7 @@ import time
 
 import pytz
 from twython import TwythonRateLimitError, TwythonError
+from urllib3.exceptions import ProtocolError
 
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
@@ -37,7 +38,7 @@ class TweetUpdateService:
         # cls.download_tweets_with_credential(credentials[2])
         cls.get_logger().info('Stoped tweet updating')
         SlackHelper().post_message_to_channel(
-            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.")
+            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
 
     @classmethod
     def download_tweets_with_credential(cls, credential):
@@ -48,6 +49,7 @@ class TweetUpdateService:
         try:
             cls.tweets_update_process(twitter, credential.id)
         except Exception as e:
+            cls.get_logger().error(e)
             cls.send_stopped_tread_notification(credential.id)
 
     @classmethod
@@ -89,7 +91,7 @@ class TweetUpdateService:
     def send_stopped_tread_notification(cls, credential_id):
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential_id}.')
         SlackHelper().post_message_to_channel(
-            "Un thread del servicio TweetUpdateService dejo de funcionar.")
+            "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
         CredentialService().unlock_credential(credential_id, cls.__name__)
 
     @classmethod
@@ -124,6 +126,9 @@ class TweetUpdateService:
         tweets = []
         time_to_return = start_time
         try:
+            # Sleep to avoid (104, 'Connection reset by peer')
+            # https://stackoverflow.com/questions/383738/104-connection-reset-by-peer-socket-error-or-when-does-closing-a-socket-resu
+            time.sleep(0.01)
             max_tweets_request_parameter = ConfigurationManager().get_int('max_tweets_parameter')
             if is_first_request:
                 tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
@@ -132,7 +137,7 @@ class TweetUpdateService:
                 tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
                                                    count=max_tweets_request_parameter, max_id=max_id)
         except TwythonRateLimitError:
-            duration = int(time.time() - start_time) + 1
+            duration = int(time.time() - start_time)
             cls.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
             # By default, wait 900 segs
             time_default = ConfigurationManager().get_int('tweets_download_sleep_seconds')
@@ -148,16 +153,17 @@ class TweetUpdateService:
             if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                     error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
                 cls.update_follower_as_private(follower)
-            elif error.error_code <= 199 or error.error_code >= 500:
+            elif not error or not error.error_code or error.error_code < 199 or error.error_code >= 500:
                 # Twitter API error
                 # More information: https://developer.twitter.com/en/docs/basics/response-codes.html
-                #  ConnectionResetError(104, 'Connection reset by peer')
                 cls.get_logger().error('Twitter API error. Try again later.')
-
             else:
                 cls.get_logger().error(
                     f'An unknown error occurred while trying to download tweets from: {follower}.')
                 cls.get_logger().error(error)
+        except (ProtocolError, ConnectionResetError):
+            # ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
+            cls.get_logger().error('Connection error. Try again later.')
         return (tweets, time_to_return)
 
     @classmethod

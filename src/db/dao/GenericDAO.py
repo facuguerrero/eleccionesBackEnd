@@ -86,6 +86,12 @@ class GenericDAO:
                                                    update={'$unset': removed_fields_dict},
                                                    return_document=ReturnDocument.AFTER)
 
+    def remove_document(self, query):
+        """
+        Deletes document matching given entry
+        """
+        self.collection.delete_one(query)
+
     def upsert(self, query, update_dict):
         """
         Creates entry if it doesn't exists and updates it if it does.

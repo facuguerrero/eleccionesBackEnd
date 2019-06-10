@@ -29,3 +29,7 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
     def hashtag_origin_checked(self, tweet):
         """ Mark tweet as checked for hashtag origin. """
         self.update_first({'_id': tweet['_id']}, {'hashtag_origin_checked': True})
+
+    def create_indexes(self):
+        self.logger.info('Creating user_id index for collection raw_tweets.')
+        Mongo().get().db.raw_followers.create_index('user_id')
