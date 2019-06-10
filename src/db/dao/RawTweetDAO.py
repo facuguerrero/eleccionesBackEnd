@@ -18,6 +18,14 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
         """ Adds RawTweet to data base using upsert to update 'follows' list."""
         try:
             self.insert(raw_tweet)
-        except DuplicateKeyError as error:
+        except DuplicateKeyError:
             # self.logger.warning(f'Trying to insert a duplicated tweet {raw_tweet["user_id"]}.')
             raise DuplicatedTweetError
+
+    def cooccurrence_checked(self, tweet):
+        """ Mark tweet as checked for hashtag cooccurrence. """
+        self.update_first({'_id': tweet['_id']}, {'cooccurrence_checked': True})
+
+    def hashtag_origin_checked(self, tweet):
+        """ Mark tweet as checked for hashtag origin. """
+        self.update_first({'_id': tweet['_id']}, {'hashtag_origin_checked': True})

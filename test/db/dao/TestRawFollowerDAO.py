@@ -9,10 +9,10 @@ from src.util.CSVUtils import CSVUtils
 from test.meta.CustomTestCase import CustomTestCase
 
 
-class TestCandidateDAO(CustomTestCase):
+class TestRawFollowerDAO(CustomTestCase):
 
     def setUp(self) -> None:
-        super(TestCandidateDAO, self).setUp()
+        super(TestRawFollowerDAO, self).setUp()
         Mongo().db = mongomock.database.Database(mongomock.MongoClient(), 'elections', _store=None)
         self.target = RawFollowerDAO()
 

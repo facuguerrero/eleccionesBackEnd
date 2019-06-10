@@ -7,6 +7,7 @@ from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.service.credentials.CredentialService import CredentialService
 from src.service.tweets.TweetUpdateService import TweetUpdateService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
+from src.util.slack.SlackHelper import SlackHelper
 from src.util.twitter.TwitterUtils import TwitterUtils
 from test.helpers.TweetUpdateHelper import TweetUpdateHelper
 from test.meta.CustomTestCase import CustomTestCase
@@ -21,10 +22,12 @@ class TestTweetUpdateService(CustomTestCase):
 
     @mock.patch.object(CredentialService, 'get_all_credentials_for_service', return_value={})
     @mock.patch.object(AsyncThreadPoolExecutor, 'run')
-    def test_update_tweets_ok(self, async_mock, credentials_mock):
+    @mock.patch.object(SlackHelper, 'post_message_to_channel')
+    def test_update_tweets_ok(self, slack_mock, async_mock, credentials_mock):
         TweetUpdateService.update_tweets()
         assert credentials_mock.call_count == 1
         assert async_mock.call_count == 1
+        assert slack_mock.call_count == 1
 
     def test_check_if_continue_downloading(self):
         tweet = TweetUpdateHelper().get_mock_tweet_may_26_follower_1()
