@@ -13,6 +13,8 @@ from src.exception.NoMoreFollowersToUpdateTweetsError import NoMoreFollowersToUp
 from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
 from src.model.followers.RawFollower import RawFollower
 from src.service.credentials.CredentialService import CredentialService
+from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
+from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.tweets.FollowersQueueService import FollowersQueueService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
@@ -227,22 +229,17 @@ class TweetUpdateService:
         for tweet in follower_download_tweets:
             tweet_date = cls.get_formatted_date(tweet['created_at'])
             if tweet_date >= min_tweet_date:
-                # Clean tweet's information
                 try:
                     tweet_copy = tweet.copy()
-                    tweet_copy["_id"] = tweet['id_str']
+                    tweet_copy["_id"] = tweet.pop('id_str', None)
                     tweet_copy.pop('id')
-                    tweet_copy.pop('id_str')
-                    tweet_copy["text"] = tweet['full_text']
-                    tweet_copy.pop('full_text')
+                    tweet_copy["text"] = tweet.pop('full_text', None)
                     tweet_copy['created_at'] = tweet_date
-                    tweet_copy['user_id'] = tweet['user']['id_str']
-                    tweet_copy.pop('user')
+                    tweet_copy['user_id'] = tweet.pop('user')['id_str']
                     RawTweetDAO().insert_tweet(tweet_copy)
+                    HashtagOriginService().process_tweet(tweet_copy)
+                    HashtagCooccurrenceService().process_tweet(tweet_copy)
                     updated_tweets += 1
-                except KeyError:
-                    RawTweetDAO().insert_tweet(tweet_copy)
-                    cls.get_logger().error(f'Key error in tweet with id {tweet_copy["_id"]}')
                 except DuplicatedTweetError:
                     return
             else:
