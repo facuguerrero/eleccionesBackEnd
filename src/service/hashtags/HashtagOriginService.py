@@ -13,7 +13,7 @@ class HashtagOriginService:
             # Retrieve existing hashtag with that key
             document = HashtagDAO().find(key)
             # Only update tweet data if this tweet was older than the previous one
-            if document is None or document['created_at'] > tweet['created_at']:
+            if document is None or document['created_at'].timestamp() > tweet['created_at'].timestamp():
                 # Store in database
                 HashtagDAO().put(key, tweet, hashtag)
         # Mark tweet as already checked
