@@ -8,7 +8,7 @@ class TweetUpdateHelper:
         return {'_id': '1',
                 'created_at': 'Sun May 26 02:43:14 +0000 2019',
                 'text': '',
-                'user': {'id': '1'}
+                'user': {'id_str': '1'}
                 }
 
     @staticmethod
@@ -16,7 +16,7 @@ class TweetUpdateHelper:
         return {'_id': '1',
                 'created_at': 'Fri May 24 02:43:14 +0000 2019',
                 'text': '',
-                'user': {'id': '1'}
+                'user': {'id_str': '1'}
                 }
 
     @staticmethod

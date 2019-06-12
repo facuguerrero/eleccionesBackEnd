@@ -5,6 +5,8 @@ import mongomock
 from src.db.Mongo import Mongo
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.service.credentials.CredentialService import CredentialService
+from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
+from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.tweets.TweetUpdateService import TweetUpdateService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.slack.SlackHelper import SlackHelper
@@ -57,7 +59,9 @@ class TestTweetUpdateService(CustomTestCase):
         assert insert_mock.call_count == 0
 
     @mock.patch.object(RawTweetDAO, 'insert_tweet')
-    def test_store_part_of_new_tweets(self, insert_mock):
+    @mock.patch.object(HashtagCooccurrenceService, 'process_tweet')
+    @mock.patch.object(HashtagOriginService, 'process_tweet')
+    def test_store_part_of_new_tweets(self, origin_mock, cooccurrence_mock, insert_mock):
         follower = TweetUpdateHelper().get_mock_follower_1()
         tweet1 = TweetUpdateHelper().get_mock_tweet_may_26_follower_1()
         tweet2 = TweetUpdateHelper().get_mock_tweet_may_24_follower_1()
@@ -67,9 +71,13 @@ class TestTweetUpdateService(CustomTestCase):
         TweetUpdateService.store_new_tweets(download_tweets, min_date)
 
         assert insert_mock.call_count == 1
+        assert origin_mock.call_count == 1
+        assert cooccurrence_mock.call_count == 1
 
     @mock.patch.object(RawTweetDAO, 'insert_tweet')
-    def test_store_new_tweets(self, insert_mock):
+    @mock.patch.object(HashtagCooccurrenceService, 'process_tweet')
+    @mock.patch.object(HashtagOriginService, 'process_tweet')
+    def test_store_new_tweets(self, origin_mock, cooccurrence_mock, insert_mock):
         follower = TweetUpdateHelper().get_mock_follower_1()
         tweet1 = TweetUpdateHelper().get_mock_tweet_may_26_follower_1()
         tweet2 = TweetUpdateHelper().get_mock_tweet_may_24_follower_1()
@@ -79,6 +87,8 @@ class TestTweetUpdateService(CustomTestCase):
         TweetUpdateService.store_new_tweets(download_tweets, min_date)
 
         assert insert_mock.call_count == 2
+        assert origin_mock.call_count == 2
+        assert cooccurrence_mock.call_count == 2
 
     @mock.patch.object(TwitterUtils, 'twitter', return_value={})
     @mock.patch.object(TweetUpdateService, 'do_download_tweets_request', return_value=[])

@@ -232,7 +232,7 @@ class TweetUpdateService:
                 try:
                     tweet_copy = tweet.copy()
                     tweet_copy["_id"] = tweet.pop('id_str', None)
-                    tweet_copy.pop('id')
+                    tweet_copy.pop('id', None)
                     tweet_copy["text"] = tweet.pop('full_text', None)
                     tweet_copy['created_at'] = tweet_date
                     tweet_copy['user_id'] = tweet.pop('user')['id_str']
