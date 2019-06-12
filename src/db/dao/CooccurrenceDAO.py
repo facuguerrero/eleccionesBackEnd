@@ -17,3 +17,7 @@ class CooccurrenceDAO(GenericDAO, metaclass=Singleton):
                     'pair': pair}
         # Store document
         self.collection.insert_one(document)
+
+    def find_in_window(self, start_date, end_date):
+        """ Retrieve all pairs of hashtags in time window. """
+        return self.get_all({'created_at': {'$gt': start_date, '$lt': end_date}}, {'pair': 1, '_id': 0})
