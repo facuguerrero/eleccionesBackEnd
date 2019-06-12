@@ -5,6 +5,7 @@ from flask_restful import Api
 
 from src.api.CSVLoadingResource import CSVLoadingResource
 from src.api.CandidateResource import CandidateResource
+from src.api.CooccurrenceAnalysisResource import CooccurrenceAnalysisResource
 from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
 from src.api.RawFollowerResource import RawFollowerResource
@@ -21,11 +22,12 @@ ENV = 'dev'
 app = Flask(__name__)
 api = Api(app)
 
-# The first three are utility endpoints
+# These are utility endpoints
 api.add_resource(PingResource, '/')
 api.add_resource(CSVLoadingResource, '/csv/load')
 api.add_resource(FollowerUpdatingResource, '/followers/update')
 api.add_resource(TweetUpdatingResource, '/tweets')
+api.add_resource(CooccurrenceAnalysisResource, '/cooccurrence')
 # The following are endpoints used by the Front End application
 api.add_resource(RawFollowerResource, '/raw_followers', '/raw_followers/<candidate_name>')
 api.add_resource(CandidateResource, '/candidates', '/candidates/<screen_name>')
