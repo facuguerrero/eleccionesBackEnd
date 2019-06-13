@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import mongomock
 
 from src.db.Mongo import Mongo
@@ -26,3 +28,17 @@ class TestHashtagDAO(CustomTestCase):
         assert hashtag['user_id'] == tweet['user_id']
         assert hashtag['created_at'] == tweet['created_at']
         assert hashtag['original'] == 'Emperor'
+        assert hashtag['appearances'] == 1
+
+    def test_put_twice(self):
+        tweet = RawTweetHelper.common_raw_tweet()
+        self.target.put('emperor', tweet, 'Emperor')
+        tweet['created_at'] = datetime.strptime('2019-01-22', '%Y-%m-%d')
+        self.target.put('emperor', tweet, 'Emperor')
+        hashtag = self.target.find('emperor')
+        assert hashtag is not None
+        assert hashtag['tweet_id'] == tweet['_id']
+        assert hashtag['user_id'] == tweet['user_id']
+        assert hashtag['created_at'] == datetime.strptime('2019-01-22', '%Y-%m-%d')
+        assert hashtag['original'] == 'Emperor'
+        assert hashtag['appearances'] == 2

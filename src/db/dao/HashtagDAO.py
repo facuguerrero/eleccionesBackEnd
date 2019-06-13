@@ -21,5 +21,8 @@ class HashtagDAO(GenericDAO, metaclass=Singleton):
                       'user_id': str(tweet['user_id']),
                       'created_at': tweet['created_at'],
                       'original': original}
+        update_dict = {'$set': new_values, '$inc': {'appearances': 1}} if tweet else {'$inc': {'appearances': 1}}
         # Do upsert
-        self.upsert({'_id': hashtag_key}, {'$set': new_values})
+        self.collection.find_and_modify(query={'_id': hashtag_key},
+                                        update=update_dict,
+                                        upsert=True)

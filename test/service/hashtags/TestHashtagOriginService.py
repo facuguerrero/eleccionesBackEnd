@@ -46,5 +46,5 @@ class TestHashtagOriginService(CustomTestCase):
         tweet = RawTweetHelper.common_raw_tweet()
         self.target.process_tweet(tweet)
         assert find_mock.call_count == 3
-        assert put_mock.call_count == 0
+        assert put_mock.call_count == 3
         assert checked_mock.call_count == 1

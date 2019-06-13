@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import request
 from flask_restful import Resource
 
@@ -20,6 +20,9 @@ class CooccurrenceAnalysisResource(Resource):
             return ResponseBuilder.build_exception(wpe.message, 400)
         # Do function
         try:
+            # If there is only one day or both dates are the same, then we take from 00:00 to 23:59
+            if end_date is None or start_date.date() == end_date.date():
+                end_date = start_date + timedelta(days=1) - timedelta(seconds=1)
             HashtagCooccurrenceService().export_counts_for_time_window(start_date, end_date)
             OSLOMService().export_communities_for_window(start_date, end_date)
             return ResponseBuilder.build('Analysis .txt and .csv files were created.', 200)

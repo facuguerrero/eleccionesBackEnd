@@ -2,8 +2,6 @@ from uuid import uuid4
 from collections import OrderedDict
 from os.path import abspath, join, dirname
 
-from datetime import timedelta
-
 from src.db.dao.CooccurrenceDAO import CooccurrenceDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.exception.NoHashtagCooccurrenceError import NoHashtagCooccurrenceError
@@ -18,8 +16,6 @@ class HashtagCooccurrenceService:
     @classmethod
     def export_counts_for_time_window(cls, start_date, end_date):
         """ Count appearances of each pair of hashtags in the given time window and export to .txt file. """
-        if end_date is None or start_date.date() == end_date.date():
-            end_date = start_date + timedelta(days=1) - timedelta(seconds=1)
         cls.get_logger().info(f'Starting hashtag cooccurrence counting for window starting on {start_date}'
                               f' and ending on {end_date}')
         counts = dict()
@@ -38,6 +34,8 @@ class HashtagCooccurrenceService:
         with open(f'{cls.DIR_PATH}/{file_name}', 'w') as fd:
             # Write a line for each pair of hashtags
             for pair, count in OrderedDict(sorted(counts.items(), key=lambda item: item[1], reverse=True)).items():
+                # Leave out all edges with weight less or equal than 2, we don't care about them
+                if count <= 2: continue
                 pair = pair.split('-')
                 fd.write(f'{ids[pair[0]]} {ids[pair[1]]} {count}\n')
         cls.get_logger().info(f'Counting result was written in file {file_name}')

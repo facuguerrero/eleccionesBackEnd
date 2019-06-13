@@ -2,8 +2,6 @@ import re
 
 from pathlib import Path
 
-from datetime import timedelta
-
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.util.CommandLineUtils import CommandLineUtils
 from src.util.FileUtils import FileUtils
@@ -16,8 +14,6 @@ class OSLOMService:
     @classmethod
     def export_communities_for_window(cls, start_date, end_date):
         """ Create .csv file with the processed result of OSLOM's execution. """
-        if end_date is None or start_date.date() == end_date.date():
-            end_date = start_date + timedelta(days=1) - timedelta(seconds=1)
         # OSLOM2 folder path
         oslom_path = f'{Path.home()}/OSLOM2/'
         # OSLOM undirected script path

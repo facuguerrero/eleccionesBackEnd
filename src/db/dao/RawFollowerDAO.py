@@ -31,7 +31,6 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                      # This field is ignored if it already exists
                      '$setOnInsert': {'is_private': raw_follower.is_private}
                      })
-        self.logger.info(f'replaced correctly {raw_follower.id}')
 
     def update_follower_data(self, raw_follower):
         self.upsert({'_id': raw_follower.id},

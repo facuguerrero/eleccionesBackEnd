@@ -16,5 +16,8 @@ class HashtagOriginService:
             if document is None or document['created_at'].timestamp() > tweet['created_at'].timestamp():
                 # Store in database
                 HashtagDAO().put(key, tweet, hashtag)
+            else:
+                # In this case we only add one to the number of appearances of the hashtag
+                HashtagDAO().put(key, None, hashtag)
         # Mark tweet as already checked
         RawTweetDAO().hashtag_origin_checked(tweet)
