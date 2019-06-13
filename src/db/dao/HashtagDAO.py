@@ -16,12 +16,15 @@ class HashtagDAO(GenericDAO, metaclass=Singleton):
 
     def put(self, hashtag_key, tweet, original):
         """ Put new hashtag data with upsert modality. """
-        # Generate document data
-        new_values = {'tweet_id': str(tweet['_id']),
-                      'user_id': str(tweet['user_id']),
-                      'created_at': tweet['created_at'],
-                      'original': original}
-        update_dict = {'$set': new_values, '$inc': {'appearances': 1}} if tweet else {'$inc': {'appearances': 1}}
+        if tweet:
+            # Generate document data
+            new_values = {'tweet_id': str(tweet['_id']),
+                          'user_id': str(tweet['user_id']),
+                          'created_at': tweet['created_at'],
+                          'original': original}
+            update_dict = {'$set': new_values, '$inc': {'appearances': 1}}
+        else:
+            update_dict = {'$inc': {'appearances': 1}}
         # Do upsert
         self.collection.find_and_modify(query={'_id': hashtag_key},
                                         update=update_dict,
