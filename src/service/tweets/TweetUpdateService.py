@@ -81,7 +81,7 @@ class TweetUpdateService:
                     follower_download_tweets = result[1]
                     start_time = result[2]
                 if len(follower_download_tweets) != 0:
-                    cls.update_complete_follower(follower, follower_download_tweets[0])
+                    cls.update_complete_follower(follower, follower_download_tweets[0], min_tweet_date)
                     cls.store_new_tweets(follower_download_tweets, min_tweet_date)
                 else:
                     cls.update_follower_with_no_tweets(follower)
@@ -181,10 +181,14 @@ class TweetUpdateService:
             cls.get_logger().error(error)
 
     @classmethod
-    def update_complete_follower(cls, follower, tweet):
+    def update_complete_follower(cls, follower, tweet, min_tweet_date):
         """ Update follower's last download date. """
         try:
             today = datetime.datetime.today()
+            tweet_date = cls.get_formatted_date(tweet['created_at'])
+            has_tweets = False
+            if tweet_date >= min_tweet_date:
+                has_tweets = True
             if 'user' in tweet:
                 user_information = tweet['user']
                 updated_raw_follower = RawFollower(**{
@@ -196,7 +200,7 @@ class TweetUpdateService:
                     'listed_count': user_information['listed_count'],
                     'favourites_count': user_information['favourites_count'],
                     'statuses_count': user_information['statuses_count'],
-                    'has_tweets': True
+                    'has_tweets': has_tweets
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
                 # cls.get_logger().info(f'{follower} is completely updated.')
