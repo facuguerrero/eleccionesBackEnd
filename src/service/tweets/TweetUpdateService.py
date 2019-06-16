@@ -60,12 +60,9 @@ class TweetUpdateService:
         # While there are followers to update
         followers = cls.get_followers_to_update()
         start_time = time.time()
-        min_tweet_date = datetime.datetime(2018, 12, 31, 23, 59, 59).astimezone(
-            pytz.timezone('America/Argentina/Buenos_Aires'))
         while followers:
             for follower, last_update in followers.items():
-                # TODO descomentar luego de la primera pasada
-                # min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
+                min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
                 # TODO cuando termine la primera ronda poner el parametro trim_user = true para
                 # que no devuelva todo el usuario. tambien sacar el update_follower
                 result = cls.download_tweets_and_validate(twitter, follower,
@@ -255,6 +252,7 @@ class TweetUpdateService:
     def check_if_continue_downloading(cls, last_tweet, min_tweet_date):
         """" Return True if the oldest download's tweet is greater than min_date required. """
         last_tweet_date = cls.get_formatted_date(last_tweet['created_at'])
+        if last_tweet_date is None or min_tweet_date is None: return False
         return min_tweet_date < last_tweet_date
 
     @classmethod

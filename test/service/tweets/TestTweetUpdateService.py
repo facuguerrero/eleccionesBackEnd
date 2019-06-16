@@ -31,13 +31,10 @@ class TestTweetUpdateService(CustomTestCase):
         assert async_mock.call_count == 1
         assert slack_mock.call_count == 1
 
-    def test_check_if_continue_downloading(self):
-        tweet = TweetUpdateHelper().get_mock_tweet_may_26_follower_1()
-        min_date = TweetUpdateHelper().get_mock_min_date_may_25()
+    def test_get_formatted_date_invalid_date(self):
+        date = TweetUpdateService.get_formatted_date('123123')
 
-        result = TweetUpdateService.check_if_continue_downloading(tweet, min_date)
-
-        assert result == True
+        assert date is None
 
     def test_check_if_continue_downloading_return_false(self):
         tweet = TweetUpdateHelper().get_mock_tweet_may_24_follower_1()
@@ -45,7 +42,23 @@ class TestTweetUpdateService(CustomTestCase):
 
         result = TweetUpdateService.check_if_continue_downloading(tweet, min_date)
 
-        assert result == False
+        assert result is False
+
+    def test_check_if_continue_downloading(self):
+        tweet = TweetUpdateHelper().get_mock_tweet_may_26_follower_1()
+        min_date = TweetUpdateHelper().get_mock_min_date_may_25()
+
+        result = TweetUpdateService.check_if_continue_downloading(tweet, min_date)
+
+        assert result is True
+
+    def test_check_if_continue_downloading_invalid_date(self):
+        tweet = TweetUpdateHelper().get_mock_tweet_may_26_follower_1()
+        min_date = TweetUpdateService.get_formatted_date('123123')
+
+        result = TweetUpdateService.check_if_continue_downloading(tweet, min_date)
+
+        assert result is False
 
     @mock.patch.object(RawTweetDAO, 'insert_tweet')
     def test_do_not_store_new_tweets(self, insert_mock):
