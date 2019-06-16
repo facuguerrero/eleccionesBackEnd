@@ -53,7 +53,7 @@ class FollowersQueueService(metaclass=Singleton):
         # TODO Analizar productor y consumidor en python.
         self.logger.info(
             f'Adding new followers to update their tweets. Actual size: {str(len(self.updating_followers))}')
-        new_followers = RawFollowerDAO().get_public_and_not_updated_users()
+        new_followers = RawFollowerDAO().get_random_followers_sample()
         if len(new_followers) == 0:
             # If there are no new results
             self.logger.error('Can\'t retrieve followers to update their tweets. ')

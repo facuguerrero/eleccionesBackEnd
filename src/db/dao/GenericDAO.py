@@ -101,3 +101,9 @@ class GenericDAO:
                                                    update=update_dict,
                                                    upsert=True,
                                                    return_document=ReturnDocument.AFTER)
+
+    def aggregate(self, stages):
+        """
+        Aggregate documents by given stages
+        """
+        return self.collection.aggregate(stages)
