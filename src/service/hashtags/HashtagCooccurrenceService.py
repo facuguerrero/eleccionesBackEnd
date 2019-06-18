@@ -1,6 +1,6 @@
 from uuid import uuid4
 from collections import OrderedDict
-from os.path import abspath, join, dirname
+from pathlib import Path
 
 from src.db.dao.CooccurrenceDAO import CooccurrenceDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
@@ -10,7 +10,8 @@ from src.util.logging.Logger import Logger
 
 
 class HashtagCooccurrenceService:
-    DIR_PATH = f"{abspath(join(dirname(__file__), '../../'))}/resources/cooccurrence"
+
+    DIR_PATH = f'{Path.home()}/cooccurrence'
     THIRTY_ONE_BITS = 0x7fffffff
 
     @classmethod
@@ -34,7 +35,7 @@ class HashtagCooccurrenceService:
         with open(f'{cls.DIR_PATH}/{file_name}', 'w') as fd:
             # Write a line for each pair of hashtags
             for pair, count in OrderedDict(sorted(counts.items(), key=lambda item: item[1], reverse=True)).items():
-                # Leave out all edges with weight less or equal than 2, we don't care about them
+                # Leave out all edges with weight less than 3, we don't care about them
                 if count <= 2: continue
                 pair = pair.split('-')
                 fd.write(f'{ids[pair[0]]} {ids[pair[1]]} {count}\n')
@@ -44,8 +45,9 @@ class HashtagCooccurrenceService:
         with open(f'{cls.DIR_PATH}/{file_name}', 'w') as fd:
             # Write a line for each hashtag
             for hashtag, uuid in ids.items():
-                fd.write(f'{hashtag} {uuid}\n')
+                fd.write(f'{uuid} {hashtag}\n')
         cls.get_logger().info(f'Hashtag ids were written in file {file_name}')
+        return counts
 
     @classmethod
     def process_tweet(cls, tweet):
@@ -81,7 +83,7 @@ class HashtagCooccurrenceService:
         """ Add entry to map if it doesn't exist. Hashtag ids are unique UUIDs. """
         for hashtag in pair:
             if hashtag not in ids:
-                # Get only first 32 bits of uuid. Just to avoid OSLOM's explosion
+                # Get only first 31 bits of uuid. Just to avoid OSLOM's explosion
                 ids[hashtag] = uuid4().int & cls.THIRTY_ONE_BITS
 
     @classmethod

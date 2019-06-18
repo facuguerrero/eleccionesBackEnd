@@ -1,11 +1,14 @@
+# -*- coding: utf-8 -*-
 from argparse import ArgumentParser
 
 from flask import Flask
 from flask_restful import Api
+from flask_cors import CORS
 
 from src.api.CSVLoadingResource import CSVLoadingResource
 from src.api.CandidateResource import CandidateResource
 from src.api.CooccurrenceAnalysisResource import CooccurrenceAnalysisResource
+from src.api.CooccurrenceGraphResource import CooccurrenceGraphResource
 from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
 from src.api.RawFollowerResource import RawFollowerResource
@@ -21,6 +24,7 @@ ENV = 'dev'
 
 app = Flask(__name__)
 api = Api(app)
+CORS(app)
 
 # These are utility endpoints
 api.add_resource(PingResource, '/')
@@ -31,6 +35,7 @@ api.add_resource(CooccurrenceAnalysisResource, '/cooccurrence')
 # The following are endpoints used by the Front End application
 api.add_resource(RawFollowerResource, '/raw_followers', '/raw_followers/<candidate_name>')
 api.add_resource(CandidateResource, '/candidates', '/candidates/<screen_name>')
+api.add_resource(CooccurrenceGraphResource, '/cooccurrence_graphs')
 
 
 def set_up_context(db_name, authorization, environment):
