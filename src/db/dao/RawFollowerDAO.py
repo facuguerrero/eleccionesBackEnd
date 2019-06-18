@@ -87,7 +87,11 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
 
     def get_random_followers_sample(self):
         """ Get random follower's sample """
-        date = datetime.datetime.today() - datetime.timedelta(days=1)
+        # TODO cuando tengamos el total de usuarios a actualizar, modificar las horas
+        # Aproximadamente vamos a actualizar 1300 * 4 * 24 * 7 = 873 600 usuarios por día
+        # Por lo que no puede quedar 1 M para que elija la query porque podria haber usuarios que
+        # No se actualizarian nunca. Achicar esa ventana para que solamente haya 200mil usuarios sin actualizar
+        date = datetime.datetime.today() - datetime.timedelta(hours=36)
         documents = self.aggregate(
             [{"$match":
                 {"$and": [

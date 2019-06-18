@@ -151,6 +151,7 @@ class TweetUpdateService:
         except TwythonError as error:
             if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                     error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
+                # TODO comentar esto, ya no deberia haber usuarios privados
                 cls.update_follower_as_private(follower)
             elif not error or not error.error_code or error.error_code < 199 or error.error_code >= 500:
                 # Twitter API error
@@ -182,10 +183,6 @@ class TweetUpdateService:
         """ Update follower's last download date. """
         try:
             today = datetime.datetime.today()
-            tweet_date = cls.get_formatted_date(tweet['created_at'])
-            has_tweets = False
-            if tweet_date >= min_tweet_date:
-                has_tweets = True
             if 'user' in tweet:
                 user_information = tweet['user']
                 updated_raw_follower = RawFollower(**{
@@ -196,8 +193,7 @@ class TweetUpdateService:
                     'friends_count': user_information['friends_count'],
                     'listed_count': user_information['listed_count'],
                     'favourites_count': user_information['favourites_count'],
-                    'statuses_count': user_information['statuses_count'],
-                    'has_tweets': has_tweets
+                    'statuses_count': user_information['statuses_count']
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
                 # cls.get_logger().info(f'{follower} is completely updated.')
@@ -215,8 +211,7 @@ class TweetUpdateService:
                 today = datetime.datetime.today()
                 updated_raw_follower = RawFollower(**{
                     'id': follower,
-                    'downloaded_on': today,
-                    'has_tweets': False
+                    'downloaded_on': today
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
                 # cls.get_logger().info(f'{follower} is updated with 0 tweets.')
