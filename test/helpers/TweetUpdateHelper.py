@@ -1,3 +1,4 @@
+from src.model.followers.RawFollower import RawFollower
 from src.service.tweets.TweetUpdateService import TweetUpdateService
 
 
@@ -8,7 +9,14 @@ class TweetUpdateHelper:
         return {'_id': '1',
                 'created_at': 'Sun May 26 02:43:14 +0000 2019',
                 'text': '',
-                'user': {'id_str': '1'}
+                'user': {'id_str': '1',
+                         'location': 'dummy',
+                         'followers_count': 'dummy',
+                         'friends_count': 'dummy',
+                         'listed_count': 'dummy',
+                         'favourites_count': 'dummy',
+                         'statuses_count': 'dummy'
+                         }
                 }
 
     @staticmethod
@@ -30,3 +38,15 @@ class TweetUpdateHelper:
     @staticmethod
     def get_mock_follower_1():
         return '1'
+
+    @staticmethod
+    def get_mock_follower_private():
+        return RawFollower(**{'id': 'dummy', 'is_private': True})
+
+    @staticmethod
+    def get_mock_follower_not_private():
+        return RawFollower(**{'id': 'dummy', 'is_private': False})
+
+    @staticmethod
+    def get_twitter_mock():
+        return RawFollower(**{'id': 'dummy', 'is_private': False})
