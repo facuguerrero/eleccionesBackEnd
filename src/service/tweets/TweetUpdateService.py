@@ -80,7 +80,7 @@ class TweetUpdateService:
                     cls.store_new_tweets(follower_download_tweets, min_tweet_date)
                 else:
                     cls.update_follower_with_no_tweets(follower)
-                cls.get_logger().warning(f'Follower updated {follower}.')
+                # cls.get_logger().warning(f'Follower updated {follower}.')
             followers = cls.get_followers_to_update()
         cls.send_stopped_tread_notification(credential_id)
 
@@ -171,7 +171,7 @@ class TweetUpdateService:
             # Retrieve the follower from DB
             raw_follower = RawFollowerDAO().get(follower)
             RawFollowerDAO().tag_as_private(raw_follower)
-            cls.get_logger().info(f'{follower} is tagged as private.')
+            # cls.get_logger().info(f'{follower} is tagged as private.')
         except NonExistentRawFollowerError as error:
             cls.get_logger().error(f'{follower} can not be tagged as private because does not exists.')
             cls.get_logger().error(error)
