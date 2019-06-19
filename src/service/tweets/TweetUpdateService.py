@@ -16,8 +16,10 @@ from src.service.credentials.CredentialService import CredentialService
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.tweets.FollowersQueueService import FollowersQueueService
+from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
+from src.util.slack.SlackHelper import SlackHelper
 from src.util.twitter.TwitterUtils import TwitterUtils
 
 
@@ -34,11 +36,11 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        # AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        cls.download_tweets_with_credential(credentials[0])
+        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        # cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
-        # SlackHelper().post_message_to_channel(
-        #    "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
+        SlackHelper().post_message_to_channel(
+            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
 
     @classmethod
     def download_tweets_with_credential(cls, credential):
@@ -61,8 +63,6 @@ class TweetUpdateService:
         while followers:
             for follower, last_update in followers.items():
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
-                # TODO cuando termine la primera ronda poner el parametro trim_user = true para
-                # que no devuelva todo el usuario. tambien sacar el update_follower
                 result = cls.download_tweets_and_validate(twitter, follower,
                                                           min_tweet_date, start_time, True)
                 continue_downloading = result[0]
@@ -76,7 +76,7 @@ class TweetUpdateService:
                     follower_download_tweets = result[1]
                     start_time = result[2]
                 if len(follower_download_tweets) != 0:
-                    cls.update_complete_follower(follower, follower_download_tweets[0], min_tweet_date)
+                    cls.update_complete_follower(follower, follower_download_tweets[0])
                     cls.store_new_tweets(follower_download_tweets, min_tweet_date)
                 else:
                     cls.update_follower_with_no_tweets(follower)
@@ -87,8 +87,8 @@ class TweetUpdateService:
     @classmethod
     def send_stopped_tread_notification(cls, credential_id):
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential_id}.')
-        # SlackHelper().post_message_to_channel(
-        #   "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
+        SlackHelper().post_message_to_channel(
+            "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
         CredentialService().unlock_credential(credential_id, cls.__name__)
 
     @classmethod
@@ -177,7 +177,7 @@ class TweetUpdateService:
             cls.get_logger().error(error)
 
     @classmethod
-    def update_complete_follower(cls, follower, tweet, min_tweet_date):
+    def update_complete_follower(cls, follower, tweet):
         """ Update follower's last download date. """
         try:
             today = datetime.datetime.today()

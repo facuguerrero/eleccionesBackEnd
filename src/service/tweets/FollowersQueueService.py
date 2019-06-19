@@ -6,6 +6,7 @@ from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 from src.util.meta.Singleton import Singleton
+from src.util.slack.SlackHelper import SlackHelper
 
 
 class FollowersQueueService(metaclass=Singleton):
@@ -28,8 +29,8 @@ class FollowersQueueService(metaclass=Singleton):
             self.add_followers_to_be_updated()
 
         if len(self.updating_followers) == 0:
-            # SlackHelper().post_message_to_channel(
-            #   "No se obtuvieron seguidores de la base de datos.")
+            SlackHelper().post_message_to_channel(
+                "No se obtuvieron seguidores de la base de datos.")
             self.logger.error('There are not followers to update their tweets.')
             raise NoMoreFollowersToUpdateTweetsError()
 
@@ -37,8 +38,8 @@ class FollowersQueueService(metaclass=Singleton):
         try:
             random_followers_keys = random.sample(self.updating_followers.keys(), max_users_per_window)
         except ValueError:
-            # SlackHelper().post_message_to_channel(
-            #   "Quedan pocos usuarios por actualizar en la cola.")
+            SlackHelper().post_message_to_channel(
+                "Quedan pocos usuarios por actualizar en la cola.")
             self.logger.warning(f'There are {len(self.updating_followers)} followers to update in the queue.')
             random_followers_keys = self.updating_followers.copy()
             self.updating_followers = {}

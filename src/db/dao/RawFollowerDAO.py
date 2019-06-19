@@ -88,23 +88,25 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
 
     def get_random_followers_sample(self):
         """ Get random follower's sample """
-        # TODO cuando tengamos el total de usuarios a actualizar, modificar las horas
-        # Aproximadamente vamos a actualizar 1300 * 4 * 24 * 7 = 873 600 usuarios por día
-        # Por lo que no puede quedar 1 M para que elija la query porque podria haber usuarios que
-        # No se actualizarian nunca. Achicar esa ventana para que solamente haya 200mil usuarios sin actualizar
-        date = datetime.datetime.today() - datetime.timedelta(hours=36)
-        documents = self.aggregate(
-            [{"$match":
+        # Aproximadamente vamos a actualizar 1300 * 4 * 6 ~ 31K usuarios por hora
+        # 31K * 24hs ~ 800K por dia
+        # Con un total de 1.250.435 usuarios que tienen tweets
+        # Seteo ventana de 37 hs, lo que nos da 96k de base para actualizar + 31k por hora
+        date = datetime.datetime.today() - datetime.timedelta(hours=37)
+        documents = self.aggregate([
+            {"$match":
                 {"$and": [
                     {"has_tweets": True},
                     {'downloaded_on': {'$lt': date}}
-                ]}},
-                {"$group":
-                     {"_id": "$_id",
-                      "downloaded_on": {"$first": "$downloaded_on"}, "total": {"$sum": 1}
-                      }},
-                {"$sample": {"size": 31500}}])
-        # Retrieve 1500 * 7 * 3 samples
+                ]}
+            },
+            {"$sample": {"size": 27000}},
+            {"$group":
+                 {"_id": "$_id",
+                  "downloaded_on": {"$first": "$downloaded_on"}
+                  }
+             }
+        ])
         followers_to_return = {}
         for document in documents:
             followers_to_return[document['_id']] = document['downloaded_on']
