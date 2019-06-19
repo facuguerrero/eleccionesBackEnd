@@ -1,6 +1,5 @@
 from src.db.dao.HashtagDAO import HashtagDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
-from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
 
 
 class HashtagOriginService:
@@ -12,8 +11,8 @@ class HashtagOriginService:
             # Make hashtag key
             key = hashtag.lower()
             # Lock for this hashtag to avoid undesired overwriting
-            ConcurrencyUtils().create_lock(key)
-            ConcurrencyUtils().acquire_lock(key)
+            # ConcurrencyUtils().create_lock(key)
+            # ConcurrencyUtils().acquire_lock(key)
             # Retrieve existing hashtag with that key
             document = HashtagDAO().find(key)
             # Only update tweet data if this tweet was older than the previous one
@@ -24,6 +23,6 @@ class HashtagOriginService:
                 # In this case we only add one to the number of appearances of the hashtag
                 HashtagDAO().put(key, None, hashtag)
             # Unlock
-            ConcurrencyUtils().release_lock(key)
+            #ConcurrencyUtils().release_lock(key)
         # Mark tweet as already checked
         RawTweetDAO().hashtag_origin_checked(tweet)
