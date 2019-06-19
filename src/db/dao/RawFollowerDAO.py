@@ -86,6 +86,32 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
             followers_to_return[document['_id']] = "date"
         return followers_to_return
 
+    def get_random_followers_sample(self):
+        """ Get random follower's sample """
+        # Aproximadamente vamos a actualizar 1300 * 4 * 6 ~ 31K usuarios por hora
+        # 31K * 24hs ~ 800K por dia
+        # Con un total de 1.250.435 usuarios que tienen tweets
+        # Seteo ventana de 37 hs, lo que nos da 96k de base para actualizar + 31k por hora
+        date = datetime.datetime.today() - datetime.timedelta(hours=37)
+        documents = self.aggregate([
+            {"$match":
+                {"$and": [
+                    {"has_tweets": True},
+                    {'downloaded_on': {'$lt': date}}
+                ]}
+            },
+            {"$sample": {"size": 27000}},
+            {"$group":
+                 {"_id": "$_id",
+                  "downloaded_on": {"$first": "$downloaded_on"}
+                  }
+             }
+        ])
+        followers_to_return = {}
+        for document in documents:
+            followers_to_return[document['_id']] = document['downloaded_on']
+        return followers_to_return
+
     def finish_candidate(self, candidate_name):
         """ Add entry to verify if a certain candidate had its followers loaded. """
         self.insert({'_id': candidate_name})

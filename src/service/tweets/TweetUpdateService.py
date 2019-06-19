@@ -16,8 +16,10 @@ from src.service.credentials.CredentialService import CredentialService
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.tweets.FollowersQueueService import FollowersQueueService
+from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
+from src.util.slack.SlackHelper import SlackHelper
 from src.util.twitter.TwitterUtils import TwitterUtils
 
 
@@ -34,11 +36,11 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        # AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        cls.download_tweets_with_credential(credentials[0])
+        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        # cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
-        # SlackHelper().post_message_to_channel(
-        #    "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
+        SlackHelper().post_message_to_channel(
+            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
 
     @classmethod
     def download_tweets_with_credential(cls, credential):
@@ -58,14 +60,9 @@ class TweetUpdateService:
         # While there are followers to update
         followers = cls.get_followers_to_update()
         start_time = time.time()
-        min_tweet_date = datetime.datetime(2018, 12, 31, 23, 59, 59).astimezone(
-            pytz.timezone('America/Argentina/Buenos_Aires'))
         while followers:
             for follower, last_update in followers.items():
-                # TODO descomentar luego de la primera pasada
-                # min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
-                # TODO cuando termine la primera ronda poner el parametro trim_user = true para
-                # que no devuelva todo el usuario. tambien sacar el update_follower
+                min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
                 result = cls.download_tweets_and_validate(twitter, follower,
                                                           min_tweet_date, start_time, True)
                 continue_downloading = result[0]
@@ -79,7 +76,7 @@ class TweetUpdateService:
                     follower_download_tweets = result[1]
                     start_time = result[2]
                 if len(follower_download_tweets) != 0:
-                    cls.update_complete_follower(follower, follower_download_tweets[0], min_tweet_date)
+                    cls.update_complete_follower(follower, follower_download_tweets[0])
                     cls.store_new_tweets(follower_download_tweets, min_tweet_date)
                 else:
                     cls.update_follower_with_no_tweets(follower)
@@ -90,8 +87,8 @@ class TweetUpdateService:
     @classmethod
     def send_stopped_tread_notification(cls, credential_id):
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential_id}.')
-        # SlackHelper().post_message_to_channel(
-        #   "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
+        SlackHelper().post_message_to_channel(
+            "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
         CredentialService().unlock_credential(credential_id, cls.__name__)
 
     @classmethod
@@ -152,6 +149,7 @@ class TweetUpdateService:
         except TwythonError as error:
             if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                     error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
+                # TODO comentar esto, ya no deberia haber usuarios privados
                 cls.update_follower_as_private(follower)
             elif not error or not error.error_code or error.error_code < 199 or error.error_code >= 500:
                 # Twitter API error
@@ -179,14 +177,10 @@ class TweetUpdateService:
             cls.get_logger().error(error)
 
     @classmethod
-    def update_complete_follower(cls, follower, tweet, min_tweet_date):
+    def update_complete_follower(cls, follower, tweet):
         """ Update follower's last download date. """
         try:
             today = datetime.datetime.today()
-            tweet_date = cls.get_formatted_date(tweet['created_at'])
-            has_tweets = False
-            if tweet_date >= min_tweet_date:
-                has_tweets = True
             if 'user' in tweet:
                 user_information = tweet['user']
                 updated_raw_follower = RawFollower(**{
@@ -197,8 +191,7 @@ class TweetUpdateService:
                     'friends_count': user_information['friends_count'],
                     'listed_count': user_information['listed_count'],
                     'favourites_count': user_information['favourites_count'],
-                    'statuses_count': user_information['statuses_count'],
-                    'has_tweets': has_tweets
+                    'statuses_count': user_information['statuses_count']
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
                 # cls.get_logger().info(f'{follower} is completely updated.')
@@ -216,8 +209,7 @@ class TweetUpdateService:
                 today = datetime.datetime.today()
                 updated_raw_follower = RawFollower(**{
                     'id': follower,
-                    'downloaded_on': today,
-                    'has_tweets': False
+                    'downloaded_on': today
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
                 # cls.get_logger().info(f'{follower} is updated with 0 tweets.')
@@ -253,6 +245,7 @@ class TweetUpdateService:
     def check_if_continue_downloading(cls, last_tweet, min_tweet_date):
         """" Return True if the oldest download's tweet is greater than min_date required. """
         last_tweet_date = cls.get_formatted_date(last_tweet['created_at'])
+        if last_tweet_date is None or min_tweet_date is None: return False
         return min_tweet_date < last_tweet_date
 
     @classmethod
