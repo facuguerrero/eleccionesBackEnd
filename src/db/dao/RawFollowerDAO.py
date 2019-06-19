@@ -79,7 +79,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         """
         date = datetime.datetime.today() - datetime.timedelta(days=21)
         # 'downloaded_on': {'$lt': date},
-        documents = self.get_with_limit({'is_private': {'$exists': False}},
+        documents = self.get_with_limit({'screen_name': {'$exists': True}},
                                         {'_id': 1, 'downloaded_on': 1})
         followers_to_return = {}
         for document in documents:
