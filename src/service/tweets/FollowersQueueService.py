@@ -18,7 +18,6 @@ class FollowersQueueService(metaclass=Singleton):
     def get_followers_to_update(self):
         # Acquire lock for get the followers
         ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
-
         self.logger.info(f'Getting followers to update their tweets. Queue\'s size: {len(self.updating_followers)} ')
 
         max_users_per_window = ConfigurationManager().get_int('max_users_per_window')
@@ -34,18 +33,22 @@ class FollowersQueueService(metaclass=Singleton):
             self.logger.error('There are not followers to update their tweets.')
             raise NoMoreFollowersToUpdateTweetsError()
 
+        random_followers_keys = []
         try:
             random_followers_keys = random.sample(self.updating_followers.keys(), max_users_per_window)
         except ValueError:
             # SlackHelper().post_message_to_channel(
             #   "Quedan pocos usuarios por actualizar en la cola.")
             self.logger.warning(f'There are {len(self.updating_followers)} followers to update in the queue.')
-            random_followers_keys = self.updating_followers.keys()
+            random_followers_keys = self.updating_followers.copy()
+            self.updating_followers = {}
+            return random_followers_keys
         # Remove selected followers
         for follower in random_followers_keys:
             followers_to_update[follower] = self.updating_followers.pop(follower)
 
         ConcurrencyUtils().release_lock('followers_for_update_tweets')
+
         return followers_to_update
 
     def add_followers_to_be_updated(self):
