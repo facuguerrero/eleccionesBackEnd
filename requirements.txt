@@ -10,3 +10,4 @@ pandas
 asyncio
 mock
 slackclient
+flask-cors

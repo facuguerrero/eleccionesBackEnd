@@ -78,11 +78,12 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
             Returns {'id': 'last_update'}
         """
         date = datetime.datetime.today() - datetime.timedelta(days=21)
-        documents = self.get_with_limit({'is_private': False, 'downloaded_on': {'$lt': date}},
+        # 'downloaded_on': {'$lt': date},
+        documents = self.get_with_limit({'screen_name': {'$exists': True}},
                                         {'_id': 1, 'downloaded_on': 1})
         followers_to_return = {}
         for document in documents:
-            followers_to_return[document['_id']] = document['downloaded_on']
+            followers_to_return[document['_id']] = "date"
         return followers_to_return
 
     def get_random_followers_sample(self):

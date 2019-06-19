@@ -16,10 +16,8 @@ from src.service.credentials.CredentialService import CredentialService
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.tweets.FollowersQueueService import FollowersQueueService
-from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
-from src.util.slack.SlackHelper import SlackHelper
 from src.util.twitter.TwitterUtils import TwitterUtils
 
 
@@ -36,11 +34,11 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        # cls.download_tweets_with_credential(credentials[2])
+        # AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
-        SlackHelper().post_message_to_channel(
-            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
+        # SlackHelper().post_message_to_channel(
+        #    "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
 
     @classmethod
     def download_tweets_with_credential(cls, credential):
@@ -82,15 +80,15 @@ class TweetUpdateService:
                     cls.store_new_tweets(follower_download_tweets, min_tweet_date)
                 else:
                     cls.update_follower_with_no_tweets(follower)
-                # cls.get_logger().warning(f'Follower updated {follower}.')
+                cls.get_logger().warning(f'Follower updated {follower}.')
             followers = cls.get_followers_to_update()
         cls.send_stopped_tread_notification(credential_id)
 
     @classmethod
     def send_stopped_tread_notification(cls, credential_id):
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential_id}.')
-        SlackHelper().post_message_to_channel(
-            "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
+        # SlackHelper().post_message_to_channel(
+        #   "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
         CredentialService().unlock_credential(credential_id, cls.__name__)
 
     @classmethod
@@ -173,7 +171,7 @@ class TweetUpdateService:
             # Retrieve the follower from DB
             raw_follower = RawFollowerDAO().get(follower)
             RawFollowerDAO().tag_as_private(raw_follower)
-            # cls.get_logger().info(f'{follower} is tagged as private.')
+            cls.get_logger().info(f'{follower} is tagged as private.')
         except NonExistentRawFollowerError as error:
             cls.get_logger().error(f'{follower} can not be tagged as private because does not exists.')
             cls.get_logger().error(error)

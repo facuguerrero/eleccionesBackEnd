@@ -9,15 +9,20 @@ from src.util.logging.Logger import Logger
 
 
 class OSLOMService:
+
     RESULT_FILE_NAME = 'tp'
+    SEED_FILE_NAME = 'time_seed.dat'
+    RESULT_FOLDER_SUFFIX = '_oslo_files'
+    OSLOM_SCRIPT_NAME = 'oslom_undir'
+    OSLOM_FOLDER_NAME = 'OSLOM2'
 
     @classmethod
-    def export_communities_for_window(cls, start_date, end_date):
-        """ Create .csv file with the processed result of OSLOM's execution. """
+    def export_communities_for_window(cls, start_date, end_date, graph):
+        """ Create .csv file with the processed result of OSLOM's execution. Add known data to graph. """
         # OSLOM2 folder path
-        oslom_path = f'{Path.home()}/OSLOM2/'
+        oslom_path = f'{Path.home()}/{cls.OSLOM_FOLDER_NAME}/'
         # OSLOM undirected script path
-        script_path = f'{oslom_path}oslom_undir'
+        script_path = f'{oslom_path}{cls.OSLOM_SCRIPT_NAME}'
         # Weights file name
         file_name = FileUtils.file_name_with_dates('weights', start_date, end_date, '.txt')
         # Weights file path
@@ -30,16 +35,16 @@ class OSLOMService:
         # Move the resultant file
         CommandLineUtils.move(cls.RESULT_FILE_NAME, HashtagCooccurrenceService.DIR_PATH)
         # Remove the seed file
-        CommandLineUtils.remove('time_seed.dat')
+        CommandLineUtils.remove(cls.SEED_FILE_NAME)
         # Remove the created folder
-        result_dir_path = f'{oslom_path}{file_name}_oslo_files/'
+        result_dir_path = f'{oslom_path}{file_name}{cls.RESULT_FOLDER_SUFFIX}/'
         CommandLineUtils.remove(result_dir_path)
         # Remove the copied file
         CommandLineUtils.remove(f'{oslom_path}{file_name}')
         # Process OSLOM's output
         hashtag_clusters = cls.__extract_oslom_communities()
         # Write to .csv
-        cls.__write_hashtag_clusters_file(hashtag_clusters, start_date, end_date)
+        cls.__write_hashtag_clusters_file(hashtag_clusters, start_date, end_date, graph)
         # Remove OSLOM result
         CommandLineUtils.remove(f'{HashtagCooccurrenceService.DIR_PATH}/{cls.RESULT_FILE_NAME}')
 
@@ -73,7 +78,7 @@ class OSLOMService:
         return hashtag_clusters
 
     @classmethod
-    def __write_hashtag_clusters_file(cls, hashtag_clusters, start_date, end_date):
+    def __write_hashtag_clusters_file(cls, hashtag_clusters, start_date, end_date, graph):
         """ Create .csv files with mappings for hashtag -> cluster. """
         base_dir = f'{HashtagCooccurrenceService.DIR_PATH}/'
         translator = FileUtils.file_name_with_dates(f'{base_dir}ids', start_date, end_date, '.txt')
@@ -82,16 +87,16 @@ class OSLOMService:
         with open(translator) as translator_fd:
             for line in translator_fd:
                 splitted = line.strip().split(' ')
-                mappings[splitted[1]] = splitted[0]
+                mappings[int(splitted[0])] = splitted[1]
         # Create a .csv with numerical ids and one with string hashtag names
         ids = FileUtils.file_name_with_dates(f'{base_dir}ids_clusters', start_date, end_date, '.csv')
-        names = FileUtils.file_name_with_dates(f'{base_dir}hashtags_clusters', start_date, end_date, '.csv')
-        with open(ids, 'w') as ids_fd, open(names, 'w') as translated_fd:
+        # TODO: This may not be needed if we do not use LaNet-vi
+        with open(ids, 'w') as ids_fd:
             # Write a line for each pair hashtag-cluster
             for hashtag, clusters in hashtag_clusters.items():
                 for cluster in clusters:
+                    graph['nodes'][mappings[hashtag]]['cluster'] = cluster
                     ids_fd.write(f'{hashtag} {cluster}\n')
-                    translated_fd.write(f'{mappings[str(hashtag)]} {cluster}\n')
 
     @classmethod
     def get_logger(cls):
