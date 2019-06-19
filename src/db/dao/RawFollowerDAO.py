@@ -78,7 +78,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
             Returns {'id': 'last_update'}
         """
         date = datetime.datetime.today() - datetime.timedelta(days=21)
-        documents = self.get_with_limit({'downloaded_on': {'$lt': date}},
+        documents = self.get_with_limit({'downloaded_on': {'$lt': date}, 'is_private': False},
                                         {'_id': 1, 'downloaded_on': 1})
         followers_to_return = {}
         for document in documents:

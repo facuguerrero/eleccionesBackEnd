@@ -19,7 +19,6 @@ from src.service.tweets.FollowersQueueService import FollowersQueueService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
-from src.util.slack.SlackHelper import SlackHelper
 from src.util.twitter.TwitterUtils import TwitterUtils
 
 
@@ -39,8 +38,8 @@ class TweetUpdateService:
         AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
         # cls.download_tweets_with_credential(credentials[2])
         cls.get_logger().info('Stoped tweet updating')
-        SlackHelper().post_message_to_channel(
-            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
+        # SlackHelper().post_message_to_channel(
+        #    "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
 
     @classmethod
     def download_tweets_with_credential(cls, credential):
@@ -92,8 +91,8 @@ class TweetUpdateService:
     @classmethod
     def send_stopped_tread_notification(cls, credential_id):
         cls.get_logger().warning(f'Stoping follower updating proccess with {credential_id}.')
-        SlackHelper().post_message_to_channel(
-            "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
+        # SlackHelper().post_message_to_channel(
+        #   "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
         CredentialService().unlock_credential(credential_id, cls.__name__)
 
     @classmethod
