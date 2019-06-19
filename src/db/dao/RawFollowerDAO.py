@@ -83,7 +83,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                                         {'_id': 1, 'downloaded_on': 1})
         followers_to_return = {}
         for document in documents:
-            followers_to_return[document['_id']] = document['downloaded_on']
+            followers_to_return[document['_id']] = "date"
         return followers_to_return
 
     def finish_candidate(self, candidate_name):
