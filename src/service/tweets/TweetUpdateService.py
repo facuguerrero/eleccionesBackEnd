@@ -16,6 +16,7 @@ from src.service.credentials.CredentialService import CredentialService
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.tweets.FollowersQueueService import FollowersQueueService
+from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
@@ -35,8 +36,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        # AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        cls.download_tweets_with_credential(credentials[0])
+        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        # cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
         SlackHelper().post_message_to_channel(
             "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
