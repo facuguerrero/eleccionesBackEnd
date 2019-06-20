@@ -9,10 +9,14 @@ class ConcurrencyUtils(metaclass=Singleton):
         self.locks = {}
 
     def create_lock(self, lock_id):
-        self.locks[lock_id] = Lock()
+        """ Create a new lock if it doesn't already exist one with the given id. """
+        if lock_id not in self.locks:
+            self.locks[lock_id] = Lock()
 
     def acquire_lock(self, lock_id):
+        """ Acquire lock with given id. """
         self.locks[lock_id].acquire(True)
 
     def release_lock(self, lock_id):
+        """ Release lock with given id. """
         self.locks[lock_id].release()

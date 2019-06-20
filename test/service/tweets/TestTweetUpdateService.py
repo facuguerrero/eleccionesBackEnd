@@ -141,7 +141,7 @@ class TestTweetUpdateService(CustomTestCase):
         tweet = TweetUpdateHelper().get_mock_tweet_may_26_follower_1()
         min_date = TweetUpdateHelper().get_mock_min_date_may_24()
 
-        TweetUpdateService.update_complete_follower("dummyFollower", tweet, min_date)
+        TweetUpdateService.update_complete_follower("dummyFollower", tweet)
 
         assert update_mock.call_count == 1
 
