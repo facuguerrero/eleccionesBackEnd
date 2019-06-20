@@ -31,12 +31,12 @@ class GenericDAO:
         """
         return self.collection.find({} if query is None else query, projection_dict).count()
 
-    def get_with_limit(self, query=None, projection_dict=None):
+    def get_with_limit(self, query=None, projection_dict=None, limit=24000):
         """
         Get entries matching the given query.
         The maximum quantity of results are 5000
         """
-        return self.collection.find({} if query is None else query, projection_dict).limit(24000)
+        return self.collection.find({} if query is None else query, projection_dict).limit(limit)
 
     def get_with_cursor(self, query=None, projection_dict=None, sort=None, skip=0, limit=0):
         """

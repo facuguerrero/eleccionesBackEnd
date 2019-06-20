@@ -16,7 +16,6 @@ from src.service.credentials.CredentialService import CredentialService
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.tweets.FollowersQueueService import FollowersQueueService
-from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
@@ -36,8 +35,8 @@ class TweetUpdateService:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        # cls.download_tweets_with_credential(credentials[0])
+        # AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
+        cls.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stoped tweet updating')
         SlackHelper().post_message_to_channel(
             "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
@@ -169,8 +168,13 @@ class TweetUpdateService:
         """ When an error occurs, follower is tagged as private. """
         try:
             # Retrieve the follower from DB
-            raw_follower = RawFollowerDAO().get(follower)
-            RawFollowerDAO().tag_as_private(raw_follower)
+            today = datetime.datetime.today()
+            updated_raw_follower = RawFollower(**{
+                'id': follower,
+                'downloaded_on': today,
+                'is_private': True
+            })
+            RawFollowerDAO().update_follower_data(updated_raw_follower)
             # cls.get_logger().info(f'{follower} is tagged as private.')
         except NonExistentRawFollowerError as error:
             cls.get_logger().error(f'{follower} can not be tagged as private because does not exists.')
@@ -186,6 +190,7 @@ class TweetUpdateService:
                 updated_raw_follower = RawFollower(**{
                     'id': follower,
                     'downloaded_on': today,
+                    'is_private': False,
                     'location': user_information['location'],
                     'followers_count': user_information['followers_count'],
                     'friends_count': user_information['friends_count'],
@@ -209,7 +214,8 @@ class TweetUpdateService:
                 today = datetime.datetime.today()
                 updated_raw_follower = RawFollower(**{
                     'id': follower,
-                    'downloaded_on': today
+                    'downloaded_on': today,
+                    'is_private': False
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
                 # cls.get_logger().info(f'{follower} is updated with 0 tweets.')

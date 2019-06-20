@@ -20,8 +20,7 @@ class SlackHelper(metaclass=Singleton):
         # new_followers = CandidatesFollowersDAO().get()
 
         message = f'Cantidad de tweets descargados hasta el momento: {tweets_updated} \n ' \
-            f'Usuarios actualizados durante el día de ayer: {followers_updated} \n' \
-            f'Cantidad de usuarios totales actualizados: {total_followers_updated}'
+            f'Usuarios actualizados durante el día de ayer: {followers_updated} \n'
         cls.post_message_to_channel(message)
 
     @classmethod
