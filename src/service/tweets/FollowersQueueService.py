@@ -66,7 +66,7 @@ class FollowersQueueService(metaclass=Singleton):
 
     def add_last_downloaded_followers(self, private_users=200000):
         # TODO Borrar esto cuando se recorran todos los usuarios privados
-        date = datetime(2019, 6, 20, 18, 45, 00)
+        date = datetime(2019, 6, 21, 15, 00, 00)
         downloaded = RawFollowerDAO().get_with_limit({'$and': [
             {'is_private': True}, {'downloaded_on': {'$lt': date}}
         ]}, None, private_users)
