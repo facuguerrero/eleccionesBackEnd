@@ -10,6 +10,15 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
         super(UserHashtagDAO, self).__init__(Mongo().get().db.user_hashtag)
         self.logger = Logger(self.__class__.__name__)
 
+    def get_hashtags_aggregated_by_user(self):
+        self.aggregate([
+            {'$group': {
+                '_id': '$user',
+                'hashtags_array': {'$push': '$hashtag'}
+            }
+            }
+        ])
+
     def create_indexes(self):
         self.logger.info('Creating timestamp index for collection user_hashtag.')
         Mongo().get().db.user_hashtag.create_index('timestamp')
