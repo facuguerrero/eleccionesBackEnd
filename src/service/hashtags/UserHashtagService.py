@@ -34,7 +34,6 @@ class UserHashtagService:
         user_hashtags = tweet['entities']['hashtags']
         user = tweet['user_id']
         for hashtag in user_hashtags:
-            # guardar en la nueva db
             try:
                 timestamp = tweet['created_at']
                 hashtag_text = hashtag['text'].lower()

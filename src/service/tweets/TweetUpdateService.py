@@ -150,7 +150,6 @@ class TweetUpdateService:
         except TwythonError as error:
             if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                     error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
-                # TODO comentar esto, ya no deberia haber usuarios privados
                 cls.update_follower_as_private(follower)
             elif not error or not error.error_code or error.error_code < 199 or error.error_code >= 500:
                 # Twitter API error
