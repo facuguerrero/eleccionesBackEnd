@@ -9,3 +9,7 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
     def __init__(self):
         super(UserHashtagDAO, self).__init__(Mongo().get().db.user_hashtag)
         self.logger = Logger(self.__class__.__name__)
+
+    def create_indexes(self):
+        self.logger.info('Creating timestamp index for collection user_hashtag.')
+        Mongo().get().db.user_hashtag.create_index('timestamp')
