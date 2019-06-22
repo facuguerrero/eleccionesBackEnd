@@ -15,6 +15,7 @@ from src.model.followers.RawFollower import RawFollower
 from src.service.credentials.CredentialService import CredentialService
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.service.hashtags.HashtagOriginService import HashtagOriginService
+from src.service.hashtags.UserHashtagService import UserHashtagService
 from src.service.tweets.FollowersQueueService import FollowersQueueService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
@@ -237,9 +238,11 @@ class TweetUpdateService:
                     tweet_copy["text"] = tweet.pop('full_text', None)
                     tweet_copy['created_at'] = tweet_date
                     tweet_copy['user_id'] = tweet.pop('user')['id_str']
+                    tweet_copy['in_user_hashtag_collection'] = True
                     RawTweetDAO().insert_tweet(tweet_copy)
                     HashtagOriginService().process_tweet(tweet_copy)
                     HashtagCooccurrenceService().process_tweet(tweet_copy)
+                    UserHashtagService().insert_hashtags_of_one_tweet(tweet_copy)
                     updated_tweets += 1
                 except DuplicatedTweetError:
                     return
