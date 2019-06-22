@@ -1,5 +1,8 @@
+from pymongo.errors import DuplicateKeyError
+
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
+from src.util.logging.Logger import Logger
 
 
 class UserHashtagService:
@@ -25,12 +28,25 @@ class UserHashtagService:
     @classmethod
     def insert_hashtags_of_one_tweet(cls, tweet):
         """ create (user, hashtag, timestap) pairs from a given tweet. """
+        # TODO Chequear en db:
+        # db.raw_tweet.find({ 'entities': {$exists: False} }).count()
+        # db.raw_tweet.find({ 'entities.hashtags': {$exists: False} }).count()
         user_hashtags = tweet['entities']['hashtags']
         user = tweet['user_id']
         for hashtag in user_hashtags:
             # guardar en la nueva db
-            UserHashtagDAO().insert({
-                'user': user,
-                'hashtag': hashtag['text'].lower(),
-                'timestamp': tweet['created_at']
-            })
+            try:
+                timestamp = tweet['created_at']
+                hashtag_text = hashtag['text'].lower()
+                UserHashtagDAO().insert({
+                    '_id': user + hashtag + timestamp,
+                    'user': user,
+                    'hashtag': hashtag_text,
+                    'timestamp': timestamp
+                })
+            except DuplicateKeyError:
+                cls.get_logger().info(f'Trying to insert duplicated pair: {user} - {hashtag_text}')
+
+    @classmethod
+    def get_logger(cls):
+        return Logger('TweetUpdateService')
