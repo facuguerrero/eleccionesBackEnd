@@ -16,6 +16,7 @@ class UserHashtagService:
 
     @classmethod
     def insert_hashtags(cls):
+        """ """
         tweets_cursor = RawTweetDAO().get_all({'in_user_hashtag_collection': {'$exists': False}})
         for tweet in tweets_cursor:
             cls.insert_hashtags_of_one_tweet(tweet)
@@ -23,6 +24,7 @@ class UserHashtagService:
 
     @classmethod
     def insert_hashtags_of_one_tweet(cls, tweet):
+        """ create (user, hashtag, timestap) pairs from a given tweet. """
         user_hashtags = tweet['entities']['hashtags']
         user = tweet['user_id']
         for hashtag in user_hashtags:
