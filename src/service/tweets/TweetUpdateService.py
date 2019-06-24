@@ -197,7 +197,8 @@ class TweetUpdateService:
                     'friends_count': user_information['friends_count'],
                     'listed_count': user_information['listed_count'],
                     'favourites_count': user_information['favourites_count'],
-                    'statuses_count': user_information['statuses_count']
+                    'statuses_count': user_information['statuses_count'],
+                    'has_tweets': True
                 })
                 RawFollowerDAO().update_follower_data(updated_raw_follower)
                 # cls.get_logger().info(f'{follower} is completely updated.')
@@ -212,13 +213,7 @@ class TweetUpdateService:
         try:
             raw_follower = RawFollowerDAO().get(follower)
             if not raw_follower.is_private:
-                today = datetime.datetime.today()
-                updated_raw_follower = RawFollower(**{
-                    'id': follower,
-                    'downloaded_on': today,
-                    'is_private': False
-                })
-                RawFollowerDAO().update_follower_data(updated_raw_follower)
+                RawFollowerDAO().update_follower_downloaded_on(follower)
                 # cls.get_logger().info(f'{follower} is updated with 0 tweets.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')

@@ -46,6 +46,13 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                               }
                      })
 
+    def update_follower_downloaded_on(self, id_follower):
+        self.upsert({'_id': id_follower},
+                    {'$set': {'downloaded_on': datetime.datetime.today(),
+                              'is_private': False
+                              }
+                     })
+
     def update_follower_id(self, int_id):
         self.upsert({'_id': int_id},
                     {'$set': {'_id': str(int_id)}})
