@@ -20,10 +20,11 @@ class UserHashtagService:
     @classmethod
     def insert_hashtags(cls):
         """ """
-        tweets_cursor = RawTweetDAO().get_all({"entities.hashtags": {'$size': 1}})
+        tweets_cursor = RawTweetDAO().get_all({"in_user_hashtag_collection": True})
         x = 0
         for tweet in tweets_cursor:
             cls.insert_hashtags_of_one_tweet(tweet)
+            cls.get_logger().info(f'Tweets updated: {tweet["_id"]}')
             # RawTweetDAO().update_first({'_id': tweet['_id']}, {'in_user_hashtag_collection': True})
             if x % 10000 == 0:
                 cls.get_logger().info(f'Tweets updated: {x}')
