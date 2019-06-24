@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from argparse import ArgumentParser
-from threading import Thread
 
 from flask import Flask
 from flask_cors import CORS
@@ -16,7 +15,7 @@ from src.api.RawFollowerResource import RawFollowerResource
 from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
-from src.service.tweets.TweetUpdateService import TweetUpdateService
+from src.service.hashtags.UserHashtagService import UserHashtagService
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
@@ -55,9 +54,9 @@ def set_up_context(db_name, authorization, environment):
 
 
 def init_services():
-    # UserHashtagService().insert_hashtags_of_already_downloaded_tweets()
-    thread = Thread(target=TweetUpdateService.update_tweets)
-    thread.start()
+    UserHashtagService().insert_hashtags_of_already_downloaded_tweets()
+    # thread = Thread(target=TweetUpdateService.update_tweets)
+    # thread.start()
 
 
 def parse_arguments():

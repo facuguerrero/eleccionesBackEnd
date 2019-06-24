@@ -15,22 +15,23 @@ class UserHashtagService:
         # TODO activate this
         # thread = Thread(target=cls.insert_hashtags)
         # thread.start()
-        # cls.insert_hashtags()
+        cls.insert_hashtags()
 
     @classmethod
     def insert_hashtags(cls):
         """ """
-        tweets_cursor = RawTweetDAO().get_all({'in_user_hashtag_collection': {'$exists': False}})
+        tweets_cursor = RawTweetDAO().get_all({"entities.hashtags": {'$size': 1}})
+        x = 0
         for tweet in tweets_cursor:
             cls.insert_hashtags_of_one_tweet(tweet)
-            RawTweetDAO().update_first({'_id': tweet['_id']}, {'in_user_hashtag_collection': True})
+            # RawTweetDAO().update_first({'_id': tweet['_id']}, {'in_user_hashtag_collection': True})
+            if x % 10000 == 0:
+                cls.get_logger().info(f'Tweets updated: {x}')
+
 
     @classmethod
     def insert_hashtags_of_one_tweet(cls, tweet):
         """ create (user, hashtag, timestap) pairs from a given tweet. """
-        # TODO Chequear en db:
-        # db.raw_tweet.find({ 'entities': {$exists: False} }).count()
-        # db.raw_tweet.find({ 'entities.hashtags': {$exists: False} }).count()
         user_hashtags = tweet['entities']['hashtags']
         user = tweet['user_id']
         for hashtag in user_hashtags:
@@ -38,7 +39,7 @@ class UserHashtagService:
                 timestamp = tweet['created_at']
                 hashtag_text = hashtag['text'].lower()
                 UserHashtagDAO().insert({
-                    '_id': user + hashtag + timestamp,
+                    '_id': user + hashtag_text + timestamp,
                     'user': user,
                     'hashtag': hashtag_text,
                     'timestamp': timestamp
