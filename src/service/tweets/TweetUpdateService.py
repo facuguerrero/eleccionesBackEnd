@@ -236,7 +236,7 @@ class TweetUpdateService:
                     tweet_copy["text"] = tweet.pop('full_text', None)
                     tweet_copy['created_at'] = tweet_date
                     tweet_copy['user_id'] = tweet.pop('user')['id_str']
-                    tweet_copy['in_user_hashtag_collection'] = True
+                    # tweet_copy['in_user_hashtag_collection'] = True
                     RawTweetDAO().insert_tweet(tweet_copy)
                     HashtagOriginService().process_tweet(tweet_copy)
                     HashtagCooccurrenceService().process_tweet(tweet_copy)
