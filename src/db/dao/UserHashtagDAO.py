@@ -1,3 +1,5 @@
+import datetime
+
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
 from src.util.logging.Logger import Logger
@@ -11,7 +13,10 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
         self.logger = Logger(self.__class__.__name__)
 
     def get_hashtags_aggregated_by_user(self):
+        # TODO preguntar a que hora correrlo.
+        date = datetime.datetime.today()
         self.aggregate([
+            {'$match': {'timestamp': {'$gt': date}}},
             {'$group': {
                 '_id': '$user',
                 'hashtags_array': {'$push': '$hashtag'}

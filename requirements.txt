@@ -11,3 +11,4 @@ asyncio
 mock
 slackclient
 flask-cors
+scipy
