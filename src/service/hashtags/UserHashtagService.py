@@ -1,10 +1,9 @@
 from threading import Thread
 
-from pymongo.errors import DuplicateKeyError
-
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.util.logging.Logger import Logger
+from src.util.slack.SlackHelper import SlackHelper
 
 
 class UserHashtagService:
@@ -24,6 +23,8 @@ class UserHashtagService:
         for tweet in tweets_cursor:
             cls.insert_hashtags_of_one_tweet(tweet)
             RawTweetDAO().update_first({'_id': tweet['_id']}, {'in_user_hashtag_collection': True})
+        SlackHelper().post_message_to_channel(
+            "Termino el servicio encargado de crear la colección user-hashtag")
 
 
     @classmethod
@@ -32,17 +33,13 @@ class UserHashtagService:
         user_hashtags = tweet['entities']['hashtags']
         user = tweet['user_id']
         for hashtag in user_hashtags:
-            try:
-                timestamp = tweet['created_at']
-                hashtag_text = hashtag['text'].lower()
-                UserHashtagDAO().insert({
-                    '_id': user + hashtag_text + timestamp,
-                    'user': user,
-                    'hashtag': hashtag_text,
-                    'timestamp': timestamp
-                })
-            except DuplicateKeyError:
-                cls.get_logger().info(f'Trying to insert duplicated pair: {user} - {hashtag_text}')
+            timestamp = tweet['created_at']
+            hashtag_text = hashtag['text'].lower()
+            UserHashtagDAO().insert({
+                'user': user,
+                'hashtag': hashtag_text,
+                'timestamp': timestamp
+            })
 
     @classmethod
     def get_logger(cls):

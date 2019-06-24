@@ -15,6 +15,8 @@ from src.api.RawFollowerResource import RawFollowerResource
 from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
+from src.service.hashtags.UserHashtagService import UserHashtagService
+from src.service.tweets.TweetUpdateService import TweetUpdateService
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
@@ -52,10 +54,9 @@ def set_up_context(db_name, authorization, environment):
         create_queue_entries()
 
 
-# def init_services():
-# UserHashtagService().insert_hashtags_of_already_downloaded_tweets()
-    # thread = Thread(target=TweetUpdateService.update_tweets)
-    # thread.start()
+def init_services():
+    UserHashtagService().insert_hashtags_of_already_downloaded_tweets()
+    TweetUpdateService().update_tweets()
 
 
 def parse_arguments():
@@ -77,5 +78,5 @@ if __name__ == '__main__':
     db, auth, env = parse_arguments()
     set_up_context(db, auth, env)
     Scheduler().set_up()
-    #init_services()
+    init_services()
     app.run(port=8080, threaded=True)
