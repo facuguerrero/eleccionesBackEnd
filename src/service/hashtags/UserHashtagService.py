@@ -1,3 +1,5 @@
+from threading import Thread
+
 from pymongo.errors import DuplicateKeyError
 
 from src.db.dao.RawTweetDAO import RawTweetDAO
@@ -12,22 +14,16 @@ class UserHashtagService:
         """ This methods run over all downloaded tweets until 21/05 and insert every hash tag
         which appear in a specific user.
         """
-        # TODO activate this
-        # thread = Thread(target=cls.insert_hashtags)
-        # thread.start()
-        cls.insert_hashtags()
+        thread = Thread(target=cls.insert_hashtags)
+        thread.start()
 
     @classmethod
     def insert_hashtags(cls):
         """ """
-        tweets_cursor = RawTweetDAO().get_all({"in_user_hashtag_collection": True})
-        x = 0
+        tweets_cursor = RawTweetDAO().get_all({"in_user_hashtag_collection": {'$exists': False}})
         for tweet in tweets_cursor:
             cls.insert_hashtags_of_one_tweet(tweet)
-            cls.get_logger().info(f'Tweets updated: {tweet["_id"]}')
-            # RawTweetDAO().update_first({'_id': tweet['_id']}, {'in_user_hashtag_collection': True})
-            if x % 10000 == 0:
-                cls.get_logger().info(f'Tweets updated: {x}')
+            RawTweetDAO().update_first({'_id': tweet['_id']}, {'in_user_hashtag_collection': True})
 
 
     @classmethod
