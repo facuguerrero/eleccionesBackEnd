@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from argparse import ArgumentParser
+from threading import Thread
 
 from flask import Flask
 from flask_cors import CORS
@@ -55,7 +56,8 @@ def set_up_context(db_name, authorization, environment):
 
 def init_services():
     # UserHashtagService().insert_hashtags_of_already_downloaded_tweets()
-    TweetUpdateService().update_tweets()
+    thread = Thread(target=TweetUpdateService.update_tweets)
+    thread.start()
 
 
 def parse_arguments():

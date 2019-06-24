@@ -15,7 +15,7 @@ class UserHashtagService:
         # TODO activate this
         # thread = Thread(target=cls.insert_hashtags)
         # thread.start()
-        cls.insert_hashtags()
+        # cls.insert_hashtags()
 
     @classmethod
     def insert_hashtags(cls):
