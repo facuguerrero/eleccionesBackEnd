@@ -18,6 +18,7 @@ class UserHashtagService:
     @classmethod
     def insert_hashtags(cls):
         """ """
+        cls.get_logger().info("Starting User Hashtag process.")
         tweets_cursor = RawTweetDAO().get_all({"in_user_hashtag_collection": {'$exists': False}})
         for tweet in tweets_cursor:
             cls.insert_hashtags_of_one_tweet(tweet)
