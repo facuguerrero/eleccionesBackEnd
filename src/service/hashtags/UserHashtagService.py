@@ -22,9 +22,7 @@ class UserHashtagService:
         for tweet in tweets_cursor:
             cls.insert_hashtags_of_one_tweet(tweet)
             RawTweetDAO().update_first({'_id': tweet['_id']}, {'in_user_hashtag_collection': True})
-
         cls.get_logger().info("User Hashtag Service finished.")
-
 
     @classmethod
     def insert_hashtags_of_one_tweet(cls, tweet):
