@@ -3,7 +3,6 @@ from threading import Thread
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.util.logging.Logger import Logger
-from src.util.slack.SlackHelper import SlackHelper
 
 
 class UserHashtagService:
@@ -23,8 +22,8 @@ class UserHashtagService:
         for tweet in tweets_cursor:
             cls.insert_hashtags_of_one_tweet(tweet)
             RawTweetDAO().update_first({'_id': tweet['_id']}, {'in_user_hashtag_collection': True})
-        SlackHelper().post_message_to_channel(
-            "Termino el servicio encargado de crear la colección user-hashtag")
+
+        cls.get_logger().info("User Hashtag Service finished.")
 
 
     @classmethod

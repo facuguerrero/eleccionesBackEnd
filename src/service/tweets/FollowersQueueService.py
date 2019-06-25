@@ -70,15 +70,39 @@ class FollowersQueueService(metaclass=Singleton):
         downloaded = RawFollowerDAO().get_with_limit({'$and': [
             {'is_private': True}, {'downloaded_on': {'$lt': date}}
         ]}, None, private_users)
-        followers = {}
-        for follower in downloaded:
-            followers[follower['_id']] = follower['downloaded_on']
-        self.updating_followers.update(followers)
+        self.add_followers(downloaded)
 
-        downloaded = RawFollowerDAO().get_with_limit({'$and': [
-            {'$and': [{'has_tweets': {'$exists': False}}, {'is_private': False}]}
-        ]}, None, 200000)
+        initDate = datetime(2019, 6, 17, 20, 0, 0)
+        endDate = datetime(2019, 6, 19, 8, 0, 0)
+        downloaded = RawFollowerDAO().get_all({
+            '$and': [
+                {"downloaded_on": {'$gt': initDate}},
+                {"downloaded_on": {'$lt': endDate}},
+                {'has_tweets': False}
+            ]})
+        self.add_followers(downloaded)
+
+        initDate = datetime(2019, 6, 24, 0, 0, 0)
+        endDate = datetime(2019, 6, 25, 0, 0, 0)
+        downloaded = RawFollowerDAO().get_all({
+            '$and': [
+                {"downloaded_on": {'$gt': initDate}},
+                {"downloaded_on": {'$lt': endDate}},
+                {'has_tweets': None},
+                {'is_private': True}
+            ]})
+        self.add_followers(downloaded)
+
+        downloaded = RawFollowerDAO().get_with_limit({
+            '$and': [
+                {'has_tweets': {'$exists': False}},
+                {'is_private': False}
+            ]})
+        self.add_followers(downloaded)
+
+    def add_followers(self, downloaded):
         followers = {}
         for follower in downloaded:
             followers[follower['_id']] = follower['downloaded_on']
+        self.logger.info(f"Added {len(followers)} to queue.")
         self.updating_followers.update(followers)
