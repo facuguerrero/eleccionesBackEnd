@@ -40,7 +40,7 @@ class FollowersQueueService(metaclass=Singleton):
             random_followers_keys = random.sample(self.updating_followers.keys(), max_users_per_window)
         except ValueError:
             SlackHelper().post_message_to_channel(
-               "Quedan pocos usuarios por actualizar en la cola.")
+                "Quedan pocos usuarios por actualizar en la cola.")
             self.logger.warning(f'There are {len(self.updating_followers)} followers to update in the queue.')
             random_followers_keys = self.updating_followers.copy()
             self.updating_followers = {}
@@ -66,6 +66,7 @@ class FollowersQueueService(metaclass=Singleton):
 
     def add_last_downloaded_followers(self, private_users=200000):
         # TODO Borrar esto cuando se recorran todos los usuarios privados
+        self.logger.info('Adding last downloaded followers')
         date = datetime(2019, 6, 24, 00, 00, 00)
         downloaded = RawFollowerDAO().get_with_limit({'$and': [
             {'is_private': True}, {'downloaded_on': {'$lt': date}}
@@ -82,7 +83,7 @@ class FollowersQueueService(metaclass=Singleton):
             ]})
         self.add_followers(downloaded)
 
-        #{'$and': [{"downloaded_on": {$gt: new ISODate("2019-06-17T20:00:00")}}, {"downloaded_on": {$lt: new ISODate("2019-06-19T08:00:00")}}, {'has_tweets': false} ]}
+        # {'$and': [{"downloaded_on": {$gt: new ISODate("2019-06-17T20:00:00")}}, {"downloaded_on": {$lt: new ISODate("2019-06-19T08:00:00")}}, {'has_tweets': false} ]}
 
         initDate = datetime(2019, 6, 24, 0, 0, 0)
         endDate = datetime(2019, 6, 25, 0, 0, 0)
@@ -101,6 +102,7 @@ class FollowersQueueService(metaclass=Singleton):
                 {'is_private': False}
             ]})
         self.add_followers(downloaded)
+        self.logger.info('Finishing insertion of last downloaded followers')
 
     def add_followers(self, downloaded):
         followers = {}
