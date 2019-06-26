@@ -40,7 +40,7 @@ class FollowersQueueService(metaclass=Singleton):
             random_followers_keys = random.sample(self.updating_followers.keys(), max_users_per_window)
         except ValueError:
             SlackHelper().post_message_to_channel(
-                "Quedan pocos usuarios por actualizar en la cola.")
+               "Quedan pocos usuarios por actualizar en la cola.")
             self.logger.warning(f'There are {len(self.updating_followers)} followers to update in the queue.')
             random_followers_keys = self.updating_followers.copy()
             self.updating_followers = {}
@@ -82,6 +82,8 @@ class FollowersQueueService(metaclass=Singleton):
             ]})
         self.add_followers(downloaded)
 
+        #{'$and': [{"downloaded_on": {$gt: new ISODate("2019-06-17T20:00:00")}}, {"downloaded_on": {$lt: new ISODate("2019-06-19T08:00:00")}}, {'has_tweets': false} ]}
+
         initDate = datetime(2019, 6, 24, 0, 0, 0)
         endDate = datetime(2019, 6, 25, 0, 0, 0)
         downloaded = RawFollowerDAO().get_all({
@@ -103,6 +105,6 @@ class FollowersQueueService(metaclass=Singleton):
     def add_followers(self, downloaded):
         followers = {}
         for follower in downloaded:
-            followers[follower['_id']] = follower['downloaded_on']
+            followers[follower['_id']] = follower['last_tweet_date']
         self.logger.info(f"Added {len(followers)} to queue.")
         self.updating_followers.update(followers)

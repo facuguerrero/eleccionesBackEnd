@@ -48,10 +48,11 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
 
     def update_follower_downloaded_on(self, id_follower):
         self.upsert({'_id': id_follower},
-                    {'$set': {'downloaded_on': datetime.datetime.today(),
-                              'is_private': False
-                              }
-                     })
+                    {'$set': {
+                        'downloaded_on': datetime.datetime.today(),
+                        'is_private': False
+                    }
+                 })
 
     def update_follower_id(self, int_id):
         self.upsert({'_id': int_id},
@@ -110,13 +111,13 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
             {"$sample": {"size": 24000}},
             {"$group":
                  {"_id": "$_id",
-                  "downloaded_on": {"$first": "$downloaded_on"}
+                  "last_tweet_date": {"$first": "$last_tweet_date"}
                   }
              }
         ])
         followers_to_return = {}
         for document in documents:
-            followers_to_return[document['_id']] = document['downloaded_on']
+            followers_to_return[document['_id']] = document['$last_tweet_date']
         return followers_to_return
 
     def finish_candidate(self, candidate_name):
