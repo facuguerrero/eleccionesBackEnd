@@ -248,10 +248,12 @@ class TweetUpdateService:
                     UserHashtagService().insert_hashtags_of_one_tweet(tweet_copy)
                     updated_tweets += 1
                 except DuplicatedTweetError:
+                    cls.get_logger().info(
+                        f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
                     return
             else:
-                # cls.get_logger().info(
-                #    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
+                cls.get_logger().info(
+                   f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
                 return
 
     @classmethod
