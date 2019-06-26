@@ -42,8 +42,8 @@ class TweetUpdateService:
             self.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        #AsyncThreadPoolExecutor().run(self.download_tweets_with_credential, credentials)
-        self.download_tweets_with_credential(credentials[0])
+        AsyncThreadPoolExecutor().run(self.download_tweets_with_credential, credentials)
+        # self.download_tweets_with_credential(credentials[0])
         self.get_logger().info('Stopped tweet updating')
         SlackHelper().post_message_to_channel(
             "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
