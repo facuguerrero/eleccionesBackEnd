@@ -22,7 +22,7 @@ class FollowersQueueService(metaclass=Singleton):
         ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
         self.logger.info(f'Getting followers to update their tweets. Queue\'s size: {len(self.updating_followers)} ')
 
-        max_users_per_window = ConfigurationManager().get_int('max_users_per_window')
+        max_users_per_window = 3
         followers_to_update = {}
 
         if len(self.updating_followers) <= 2 * max_users_per_window:
@@ -67,10 +67,14 @@ class FollowersQueueService(metaclass=Singleton):
     def add_last_downloaded_followers(self, private_users=200000):
         # TODO Borrar esto cuando se recorran todos los usuarios privados
         self.logger.info('Adding last downloaded followers')
-        date = datetime(2019, 6, 24, 00, 00, 00)
-        downloaded = RawFollowerDAO().get_with_limit({'$and': [
-            {'is_private': True}, {'downloaded_on': {'$lt': date}}
-        ]}, None, private_users)
+        date = datetime(2019, 6, 24, 0, 0, 0)
+        downloaded = RawFollowerDAO().get_with_limit({
+            '$and': [
+                {'is_private': True},
+                {'downloaded_on': {'$lt': date}}
+            ]},
+            None,
+            private_users)
         self.add_followers(downloaded)
 
         initDate = datetime(2019, 6, 17, 20, 0, 0)
@@ -107,6 +111,6 @@ class FollowersQueueService(metaclass=Singleton):
     def add_followers(self, downloaded):
         followers = {}
         for follower in downloaded:
-            followers[follower['_id']] = follower['last_tweet_date']
+            followers[follower['_id']] = follower['last_tweet_date'] if 'last_tweet_date' in follower else datetime(2019,1,1)
         self.logger.info(f"Added {len(followers)} to queue.")
         self.updating_followers.update(followers)
