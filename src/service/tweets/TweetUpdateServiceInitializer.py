@@ -30,7 +30,6 @@ class TweetUpdateServiceInitializer(metaclass=Singleton):
     def initialize_with_credential(cls, credential):
         TweetUpdateService().download_tweets_with_credential(credential)
 
-
     @classmethod
     def get_logger(cls):
         return Logger('TweetUpdateService')
