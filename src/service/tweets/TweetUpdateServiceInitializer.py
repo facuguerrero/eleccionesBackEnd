@@ -3,10 +3,11 @@ from src.service.credentials.CredentialService import CredentialService
 from src.service.tweets.TweetUpdateService import TweetUpdateService
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.logging.Logger import Logger
+from src.util.meta.Singleton import Singleton
 from src.util.slack.SlackHelper import SlackHelper
 
 
-class TweetUpdateServiceInitializer:
+class TweetUpdateServiceInitializer(metaclass=Singleton):
 
     @classmethod
     def initialize_tweet_update_service(cls):
@@ -19,11 +20,16 @@ class TweetUpdateServiceInitializer:
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(TweetUpdateService().download_tweets_with_credential, credentials)
+        AsyncThreadPoolExecutor().run(cls.initialize_with_credential, credentials)
         # self.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stopped tweet updating')
         SlackHelper().post_message_to_channel(
             "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
+
+    @classmethod
+    def initialize_with_credential(cls, credential):
+        TweetUpdateService().download_tweets_with_credential(credential)
+
 
     @classmethod
     def get_logger(cls):
