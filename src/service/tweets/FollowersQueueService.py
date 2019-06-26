@@ -77,6 +77,10 @@ class FollowersQueueService(metaclass=Singleton):
             private_users)
         #self.add_followers(downloaded)
 
+        initDate = datetime(2019, 6, 26, 16, 0, 0)
+        downloaded = RawFollowerDAO().get_all({"downloaded_on": {'$gt': initDate}})
+        self.add_followers(downloaded)
+
         initDate = datetime(2019, 6, 17, 20, 0, 0)
         endDate = datetime(2019, 6, 19, 8, 0, 0)
         downloaded = RawFollowerDAO().get_all({

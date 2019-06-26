@@ -32,22 +32,6 @@ class TweetUpdateService:
         self.continue_downloading = False
         self.start_time = None
 
-    def update_tweets(self):
-        """ Update tweet of some candidates' followers. """
-        self.get_logger().info('Starting follower updating process.')
-        try:
-            credentials = CredentialService().get_all_credentials_for_service(self.__class__.__name__)
-        except CredentialsAlreadyInUseError as caiue:
-            self.get_logger().error(caiue.message)
-            self.get_logger().warning('Tweets updating process skipped.')
-            return
-        # Run tweet update process
-        AsyncThreadPoolExecutor().run(self.download_tweets_with_credential, credentials)
-        # self.download_tweets_with_credential(credentials[0])
-        self.get_logger().info('Stopped tweet updating')
-        SlackHelper().post_message_to_channel(
-            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
-
     def download_tweets_with_credential(self, credential):
         """ Update followers' tweets with an specific Twitter Api Credential. """
         self.get_logger().info(f'Starting follower updating with credential {credential.id}.')
@@ -253,12 +237,12 @@ class TweetUpdateService:
                     UserHashtagService().insert_hashtags_of_one_tweet(tweet_copy)
                     updated_tweets += 1
                 except DuplicatedTweetError:
-                    cls.get_logger().info(
-                        f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
+                    #cls.get_logger().info(
+                    #    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
                     return
             else:
-                cls.get_logger().info(
-                   f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
+                #cls.get_logger().info(
+                #   f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
                 return
 
     @classmethod
