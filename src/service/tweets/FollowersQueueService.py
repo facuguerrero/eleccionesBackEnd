@@ -75,7 +75,7 @@ class FollowersQueueService(metaclass=Singleton):
             ]},
             None,
             private_users)
-        #self.add_followers(downloaded)
+        self.add_followers(downloaded)
 
         initDate = datetime(2019, 6, 17, 20, 0, 0)
         endDate = datetime(2019, 6, 19, 8, 0, 0)
@@ -111,6 +111,9 @@ class FollowersQueueService(metaclass=Singleton):
     def add_followers(self, downloaded):
         followers = {}
         for follower in downloaded:
-            followers[follower['_id']] = follower['last_tweet_date'] if 'last_tweet_date' in follower else datetime(2019,1,1)
+            date = datetime(2019, 1, 1)
+            if 'last_tweet_date' in follower:
+                date = follower['last_tweet_date']
+            followers[follower['_id']] = date
         self.logger.info(f"Added {len(followers)} to queue.")
         self.updating_followers.update(followers)
