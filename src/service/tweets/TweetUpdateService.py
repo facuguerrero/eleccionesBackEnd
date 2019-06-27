@@ -108,6 +108,7 @@ class TweetUpdateService:
 
     def handle_twython_rate_limit_error(self):
         if self.contiguous_limit_error > 3:
+            self.get_logger().error('Shut down this credential because is raising twython rate limit error frequently.')
             SlackHelper().post_message_to_channel(
                 "Por prevención se freno el update de una credencial.", "#errors")
             raise BlockedCredentialError()
@@ -128,6 +129,7 @@ class TweetUpdateService:
         if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                 error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
             if self.contiguous_private_users >= 100:
+                self.get_logger().error('Too many private users. Shut down this credential')
                 SlackHelper().post_message_to_channel(
                     "Muchos usuarios privados.", "#errors")
                 raise BlockedCredentialError()
