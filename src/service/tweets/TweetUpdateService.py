@@ -29,6 +29,7 @@ class TweetUpdateService:
 
     def __init__(self):
         self.contiguous_private_users = 0
+        self.contiguous_limit_error = 0
         self.continue_downloading = False
         self.start_time = None
 
@@ -95,6 +96,7 @@ class TweetUpdateService:
                 tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
                                                    count=max_tweets_request_parameter, max_id=max_id)
             self.contiguous_private_users = 0
+            self.contiguous_limit_error = 0
         except TwythonRateLimitError:
             self.handle_twython_rate_limit_error()
         except TwythonError as error:
@@ -105,6 +107,11 @@ class TweetUpdateService:
         return tweets
 
     def handle_twython_rate_limit_error(self):
+        if self.contiguous_limit_error > 3:
+            SlackHelper().post_message_to_channel(
+                "Por prevención se freno el update de una credencial.", "#errors")
+            raise BlockedCredentialError()
+        self.contiguous_limit_error += 1
         duration = (datetime.datetime.today() - self.start_time).seconds
         self.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
 
@@ -121,7 +128,6 @@ class TweetUpdateService:
         if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                 error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
             if self.contiguous_private_users >= 100:
-                self.contiguous_private_users = 0
                 SlackHelper().post_message_to_channel(
                     "Muchos usuarios privados.", "#errors")
                 raise BlockedCredentialError()
