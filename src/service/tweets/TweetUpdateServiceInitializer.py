@@ -1,3 +1,5 @@
+from threading import Thread
+
 from src.exception.CredentialsAlreadyInUseError import CredentialsAlreadyInUseError
 from src.service.credentials.CredentialService import CredentialService
 from src.service.tweets.TweetUpdateService import TweetUpdateService
@@ -11,6 +13,11 @@ class TweetUpdateServiceInitializer(metaclass=Singleton):
 
     @classmethod
     def initialize_tweet_update_service(cls):
+        thread = Thread(target=cls.initialize_tweet_update_service_with_credentials)
+        thread.start()
+
+    @classmethod
+    def initialize_tweet_update_service_with_credentials(cls):
         """ Update tweet of some candidates' followers. """
         cls.get_logger().info('Starting follower updating process.')
         try:
