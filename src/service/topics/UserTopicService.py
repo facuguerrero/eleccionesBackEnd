@@ -42,4 +42,5 @@ class UserTopicService:
 
         np_data = np.array(data)
         csr_matrix(np_data)
+        # Guardarlo como npz
         # Falta aplicarle TF IDF
