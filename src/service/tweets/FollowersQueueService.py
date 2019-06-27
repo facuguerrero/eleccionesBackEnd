@@ -114,6 +114,8 @@ class FollowersQueueService(metaclass=Singleton):
             date = datetime(2019, 1, 1)
             if 'last_tweet_date' in follower:
                 date = follower['last_tweet_date']
+            if date is None:
+                self.logger.warning(f"None type for: {follower['_id']}")
             followers[follower['_id']] = date
         self.logger.info(f"Added {len(followers)} to queue.")
         self.updating_followers.update(followers)
