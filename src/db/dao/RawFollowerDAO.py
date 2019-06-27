@@ -118,10 +118,10 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         followers_to_return = {}
         for document in documents:
             selected_date = datetime.datetime(2019, 1, 1)
-            if 'last_tweet_date' in document:
+            if 'last_tweet_date' in document and document['last_tweet_date'] is not None:
                 selected_date = document['last_tweet_date']
             if selected_date is None:
-                self.logger.warning(f"None type for: {document['_id']}")
+                self.logger.warning(f"None type for: {document['_id']}. last tweet date is in document? {'last_tweet_date' in document}")
             followers_to_return[document['_id']] = selected_date
         return followers_to_return
 
