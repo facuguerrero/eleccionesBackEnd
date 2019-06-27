@@ -117,7 +117,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         ])
         followers_to_return = {}
         for document in documents:
-            followers_to_return[document['_id']] = document['$last_tweet_date']
+            followers_to_return[document['_id']] = document['last_tweet_date'] if 'last_tweet_date' in document else datetime(2019,1,1)
         return followers_to_return
 
     def finish_candidate(self, candidate_name):
