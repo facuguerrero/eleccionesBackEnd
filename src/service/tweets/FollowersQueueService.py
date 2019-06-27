@@ -76,36 +76,6 @@ class FollowersQueueService(metaclass=Singleton):
             None,
             private_users)
         self.add_followers(downloaded)
-
-        initDate = datetime(2019, 6, 17, 20, 0, 0)
-        endDate = datetime(2019, 6, 19, 8, 0, 0)
-        downloaded = RawFollowerDAO().get_all({
-            '$and': [
-                {"downloaded_on": {'$gt': initDate}},
-                {"downloaded_on": {'$lt': endDate}},
-                {'has_tweets': False}
-            ]})
-        self.add_followers(downloaded)
-
-        # {'$and': [{"downloaded_on": {$gt: new ISODate("2019-06-17T20:00:00")}}, {"downloaded_on": {$lt: new ISODate("2019-06-19T08:00:00")}}, {'has_tweets': false} ]}
-
-        initDate = datetime(2019, 6, 24, 0, 0, 0)
-        endDate = datetime(2019, 6, 25, 0, 0, 0)
-        downloaded = RawFollowerDAO().get_all({
-            '$and': [
-                {"downloaded_on": {'$gt': initDate}},
-                {"downloaded_on": {'$lt': endDate}},
-                {'has_tweets': None},
-                {'is_private': True}
-            ]})
-        self.add_followers(downloaded)
-
-        downloaded = RawFollowerDAO().get_with_limit({
-            '$and': [
-                {'has_tweets': {'$exists': False}},
-                {'is_private': False}
-            ]})
-        self.add_followers(downloaded)
         self.logger.info('Finishing insertion of last downloaded followers')
 
     def add_followers(self, downloaded):
