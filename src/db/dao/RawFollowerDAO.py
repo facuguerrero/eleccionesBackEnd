@@ -108,7 +108,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                     {'downloaded_on': {'$lt': date}}
                 ]}
             },
-            {"$sample": {"size": 24000}},
+            {"$sample": {"size": 100000}},
             {"$group":
                  {"_id": "$_id",
                   "last_tweet_date": {"$first": "$last_tweet_date"}

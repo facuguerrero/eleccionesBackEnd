@@ -76,6 +76,7 @@ class FollowersQueueService(metaclass=Singleton):
             None,
             private_users)
         self.add_followers(downloaded)
+        self.add_followers_to_be_updated()
         self.logger.info('Finishing insertion of last downloaded followers')
 
     def add_followers(self, downloaded):
