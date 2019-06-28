@@ -128,7 +128,7 @@ class TweetUpdateService:
     def handle_twython_generic_error(self, error, follower):
         if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                 error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
-            if self.contiguous_private_users >= 100:
+            if self.contiguous_private_users >= 300:
                 self.get_logger().error('Too many private users. Shut down this credential')
                 SlackHelper().post_message_to_channel(
                     "Muchos usuarios privados.", "#errors")
