@@ -65,19 +65,27 @@ class FollowersQueueService(metaclass=Singleton):
         self.updating_followers.update(new_followers)
 
     def add_last_downloaded_followers(self, private_users=200000):
-        # TODO Borrar esto cuando se recorran todos los usuarios privados
         self.logger.info('Adding last downloaded followers')
+        users_to_be_updated = RawFollowerDAO().get_all({
+            '$and': [
+                {'has_tweets': {'$exists': False}},
+                {'is_private': False}
+            ]})
+        self.add_followers(users_to_be_updated)
+        self.add_private_users(private_users)
+        self.add_followers_to_be_updated()
+        self.logger.info('Finishing insertion of last downloaded followers')
+
+    def add_private_users(self, private_users):
         date = datetime(2019, 6, 24, 0, 0, 0)
-        downloaded = RawFollowerDAO().get_with_limit({
+        users_to_be_updated = RawFollowerDAO().get_with_limit({
             '$and': [
                 {'is_private': True},
                 {'downloaded_on': {'$lt': date}}
             ]},
             None,
             private_users)
-        self.add_followers(downloaded)
-        self.add_followers_to_be_updated()
-        self.logger.info('Finishing insertion of last downloaded followers')
+        self.add_followers(users_to_be_updated)
 
     def add_followers(self, downloaded):
         followers = {}
