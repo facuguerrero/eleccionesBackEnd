@@ -4,6 +4,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from src.service.followers.FollowerUpdateService import FollowerUpdateService
 from src.service.tweets.FollowersQueueService import FollowersQueueService
+from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
 from src.util.meta.Singleton import Singleton
 from src.util.slack.SlackHelper import SlackHelper
 
@@ -26,3 +27,8 @@ class Scheduler(metaclass=Singleton):
         self.scheduler.add_job(func=SlackHelper.send_server_status, trigger='cron', hour=8, minute=30, second=0)
         self.scheduler.start()
         atexit.register(lambda: self.scheduler.shutdown())
+
+    def add_job_to_restart_credential(self, credential_id, h, m, s):
+        # Habria que ejecutarlo una única vez
+        self.scheduler.add_job(func=TweetUpdateServiceInitializer().restart_credential, trigger='cron', hour=h,
+                               minute=m, second=s)
