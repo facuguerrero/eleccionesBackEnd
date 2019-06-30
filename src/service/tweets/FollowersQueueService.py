@@ -65,7 +65,7 @@ class FollowersQueueService(metaclass=Singleton):
         self.updating_followers.update(new_followers)
         self.add_private_users(100000)
 
-    def add_last_downloaded_followers(self, private_users=200000):
+    def add_last_downloaded_followers(self):
         self.logger.info('Adding last downloaded followers')
         users_to_be_updated = RawFollowerDAO().get_all({
             '$and': [
@@ -73,11 +73,9 @@ class FollowersQueueService(metaclass=Singleton):
                 {'is_private': False}
             ]})
         self.add_followers(users_to_be_updated)
-        # self.add_private_users(private_users)
-        # self.add_followers_to_be_updated()
         self.logger.info('Finishing insertion of last downloaded followers')
 
-    def add_private_users(self, private_users):
+    def add_private_users(self, private_users=200000):
         date = datetime(2019, 6, 24, 0, 0, 0)
         users_to_be_updated = RawFollowerDAO().get_with_limit({
             '$and': [
