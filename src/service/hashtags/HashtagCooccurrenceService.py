@@ -47,7 +47,6 @@ class HashtagCooccurrenceService:
             for hashtag, uuid in ids.items():
                 fd.write(f'{uuid} {hashtag}\n')
         cls.get_logger().info(f'Hashtag ids were written in file {file_name}')
-        return counts
 
     @classmethod
     def process_tweet(cls, tweet):
