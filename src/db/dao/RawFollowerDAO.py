@@ -46,6 +46,14 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                               }
                      })
 
+    def update_follower_downloaded_on(self, id_follower):
+        self.upsert({'_id': id_follower},
+                    {'$set': {
+                        'downloaded_on': datetime.datetime.today(),
+                        'is_private': False
+                    }
+                 })
+
     def update_follower_id(self, int_id):
         self.upsert({'_id': int_id},
                     {'$set': {'_id': str(int_id)}})
@@ -71,7 +79,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         return {document['_id'] for document in documents}
 
     def get_users_updated_since_date(self, date):
-        return self.get_count({'downloaded_on': {'$gt': date}}, {'_id': 1})
+        return self.get_count({'downloaded_on': {'$gt': date}, 'is_private': False}, {'_id': 1})
 
     def get_public_and_not_updated_users(self):
         """ Retrieve all the ids of the users that are not updated since one month catalogued as private.
@@ -92,7 +100,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         # 31K * 24hs ~ 800K por dia
         # Con un total de 1.250.435 usuarios que tienen tweets
         # Seteo ventana de 37 hs, lo que nos da 96k de base para actualizar + 31k por hora
-        date = datetime.datetime.today() - datetime.timedelta(hours=37)
+        date = datetime.datetime.today() - datetime.timedelta(hours=55)
         documents = self.aggregate([
             {"$match":
                 {"$and": [
@@ -100,16 +108,21 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                     {'downloaded_on': {'$lt': date}}
                 ]}
             },
-            {"$sample": {"size": 27000}},
+            {"$sample": {"size": 100000}},
             {"$group":
                  {"_id": "$_id",
-                  "downloaded_on": {"$first": "$downloaded_on"}
+                  "last_tweet_date": {"$first": "$last_tweet_date"}
                   }
              }
         ])
         followers_to_return = {}
         for document in documents:
-            followers_to_return[document['_id']] = document['downloaded_on']
+            selected_date = datetime.datetime(2019, 1, 1)
+            if 'last_tweet_date' in document and document['last_tweet_date'] is not None:
+                selected_date = document['last_tweet_date']
+            if selected_date is None:
+                self.logger.warning(f"None type for: {document['_id']}. last tweet date is in document? {'last_tweet_date' in document}")
+            followers_to_return[document['_id']] = selected_date
         return followers_to_return
 
     def finish_candidate(self, candidate_name):

@@ -1,4 +1,5 @@
 import random
+from datetime import datetime
 
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.exception.NoMoreFollowersToUpdateTweetsError import NoMoreFollowersToUpdateTweetsError
@@ -62,3 +63,38 @@ class FollowersQueueService(metaclass=Singleton):
             self.logger.error('Can\'t retrieve followers to update their tweets. ')
             raise NoMoreFollowersToUpdateTweetsError()
         self.updating_followers.update(new_followers)
+
+    def add_last_downloaded_followers(self, private_users=200000):
+        self.logger.info('Adding last downloaded followers')
+        users_to_be_updated = RawFollowerDAO().get_all({
+            '$and': [
+                {'has_tweets': {'$exists': False}},
+                {'is_private': False}
+            ]})
+        self.add_followers(users_to_be_updated)
+        self.add_private_users(private_users)
+        self.add_followers_to_be_updated()
+        self.logger.info('Finishing insertion of last downloaded followers')
+
+    def add_private_users(self, private_users):
+        date = datetime(2019, 6, 24, 0, 0, 0)
+        users_to_be_updated = RawFollowerDAO().get_with_limit({
+            '$and': [
+                {'is_private': True},
+                {'downloaded_on': {'$lt': date}}
+            ]},
+            None,
+            private_users)
+        self.add_followers(users_to_be_updated)
+
+    def add_followers(self, downloaded):
+        followers = {}
+        for follower in downloaded:
+            date = datetime(2019, 1, 1)
+            if 'last_tweet_date' in follower:
+                date = follower['last_tweet_date']
+            if date is None:
+                self.logger.warning(f"None type for: {follower['_id']}")
+            followers[follower['_id']] = date
+        self.logger.info(f"Added {len(followers)} to queue.")
+        self.updating_followers.update(followers)

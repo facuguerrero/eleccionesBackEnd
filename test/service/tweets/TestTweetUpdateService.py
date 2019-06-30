@@ -23,15 +23,6 @@ class TestTweetUpdateService(CustomTestCase):
         # We need this to avoid mocking some object creations
         Mongo().db = mongomock.database.Database(mongomock.MongoClient(), 'elections', _store=None)
 
-    @mock.patch.object(CredentialService, 'get_all_credentials_for_service', return_value={})
-    @mock.patch.object(AsyncThreadPoolExecutor, 'run')
-    @mock.patch.object(SlackHelper, 'post_message_to_channel')
-    def test_update_tweets_ok(self, slack_mock, async_mock, credentials_mock):
-        TweetUpdateService.update_tweets()
-        assert credentials_mock.call_count == 1
-        assert async_mock.call_count == 1
-        assert slack_mock.call_count == 1
-
     def test_get_formatted_date_invalid_date(self):
         date = TweetUpdateService.get_formatted_date('123123')
 
@@ -75,7 +66,6 @@ class TestTweetUpdateService(CustomTestCase):
     @mock.patch.object(HashtagCooccurrenceService, 'process_tweet')
     @mock.patch.object(HashtagOriginService, 'process_tweet')
     def test_store_part_of_new_tweets(self, origin_mock, cooccurrence_mock, insert_mock):
-        follower = TweetUpdateHelper().get_mock_follower_1()
         tweet1 = TweetUpdateHelper().get_mock_tweet_may_26_follower_1()
         tweet2 = TweetUpdateHelper().get_mock_tweet_may_24_follower_1()
         download_tweets = [tweet1, tweet2]
@@ -120,7 +110,7 @@ class TestTweetUpdateService(CustomTestCase):
         assert get_mock.call_count == 1
         assert update_mock.call_count == 0
 
-    @mock.patch.object(RawFollowerDAO, 'update_follower_data')
+    @mock.patch.object(RawFollowerDAO, 'update_follower_downloaded_on')
     @mock.patch.object(RawFollowerDAO, 'get', return_value=TweetUpdateHelper().get_mock_follower_not_private())
     def test_update_follower_with_no_tweets_not_private_user(self, get_mock, update_mock):
         TweetUpdateService.update_follower_with_no_tweets("dummyFollower")
@@ -128,20 +118,18 @@ class TestTweetUpdateService(CustomTestCase):
         assert get_mock.call_count == 1
         assert update_mock.call_count == 1
 
-    @mock.patch.object(RawFollowerDAO, 'tag_as_private')
-    @mock.patch.object(RawFollowerDAO, 'get', return_value=TweetUpdateHelper().get_mock_follower_not_private())
-    def test_update_follower_as_private(self, get_mock, tag_mock):
+    @mock.patch.object(RawFollowerDAO, 'update_follower_data')
+    def test_update_follower_as_private(self, tag_mock):
         TweetUpdateService.update_follower_as_private("dummyFollower")
 
-        get_mock.call_count == 1
-        tag_mock.call_count == 1
+        assert tag_mock.call_count == 1
 
     @mock.patch.object(RawFollowerDAO, 'update_follower_data')
     def test_update_complete_follower(self, update_mock):
         tweet = TweetUpdateHelper().get_mock_tweet_may_26_follower_1()
-        min_date = TweetUpdateHelper().get_mock_min_date_may_24()
+        last_date = TweetUpdateHelper().get_mock_min_date_may_24()
 
-        TweetUpdateService.update_complete_follower("dummyFollower", tweet)
+        TweetUpdateService.update_complete_follower("dummyFollower", tweet, last_date)
 
         assert update_mock.call_count == 1
 
@@ -152,8 +140,8 @@ class TestTweetUpdateService(CustomTestCase):
         is_first_request = True
         max_id = None
 
-        result = TweetUpdateService.do_download_tweets_request(twitter_mock, follower, "timestamp", is_first_request,
-                                                               max_id)
+        result = TweetUpdateService().do_download_tweets_request(twitter_mock, follower, "timestamp", is_first_request,
+                                                                 max_id)
 
         assert download_tweets_mock.call_count == 1
         assert len(result) == 0
@@ -166,13 +154,13 @@ class TestTweetUpdateService(CustomTestCase):
         is_first_request = True
         max_id = None
 
-        result = TweetUpdateService.do_download_tweets_request(twitter_mock, follower, "timestamp", is_first_request,
-                                                               max_id)
+        result = TweetUpdateService().do_download_tweets_request(twitter_mock, follower, "timestamp", is_first_request,
+                                                                 max_id)
         assert download_tweets_mock.call_count == 1
         assert len(result) == 1
 
     @mock.patch.object(TwitterUtils, 'twitter', return_value={})
-    @mock.patch.object(TweetUpdateService, 'do_download_tweets_request', return_value=[[], "timestamp"])
+    @mock.patch.object(TweetUpdateService, 'do_download_tweets_request', return_value=[])
     def test_download_tweets_and_validate_with_no_results(self, download_tweets_mock, twitter_mock):
         follower = TweetUpdateHelper().get_mock_follower_1()
         follower_download_tweets = []
@@ -180,21 +168,21 @@ class TestTweetUpdateService(CustomTestCase):
         is_first_request = True
         max_id = None
 
-        TweetUpdateService.download_tweets_and_validate(twitter_mock, follower, min_tweet_date, "timestamp",
-                                                        is_first_request, max_id)
+        TweetUpdateService().download_tweets_and_validate(twitter_mock, follower, min_tweet_date, is_first_request,
+                                                          max_id)
         assert len(follower_download_tweets) == 0
         assert download_tweets_mock.call_count == 1
 
     @mock.patch.object(TwitterUtils, 'twitter', return_value={})
     @mock.patch.object(TweetUpdateService, 'do_download_tweets_request',
-                       return_value=[[TweetUpdateHelper().get_mock_tweet_may_26_follower_1()], "timestamp"])
+                       return_value=[TweetUpdateHelper().get_mock_tweet_may_26_follower_1()])
     def test_download_tweets_and_validate_with_results(self, download_tweets_mock, twitter_mock):
         follower = TweetUpdateHelper().get_mock_follower_1()
         min_tweet_date = TweetUpdateHelper().get_mock_min_date_may_25()
         is_first_request = True
         max_id = None
 
-        result = TweetUpdateService.download_tweets_and_validate(twitter_mock, follower, min_tweet_date, "timestamp",
-                                                                 is_first_request, max_id)
-        assert len(result[1]) == 1
+        result = TweetUpdateService().download_tweets_and_validate(twitter_mock, follower, min_tweet_date,
+                                                                   is_first_request, max_id)
+        assert len(result) == 1
         assert download_tweets_mock.call_count == 1

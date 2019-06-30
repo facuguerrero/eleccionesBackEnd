@@ -9,6 +9,7 @@ class TweetUpdateHelper:
         return {'_id': '1',
                 'created_at': 'Sun May 26 02:43:14 +0000 2019',
                 'text': '',
+                'entities': {'hashtags': []},
                 'user': {'id_str': '1',
                          'location': 'dummy',
                          'followers_count': 'dummy',
@@ -24,6 +25,7 @@ class TweetUpdateHelper:
         return {'_id': '1',
                 'created_at': 'Fri May 24 02:43:14 +0000 2019',
                 'text': '',
+                'entities': {'hashtags': []},
                 'user': {'id_str': '1'}
                 }
 
