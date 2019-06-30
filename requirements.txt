@@ -12,3 +12,4 @@ mock
 slackclient
 flask-cors
 scipy
+sklearn

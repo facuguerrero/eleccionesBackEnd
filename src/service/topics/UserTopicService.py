@@ -1,5 +1,8 @@
+import datetime
+
 import numpy as np
 from scipy.sparse import csr_matrix
+from sklearn.feature_extraction.text import TfidfTransformer
 
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 
@@ -40,7 +43,19 @@ class UserTopicService:
                 users_row.append(user)
                 data.append(user_hashtags_vector)
 
+        cls.create_matrix_and_save(data)
+
+    @classmethod
+    def create_matrix_and_save(cls, data):
+        """ Method which receive vector data and create a csr matrix.
+        After that apply TF-IDF and save it."""
+        # Create np array to be used in the matrix
         np_data = np.array(data)
-        csr_matrix(np_data)
-        # Guardarlo como npz
-        # Falta aplicarle TF IDF
+        matrix = csr_matrix(np_data)
+
+        # Apply TF-IDF
+        tfidf_transformer = TfidfTransformer()
+        tf_idf_matrix = tfidf_transformer.fit_transform(matrix)
+
+        date = datetime.datetime.today()
+        csr_matrix.save_npz(f'{str(date.year)}-{str(date.month)}-{str(date.day)}', tf_idf_matrix)
