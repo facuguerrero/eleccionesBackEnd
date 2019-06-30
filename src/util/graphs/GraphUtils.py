@@ -2,8 +2,8 @@ from itertools import islice
 
 import pandas as pd
 
-from src.util.FileUtils import FileUtils
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
+from src.util.FileUtils import FileUtils
 from src.util.config.ConfigurationManager import ConfigurationManager
 
 

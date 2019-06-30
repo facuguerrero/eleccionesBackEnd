@@ -1,6 +1,6 @@
-from uuid import uuid4
 from collections import OrderedDict
 from pathlib import Path
+from uuid import uuid4
 
 from src.db.dao.CooccurrenceDAO import CooccurrenceDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO

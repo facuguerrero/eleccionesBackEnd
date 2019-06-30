@@ -1,5 +1,4 @@
 import re
-
 from pathlib import Path
 
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
