@@ -22,7 +22,7 @@ class Scheduler(metaclass=Singleton):
         self.scheduler.add_job(func=FollowersQueueService().add_last_downloaded_followers, trigger='cron', hour=3,
                                minute=0, second=0)
         # Analyze cooccurrence at 00:30:00 every day
-        self.scheduler.add_job(func=CooccurrenceAnalysisService.analyze(), trigger='cron', hour=0, minute=30, second=0)
+        self.scheduler.add_job(func=CooccurrenceAnalysisService.analyze, trigger='cron', hour=0, minute=30, second=0)
         # Send server status to Slack at 08:30:00 every day
         self.scheduler.add_job(func=SlackHelper.send_server_status, trigger='cron', hour=8, minute=30, second=0)
         self.scheduler.start()
