@@ -30,6 +30,7 @@ class TweetUpdateService:
         self.contiguous_limit_error = 0
         self.continue_downloading = False
         self.start_time = None
+        self.credential = None
 
     def download_tweets_with_credential(self, credential):
         """ Update followers' tweets with an specific Twitter Api Credential. """
@@ -38,6 +39,7 @@ class TweetUpdateService:
         twitter = TwitterUtils.twitter_with_app_auth(credential)
         try:
             self.tweets_update_process(twitter, credential.id)
+            self.credential = credential.id
         except BlockedCredentialError:
             self.get_logger().error(f'credential with id {credential.id} seems to be blocked')
         except Exception as e:
@@ -114,9 +116,16 @@ class TweetUpdateService:
     def handle_twython_rate_limit_error(self):
         """ Method wich handles twython rate limit error. """
 
-        # If throws twython rate limit error 3 times in a row
+        # If throws twython rate limit error 2 times in a row
+        # Sleep by 1 hour
+        if 2 <= self.contiguous_limit_error <= 5:
+            time_to_sleep = ConfigurationManager().get_int('limit_error_sleep_time') * (self.contiguous_limit_error / 2)
+            self.get_logger().warning(f'Sleeping credential by {time_to_sleep} due to frequently rate limit error')
+            time.sleep(time_to_sleep)
+
+        # If throws twython rate limlimit_error_sleep_timeit error 5 times in a row
         # Shut down this credential
-        if self.contiguous_limit_error > 3:
+        if self.contiguous_limit_error >= 6:
             self.shut_down_credential_and_notify('Shut down this credential because is raising '
                                                  'twython rate limit error frequently.',
                                                  "Por prevención se freno el update de una credencial.")
