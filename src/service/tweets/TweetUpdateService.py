@@ -123,7 +123,7 @@ class TweetUpdateService:
             self.get_logger().warning(f'Sleeping credential by {time_to_sleep} due to frequently rate limit error')
             time.sleep(time_to_sleep)
 
-        # If throws twython rate limlimit_error_sleep_timeit error 5 times in a row
+        # If throws twython rate limit_error_sleep_time error 5 times in a row
         # Shut down this credential
         if self.contiguous_limit_error >= 6:
             self.shut_down_credential_and_notify('Shut down this credential because is raising '
