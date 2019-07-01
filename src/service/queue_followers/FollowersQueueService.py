@@ -15,6 +15,7 @@ class FollowersQueueService(metaclass=Singleton):
     def __init__(self):
         self.logger = Logger(self.__class__.__name__)
         self.updating_followers = {}
+        self.priority_updating_followers = {}
         ConcurrencyUtils().create_lock('followers_for_update_tweets')
 
     def get_followers_to_update(self):
@@ -24,6 +25,13 @@ class FollowersQueueService(metaclass=Singleton):
 
         max_users_per_window = ConfigurationManager().get_int('max_users_per_window')
         followers_to_update = {}
+
+        # If we have recent downloaded followers
+        if len(self.priority_updating_followers) != 0:
+            self.logger.warning(f'Adding {len(self.priority_updating_followers)} priority followers.')
+            followers_keys = self.priority_updating_followers.copy()
+            self.priority_updating_followers = {}
+            return followers_keys
 
         if len(self.updating_followers) <= 2 * max_users_per_window:
             # Retrieve more candidates from db
@@ -72,7 +80,8 @@ class FollowersQueueService(metaclass=Singleton):
                 {'has_tweets': {'$exists': False}},
                 {'is_private': False}
             ]})
-        self.add_followers(users_to_be_updated)
+        followers = self.add_followers(users_to_be_updated)
+        self.priority_updating_followers.update(followers)
         self.logger.info('Finishing insertion of last downloaded followers')
 
     def add_private_users(self, private_users=200000):
@@ -84,7 +93,8 @@ class FollowersQueueService(metaclass=Singleton):
             ]},
             None,
             private_users)
-        self.add_followers(users_to_be_updated)
+        followers = self.add_followers(users_to_be_updated)
+        self.updating_followers.update(followers)
 
     def add_followers(self, downloaded):
         followers = {}
@@ -96,4 +106,4 @@ class FollowersQueueService(metaclass=Singleton):
                 self.logger.warning(f"None type for: {follower['_id']}")
             followers[follower['_id']] = date
         self.logger.info(f"Added {len(followers)} to queue.")
-        self.updating_followers.update(followers)
+        return followers

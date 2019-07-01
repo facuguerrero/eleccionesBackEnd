@@ -183,6 +183,7 @@ class TweetUpdateService:
     def get_followers_to_update(cls):
         """ Get the followers to be updated from FollowersQueueService. """
         try:
+            # FollowersQueueService consumer
             return FollowersQueueService().get_followers_to_update()
         except NoMoreFollowersToUpdateTweetsError:
             return None
