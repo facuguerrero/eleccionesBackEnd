@@ -66,7 +66,6 @@ class TweetUpdateService:
 
                 self.store_tweets_and_update_follower(follower_download_tweets, follower, min_tweet_date)
                 # cls.get_logger().warning(f'Follower updated {follower}.')
-
             followers = self.get_followers_to_update()
         self.send_stopped_tread_notification(credential_id)
 
