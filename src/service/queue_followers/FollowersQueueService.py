@@ -28,9 +28,10 @@ class FollowersQueueService(metaclass=Singleton):
 
         # If we have recent downloaded followers
         if len(self.priority_updating_followers) != 0:
-            self.logger.warning(f'Adding {len(self.priority_updating_followers)} recent downloaded followers.')
+            self.logger.warning(f'Getting {len(self.priority_updating_followers)} recent downloaded followers.')
             followers_keys = self.priority_updating_followers.copy()
             self.priority_updating_followers = {}
+            ConcurrencyUtils().release_lock('followers_for_update_tweets')
             return followers_keys
 
         if len(self.updating_followers) <= 2 * max_users_per_window:
