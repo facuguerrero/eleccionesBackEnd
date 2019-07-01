@@ -3,6 +3,7 @@ from datetime import timedelta, datetime
 from src.db.dao.CommunityStrengthDAO import CommunityStrengthDAO
 from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
+from src.db.dao.ShowableGraphDAO import ShowableGraphDAO
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.service.hashtags.OSLOMService import OSLOMService
 from src.util.graphs.GraphUtils import GraphUtils
@@ -41,6 +42,7 @@ class CooccurrenceAnalysisService:
         HashtagsTopicsDAO().store(data['hashtags_topics'], start_date, end_date)
         CommunityStrengthDAO().store(data['community_strength'], start_date, end_date)
         CooccurrenceGraphDAO().store(data['graphs'], start_date, end_date)
+        ShowableGraphDAO().store(data['showable_graphs'], start_date, end_date)
 
     @classmethod
     def get_graph_for_window(cls, start_date, end_date):

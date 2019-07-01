@@ -43,8 +43,32 @@ class GraphUtils:
         community_strength = cls.__calculate_strengths(grouped)
         # Generate main graph (community connection graph)
         graphs['main'] = cls.__generate_main_graph(reduced_join, community_leaders)
+        # Generate showable graphs. These are the graphs from the main topics with a limited number of nodes
+        showable_graphs = cls.__generate_showable_graphs(graphs)
         # Return data object
-        return {'graphs': graphs, 'community_strength': community_strength, 'hashtags_topics': hashtags_topics}
+        return {'graphs': graphs,
+                'community_strength': community_strength,
+                'hashtags_topics': hashtags_topics,
+                'showable_graphs': showable_graphs}
+
+    @classmethod
+    def __generate_showable_graphs(cls, graphs):
+        """ Generate graphs from the main topics with a limited number of nodes. """
+        bound = ConfigurationManager().get_int('max_nodes_showable_graphs')
+        showable_graphs = dict()
+        # Find main topics
+        main_topics = [node['id'] for node in graphs['main']['nodes']]
+        # Create a graph for each topic
+        for main_topic in main_topics:
+            graph = graphs[main_topic]
+            # Find the 'bound' top nodes in current topic
+            top_nodes = [node for node in islice(sorted(graph['nodes'], key=lambda n: n['size'], reverse=True), bound)]
+            nodes_ids = [node['id'] for node in top_nodes]
+            # Keep only the edges between the top nodes
+            links = [link for link in graph['links'] if link['source'] in nodes_ids and link['target'] in nodes_ids]
+            # Store in showable graphs dict
+            showable_graphs[main_topic] = {'links': links, 'nodes': top_nodes}
+        return showable_graphs
 
     @classmethod
     def __generate_main_graph(cls, communities, community_leaders):
