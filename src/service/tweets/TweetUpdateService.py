@@ -16,7 +16,7 @@ from src.service.credentials.CredentialService import CredentialService
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.hashtags.UserHashtagService import UserHashtagService
-from src.service.tweets.FollowersQueueService import FollowersQueueService
+from src.service.queue_followers.FollowersQueueService import FollowersQueueService
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper

@@ -4,12 +4,12 @@ from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.service.candidates.CandidateService import CandidateService
 from src.service.credentials.CredentialService import CredentialService
 from src.service.followers.FollowerUpdateService import FollowerUpdateService
+from src.service.queue_followers.FollowersQueueService import FollowersQueueService
+from src.service.tweets.TweetUpdateService import TweetUpdateService
 from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
-from src.service.tweets.FollowersQueueService import FollowersQueueService
-from src.service.tweets.TweetUpdateService import TweetUpdateService
 
 
 class ContextInitializer:

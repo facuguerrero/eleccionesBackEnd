@@ -2,7 +2,7 @@ from src.db.dao.CandidateDAO import CandidateDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
-from src.service.tweets.FollowersQueueService import FollowersQueueService
+from src.service.queue_followers.FollowersQueueService import FollowersQueueService
 
 
 def create_indexes():
