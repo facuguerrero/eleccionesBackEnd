@@ -19,6 +19,7 @@ class Scheduler(metaclass=Singleton):
         """ Configure scheduler's jobs. """
         # Download new followers at 00:00:00 every day
         self.scheduler.add_job(func=FollowerUpdateService.update_followers, trigger='cron', hour=0, minute=0, second=0)
+        # Adds all new followers
         self.scheduler.add_job(func=FollowersQueueService().add_last_downloaded_followers, trigger='cron', hour=3,
                                minute=0, second=0)
         # Analyze cooccurrence at 00:30:00 every day
