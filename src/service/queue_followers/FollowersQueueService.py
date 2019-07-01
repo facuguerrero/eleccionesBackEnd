@@ -28,7 +28,7 @@ class FollowersQueueService(metaclass=Singleton):
 
         # If we have recent downloaded followers
         if len(self.priority_updating_followers) != 0:
-            self.logger.warning(f'Adding {len(self.priority_updating_followers)} priority followers.')
+            self.logger.warning(f'Adding {len(self.priority_updating_followers)} recent downloaded followers.')
             followers_keys = self.priority_updating_followers.copy()
             self.priority_updating_followers = {}
             return followers_keys
