@@ -89,7 +89,7 @@ class FollowersQueueService(metaclass=Singleton):
         self.priority_updating_followers.update(followers)
         self.logger.info('Finishing insertion of last downloaded followers')
 
-    def add_private_users(self, private_users=200000):
+    def add_private_users(self, private_users=50000):
         date = datetime(2019, 6, 24, 0, 0, 0)
         users_to_be_updated = RawFollowerDAO().get_with_limit({
             '$and': [
