@@ -76,7 +76,7 @@ class FollowersQueueService(metaclass=Singleton):
             self.logger.error('Can\'t retrieve followers to update their tweets. ')
             raise NoMoreFollowersToUpdateTweetsError()
         self.updating_followers.update(new_followers)
-        self.add_private_users()
+        # self.add_private_users()
 
     def add_last_downloaded_followers(self):
         self.logger.info('Adding last downloaded followers')
