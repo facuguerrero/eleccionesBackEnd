@@ -16,7 +16,7 @@ from src.service.credentials.CredentialService import CredentialService
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.hashtags.UserHashtagService import UserHashtagService
-from src.service.tweets.FollowersQueueService import FollowersQueueService
+from src.service.queue_followers.FollowersQueueService import FollowersQueueService
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
@@ -66,7 +66,6 @@ class TweetUpdateService:
 
                 self.store_tweets_and_update_follower(follower_download_tweets, follower, min_tweet_date)
                 # cls.get_logger().warning(f'Follower updated {follower}.')
-
             followers = self.get_followers_to_update()
         self.send_stopped_tread_notification(credential_id)
 
@@ -116,14 +115,15 @@ class TweetUpdateService:
     def handle_twython_rate_limit_error(self):
         """ Method wich handles twython rate limit error. """
 
-        # If throws twython rate limit error 2 times in a row
+        # If throws twython rate limit error 3 times in a row
         # Sleep by 1 hour
-        if 2 <= self.contiguous_limit_error <= 5:
-            time_to_sleep = ConfigurationManager().get_int('limit_error_sleep_time') * (self.contiguous_limit_error / 2)
+        if 3 <= self.contiguous_limit_error <= 5:
+            time_to_sleep = ConfigurationManager().get_int('limit_error_sleep_time') * int(
+                self.contiguous_limit_error / 2)
             self.get_logger().warning(f'Sleeping credential by {time_to_sleep} due to frequently rate limit error')
             time.sleep(time_to_sleep)
 
-        # If throws twython rate limlimit_error_sleep_timeit error 5 times in a row
+        # If throws twython rate limit_error_sleep_time error 5 times in a row
         # Shut down this credential
         if self.contiguous_limit_error >= 6:
             self.shut_down_credential_and_notify('Shut down this credential because is raising '
@@ -183,6 +183,7 @@ class TweetUpdateService:
     def get_followers_to_update(cls):
         """ Get the followers to be updated from FollowersQueueService. """
         try:
+            # FollowersQueueService consumer
             return FollowersQueueService().get_followers_to_update()
         except NoMoreFollowersToUpdateTweetsError:
             return None

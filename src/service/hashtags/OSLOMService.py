@@ -1,5 +1,4 @@
 import re
-
 from pathlib import Path
 
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
@@ -17,7 +16,7 @@ class OSLOMService:
     OSLOM_FOLDER_NAME = 'OSLOM2'
 
     @classmethod
-    def export_communities_for_window(cls, start_date, end_date, graph):
+    def export_communities_for_window(cls, start_date, end_date):
         """ Create .csv file with the processed result of OSLOM's execution. Add known data to graph. """
         # OSLOM2 folder path
         oslom_path = f'{Path.home()}/{cls.OSLOM_FOLDER_NAME}/'
@@ -44,7 +43,7 @@ class OSLOMService:
         # Process OSLOM's output
         hashtag_clusters = cls.__extract_oslom_communities()
         # Write to .csv
-        cls.__write_hashtag_clusters_file(hashtag_clusters, start_date, end_date, graph)
+        cls.__write_hashtag_clusters_file(hashtag_clusters, start_date, end_date)
         # Remove OSLOM result
         CommandLineUtils.remove(f'{HashtagCooccurrenceService.DIR_PATH}/{cls.RESULT_FILE_NAME}')
 
@@ -71,32 +70,50 @@ class OSLOMService:
                     module_hashtags = map(int, module_hashtags)
                     # Add cluster to hashtag's set of clusters in which it is included
                     for hashtag in module_hashtags:
-                        if hashtag not in hashtag_clusters:
-                            hashtag_clusters[hashtag] = set()
-                        hashtag_clusters[hashtag].add(cluster)
+                        cls.__add_to_dict_set(hashtag, cluster, hashtag_clusters)
         cls.get_logger().info(f'OSLOM found {cluster_count} different clusters.')
         return hashtag_clusters
 
     @classmethod
-    def __write_hashtag_clusters_file(cls, hashtag_clusters, start_date, end_date, graph):
+    def __write_hashtag_clusters_file(cls, hashtag_clusters, start_date, end_date):
         """ Create .csv files with mappings for hashtag -> cluster. """
+        # Clean received dictionary
+        hashtag_clusters = cls.__clean_clusters(hashtag_clusters)
+        # Do writing
         base_dir = f'{HashtagCooccurrenceService.DIR_PATH}/'
-        translator = FileUtils.file_name_with_dates(f'{base_dir}ids', start_date, end_date, '.txt')
-        # Store references for mapping ids to hashtag text
-        mappings = dict()
-        with open(translator) as translator_fd:
-            for line in translator_fd:
-                splitted = line.strip().split(' ')
-                mappings[int(splitted[0])] = splitted[1]
-        # Create a .csv with numerical ids and one with string hashtag names
+        # Create a .csv with numerical ids and the associated cluster
         ids = FileUtils.file_name_with_dates(f'{base_dir}ids_clusters', start_date, end_date, '.csv')
-        # TODO: This may not be needed if we do not use LaNet-vi
         with open(ids, 'w') as ids_fd:
             # Write a line for each pair hashtag-cluster
             for hashtag, clusters in hashtag_clusters.items():
                 for cluster in clusters:
-                    graph['nodes'][mappings[hashtag]]['cluster'] = cluster
                     ids_fd.write(f'{hashtag} {cluster}\n')
+
+    @classmethod
+    def __clean_clusters(cls, hashtag_clusters):
+        """ Remove all clusters with only one hashtag. """
+        frequencies = dict()
+        # We are forced to iterate because a hashtag could be in more than one cluster
+        for cluster_set in hashtag_clusters.values():
+            for cluster in cluster_set:
+                if cluster not in frequencies:
+                    frequencies[cluster] = 0
+                frequencies[cluster] += 1
+        # Keep only those hashtags that belong to a cluster with more than one element
+        output = dict()
+        for hashtag, cluster_set in hashtag_clusters.items():
+            for cluster in cluster_set:
+                if frequencies[cluster] > 1:
+                    cls.__add_to_dict_set(hashtag, cluster, output)
+        return output
+
+    @classmethod
+    def __add_to_dict_set(cls, key, value, dictionary):
+        """ Add value to the set associated with the key inside the dictionary.
+        If the key does not exist, create set and then add value. """
+        if key not in dictionary:
+            dictionary[key] = set()
+        dictionary[key].add(value)
 
     @classmethod
     def get_logger(cls):
