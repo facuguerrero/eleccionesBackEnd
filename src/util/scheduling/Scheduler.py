@@ -4,7 +4,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from src.service.followers.FollowerUpdateService import FollowerUpdateService
 from src.service.hashtags.CooccurrenceAnalysisService import CooccurrenceAnalysisService
-from src.service.tweets.FollowersQueueService import FollowersQueueService
+from src.service.queue_followers.FollowersQueueService import FollowersQueueService
 from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
 from src.util.meta.Singleton import Singleton
 from src.util.slack.SlackHelper import SlackHelper
