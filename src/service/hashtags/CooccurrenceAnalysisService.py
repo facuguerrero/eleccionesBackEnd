@@ -12,12 +12,12 @@ from src.util.logging.Logger import Logger
 
 class CooccurrenceAnalysisService:
 
-    START_DAY = datetime.strptime('2019-01-01', '%Y-%m-%d')
+    START_DAY = datetime.combine(datetime.strptime('2019-01-01', '%Y-%m-%d').date(), datetime.min.time())
 
     @classmethod
     def analyze(cls):
         """ Run cooccurrence analysis for the last day and the accumulated since 2019-01-01. """
-        last_day = datetime.now() - timedelta(days=1)
+        last_day = datetime.combine((datetime.now() - timedelta(days=1)).date(), datetime.min.time())
         # Run for previous day
         cls.get_logger().info(f'Starting cooccurrence analysis for single day {last_day.date()}.')
         cls.analyze_cooccurrence_for_window(last_day)
