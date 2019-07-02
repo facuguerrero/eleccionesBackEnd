@@ -12,17 +12,21 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
         super(UserHashtagDAO, self).__init__(Mongo().get().db.user_hashtag)
         self.logger = Logger(self.__class__.__name__)
 
-    def get_hashtags_aggregated_by_user(self):
+    def get_hashtags_yesterday_aggregated_by_user(self):
         # TODO preguntar a que hora correrlo.
         date = datetime.datetime.today()
-        self.aggregate([
-            {'$match': {'timestamp': {'$gt': date}}},
+        documents = self.aggregate([
+            {'$match': {'timestamp': {'$lt': date}}},
             {'$group': {
                 '_id': '$user',
                 'hashtags_array': {'$push': '$hashtag'}
             }
             }
         ])
+        hashtags_by_user = {}
+        for document in documents:
+            hashtags_by_user[document['_id']] = document['hashtags_array']
+        return hashtags_by_user
 
     def create_indexes(self):
         self.logger.info('Creating timestamp index for collection user_hashtag.')
