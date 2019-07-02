@@ -15,6 +15,7 @@ class FollowersQueueService(metaclass=Singleton):
     def __init__(self):
         self.logger = Logger(self.__class__.__name__)
         self.updating_followers = {}
+        self.priority_updating_followers = {}
         ConcurrencyUtils().create_lock('followers_for_update_tweets')
 
     def get_followers_to_update(self):
@@ -22,9 +23,39 @@ class FollowersQueueService(metaclass=Singleton):
         ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
         self.logger.info(f'Getting followers to update their tweets. Queue\'s size: {len(self.updating_followers)} ')
 
-        max_users_per_window = ConfigurationManager().get_int('max_users_per_window')
-        followers_to_update = {}
+        followers_to_update = self.try_to_get_priority_followers()
+        if len(followers_to_update) == 0:
+            followers_to_update = self.get_followers_with_tweets_to_update()
 
+        ConcurrencyUtils().release_lock('followers_for_update_tweets')
+        return followers_to_update
+
+    def try_to_get_priority_followers(self):
+        # If we have recent downloaded followers
+        users_to_update = {}
+        if len(self.priority_updating_followers) != 0:
+            self.logger.warning(f'Getting {len(self.priority_updating_followers)} recent downloaded followers.')
+            users_to_update = self.priority_updating_followers.copy()
+            self.priority_updating_followers = {}
+        return users_to_update
+
+    def get_followers_with_tweets_to_update(self):
+        """ Get followers with tweets to update. """
+        max_users_per_window = ConfigurationManager().get_int('max_users_per_window')
+
+        self.check_if_have_followers(max_users_per_window)
+
+        # Get the min follower's quantity between length and max_users
+        min_length = min(max_users_per_window, len(self.updating_followers.keys()))
+        random_followers_keys = random.sample(self.updating_followers.keys(), min_length)
+
+        # Remove selected followers
+        followers_to_update = {}
+        for follower in random_followers_keys:
+            followers_to_update[follower] = self.updating_followers.pop(follower)
+        return followers_to_update
+
+    def check_if_have_followers(self, max_users_per_window):
         if len(self.updating_followers) <= 2 * max_users_per_window:
             # Retrieve more candidates from db
             self.add_followers_to_be_updated()
@@ -34,24 +65,6 @@ class FollowersQueueService(metaclass=Singleton):
                 "No se obtuvieron seguidores de la base de datos.")
             self.logger.error('There are not followers to update their tweets.')
             raise NoMoreFollowersToUpdateTweetsError()
-
-        random_followers_keys = []
-        try:
-            random_followers_keys = random.sample(self.updating_followers.keys(), max_users_per_window)
-        except ValueError:
-            SlackHelper().post_message_to_channel(
-                "Quedan pocos usuarios por actualizar en la cola.")
-            self.logger.warning(f'There are {len(self.updating_followers)} followers to update in the queue.')
-            random_followers_keys = self.updating_followers.copy()
-            self.updating_followers = {}
-            return random_followers_keys
-        # Remove selected followers
-        for follower in random_followers_keys:
-            followers_to_update[follower] = self.updating_followers.pop(follower)
-
-        ConcurrencyUtils().release_lock('followers_for_update_tweets')
-
-        return followers_to_update
 
     def add_followers_to_be_updated(self):
         # TODO Analizar productor y consumidor en python.
@@ -63,19 +76,20 @@ class FollowersQueueService(metaclass=Singleton):
             self.logger.error('Can\'t retrieve followers to update their tweets. ')
             raise NoMoreFollowersToUpdateTweetsError()
         self.updating_followers.update(new_followers)
-        self.add_private_users(100000)
+        self.add_private_users()
 
     def add_last_downloaded_followers(self):
         self.logger.info('Adding last downloaded followers')
         users_to_be_updated = RawFollowerDAO().get_all({
             '$and': [
                 {'has_tweets': {'$exists': False}},
-                {'is_private': False}
+                {'is_private': {'$exists': False}}
             ]})
-        self.add_followers(users_to_be_updated)
+        followers = self.add_followers(users_to_be_updated)
+        self.priority_updating_followers.update(followers)
         self.logger.info('Finishing insertion of last downloaded followers')
 
-    def add_private_users(self, private_users=200000):
+    def add_private_users(self, private_users=50000):
         date = datetime(2019, 6, 24, 0, 0, 0)
         users_to_be_updated = RawFollowerDAO().get_with_limit({
             '$and': [
@@ -84,7 +98,8 @@ class FollowersQueueService(metaclass=Singleton):
             ]},
             None,
             private_users)
-        self.add_followers(users_to_be_updated)
+        followers = self.add_followers(users_to_be_updated)
+        self.updating_followers.update(followers)
 
     def add_followers(self, downloaded):
         followers = {}
@@ -96,4 +111,4 @@ class FollowersQueueService(metaclass=Singleton):
                 self.logger.warning(f"None type for: {follower['_id']}")
             followers[follower['_id']] = date
         self.logger.info(f"Added {len(followers)} to queue.")
-        self.updating_followers.update(followers)
+        return followers
