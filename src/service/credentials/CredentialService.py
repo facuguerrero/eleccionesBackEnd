@@ -49,6 +49,15 @@ class CredentialService(metaclass=Singleton):
                 return credential
         raise NoAvailableCredentialsError(service_id)
 
+    def get_credential_with_id_for_service(self, credential_id, service_id):
+        """ Get credential if current service is not using all of the available credentials. """
+        for credential in self.credentials:
+            if credential_id == credential.id and f"{credential.id}-{service_id}" not in self.in_use:
+                self.logger.info(f'Returning credential {credential.id} for service {service_id}.')
+                self.in_use.add(f"{credential.id}-{service_id}")
+                return credential
+        raise NoAvailableCredentialsError(service_id)
+
     def unlock_credential(self, credential_id, service_id):
         """ Unlock credential for a given service. """
         key = f'{credential_id}-{service_id}'

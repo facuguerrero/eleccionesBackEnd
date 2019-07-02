@@ -7,7 +7,7 @@ from urllib3.exceptions import ProtocolError
 
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
-from src.exception import CredentialsAlreadyInUseError
+from src.exception.BlockedCredentialError import BlockedCredentialError
 from src.exception.DuplicatedTweetError import DuplicatedTweetError
 from src.exception.NoMoreFollowersToUpdateTweetsError import NoMoreFollowersToUpdateTweetsError
 from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
@@ -17,7 +17,6 @@ from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceS
 from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.hashtags.UserHashtagService import UserHashtagService
 from src.service.tweets.FollowersQueueService import FollowersQueueService
-from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
@@ -26,71 +25,159 @@ from src.util.twitter.TwitterUtils import TwitterUtils
 
 class TweetUpdateService:
 
-    @classmethod
-    def update_tweets(cls):
-        """ Update tweet of some candidates' followers. """
-        cls.get_logger().info('Starting follower updating process.')
-        try:
-            credentials = CredentialService().get_all_credentials_for_service(cls.__name__)
-        except CredentialsAlreadyInUseError as caiue:
-            cls.get_logger().error(caiue.message)
-            cls.get_logger().warning('Tweets updating process skipped.')
-            return
-        # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.download_tweets_with_credential, credentials)
-        # cls.download_tweets_with_credential(credentials[0])
-        cls.get_logger().info('Stoped tweet updating')
-        SlackHelper().post_message_to_channel(
-            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
+    def __init__(self):
+        self.contiguous_private_users = 0
+        self.contiguous_limit_error = 0
+        self.continue_downloading = False
+        self.start_time = None
+        self.credential = None
 
-    @classmethod
-    def download_tweets_with_credential(cls, credential):
+    def download_tweets_with_credential(self, credential):
         """ Update followers' tweets with an specific Twitter Api Credential. """
-        cls.get_logger().info(f'Starting follower updating with credential {credential.id}.')
+        self.get_logger().info(f'Starting follower updating with credential {credential.id}.')
         # Create Twython instance for credential
         twitter = TwitterUtils.twitter_with_app_auth(credential)
         try:
-            cls.tweets_update_process(twitter, credential.id)
+            self.tweets_update_process(twitter, credential.id)
+            self.credential = credential.id
+        except BlockedCredentialError:
+            self.get_logger().error(f'credential with id {credential.id} seems to be blocked')
         except Exception as e:
-            cls.get_logger().error(e)
-            cls.send_stopped_tread_notification(credential.id)
+            self.get_logger().error(e)
+            self.send_stopped_tread_notification(credential.id)
 
-    @classmethod
-    def tweets_update_process(cls, twitter, credential_id):
+    def tweets_update_process(self, twitter, credential_id):
         """ Method to catch any exception """
+        followers = self.get_followers_to_update()
+
         # While there are followers to update
-        followers = cls.get_followers_to_update()
-        start_time = time.time()
+        self.start_time = datetime.datetime.today()
         while followers:
             for follower, last_update in followers.items():
+                self.continue_downloading = False
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
-                result = cls.download_tweets_and_validate(twitter, follower,
-                                                          min_tweet_date, start_time, True)
-                continue_downloading = result[0]
-                follower_download_tweets = result[1]
-                start_time = result[2]
-                while continue_downloading:
-                    max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
-                    result = cls.download_tweets_and_validate(twitter, follower,
-                                                              min_tweet_date, start_time, False, max_id)
-                    continue_downloading = result[0]
-                    follower_download_tweets = result[1]
-                    start_time = result[2]
-                if len(follower_download_tweets) != 0:
-                    cls.update_complete_follower(follower, follower_download_tweets[0])
-                    cls.store_new_tweets(follower_download_tweets, min_tweet_date)
-                else:
-                    cls.update_follower_with_no_tweets(follower)
-                # cls.get_logger().warning(f'Follower updated {follower}.')
-            followers = cls.get_followers_to_update()
-        cls.send_stopped_tread_notification(credential_id)
+                follower_download_tweets = self.download_tweets_and_validate(twitter, follower, min_tweet_date, True)
 
-    @classmethod
-    def send_stopped_tread_notification(cls, credential_id):
-        cls.get_logger().warning(f'Stoping follower updating proccess with {credential_id}.')
-        SlackHelper().post_message_to_channel(
-            "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
-        CredentialService().unlock_credential(credential_id, cls.__name__)
+                # While retrieve new tweets
+                while self.continue_downloading:
+                    max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
+                    follower_download_tweets += self.download_tweets_and_validate(twitter, follower, min_tweet_date,
+                                                                                  False, max_id)
+
+                self.store_tweets_and_update_follower(follower_download_tweets, follower, min_tweet_date)
+                # cls.get_logger().warning(f'Follower updated {follower}.')
+
+            followers = self.get_followers_to_update()
+        self.send_stopped_tread_notification(credential_id)
+
+    def download_tweets_and_validate(self, twitter, follower, min_tweet_date, is_first_request, max_id=None):
+        """ Call methods which download tweets.
+         If there are results, call method which check if continue downloading. """
+        download_tweets = self.do_download_tweets_request(twitter, follower, is_first_request, max_id)
+        self.continue_downloading = False
+        if len(download_tweets) != 0:
+            last_tweet = download_tweets[len(download_tweets) - 1]
+            self.continue_downloading = self.check_if_continue_downloading(last_tweet, min_tweet_date)
+        return download_tweets
+
+    def do_download_tweets_request(self, twitter, follower, is_first_request, max_id=None):
+        """
+        @is_first_request is True, max_id parameter is not included in the request.
+        @max_id is to get the maximum quantity of tweets per request.
+        """
+        tweets = []
+        try:
+            # Sleep to avoid (104, 'Connection reset by peer')
+            # https://stackoverflow.com/questions/383738/104-connection-reset-by-peer-socket-error-or-when-does-closing-a-socket-resu
+            time.sleep(0.01)
+            max_tweets_request_parameter = ConfigurationManager().get_int('max_tweets_parameter')
+
+            if is_first_request:
+                tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
+                                                   count=max_tweets_request_parameter)
+            else:
+                tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
+                                                   count=max_tweets_request_parameter, max_id=max_id)
+            # If no exception is throwed, reset error's counter
+            self.contiguous_private_users = 0
+            self.contiguous_limit_error = 0
+
+        except TwythonRateLimitError:
+            self.handle_twython_rate_limit_error()
+
+        except TwythonError as error:
+            self.handle_twython_generic_error(error, follower)
+
+        except (ProtocolError, ConnectionResetError):
+            # ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
+            self.get_logger().error('Connection error. Try again later.')
+        return tweets
+
+    def handle_twython_rate_limit_error(self):
+        """ Method wich handles twython rate limit error. """
+
+        # If throws twython rate limit error 2 times in a row
+        # Sleep by 1 hour
+        if 2 <= self.contiguous_limit_error <= 5:
+            time_to_sleep = ConfigurationManager().get_int('limit_error_sleep_time') * (self.contiguous_limit_error / 2)
+            self.get_logger().warning(f'Sleeping credential by {time_to_sleep} due to frequently rate limit error')
+            time.sleep(time_to_sleep)
+
+        # If throws twython rate limlimit_error_sleep_timeit error 5 times in a row
+        # Shut down this credential
+        if self.contiguous_limit_error >= 6:
+            self.shut_down_credential_and_notify('Shut down this credential because is raising '
+                                                 'twython rate limit error frequently.',
+                                                 "Por prevención se freno el update de una credencial.")
+        self.contiguous_limit_error += 1
+
+        # Execution duration is now - init
+        duration = (datetime.datetime.today() - self.start_time).seconds
+
+        # By default, wait 900 segs
+        time_default = ConfigurationManager().get_int('tweets_download_sleep_seconds')
+        self.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
+
+        # If duration is greater than 900 then sleep 900. Else sleep 900 - duration
+        time_to_sleep = (time_default - duration) if (time_default >= duration) else time_default
+        time.sleep(time_to_sleep)
+
+        self.get_logger().info(f'Waiting done. Resuming follower updating. Wait '
+                               f'for: {(datetime.datetime.today() - self.start_time).seconds}')
+        self.start_time = datetime.datetime.today()
+
+    def handle_twython_generic_error(self, error, follower):
+        """ Method wich handles twython generic error. """
+
+        # If error code matches private_user or not_found
+        if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
+                error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
+            # If throws this error 300 times in a row
+            # Shut down this credential
+            if self.contiguous_private_users >= 300:
+                self.shut_down_credential_and_notify('Too many private users. Shut down this credential',
+                                                     "Muchos usuarios privados.")
+            self.contiguous_private_users += 1
+            self.update_follower_as_private(follower)
+
+        elif not error or not error.error_code or error.error_code < 199 or error.error_code >= 500:
+            # Twitter API error
+            # More information: https://developer.twitter.com/en/docs/basics/response-codes.html
+            self.get_logger().error('Twitter API error. Try again later.')
+
+        # Unknown error
+        else:
+            self.get_logger().error(
+                f'An unknown error occurred while trying to download tweets from: {follower}.')
+            self.get_logger().error(error)
+
+    def store_tweets_and_update_follower(self, follower_download_tweets, follower, min_tweet_date):
+        if len(follower_download_tweets) != 0:
+            last_tweet_date = self.get_formatted_date(follower_download_tweets[0]['created_at'])
+            self.update_complete_follower(follower, follower_download_tweets[0], last_tweet_date)
+            self.store_new_tweets(follower_download_tweets, min_tweet_date)
+        else:
+            self.update_follower_with_no_tweets(follower)
 
     @classmethod
     def get_followers_to_update(cls):
@@ -99,70 +186,6 @@ class TweetUpdateService:
             return FollowersQueueService().get_followers_to_update()
         except NoMoreFollowersToUpdateTweetsError:
             return None
-
-    @classmethod
-    def download_tweets_and_validate(cls, twitter, follower, min_tweet_date,
-                                     start_time, is_first_request, max_id=None):
-        """ Download tweets. If there are not new results, return false to end the download. """
-        result = cls.do_download_tweets_request(twitter, follower, start_time, is_first_request, max_id)
-        follower_download_tweets = []
-        download_tweets = result[0]
-        time_to_return = result[1]
-        if len(download_tweets) != 0:
-            last_tweet = download_tweets[len(download_tweets) - 1]
-            follower_download_tweets += download_tweets
-            return (
-                cls.check_if_continue_downloading(last_tweet, min_tweet_date), follower_download_tweets, time_to_return)
-        return (False, follower_download_tweets, time_to_return)
-
-    @classmethod
-    def do_download_tweets_request(cls, twitter, follower, start_time, is_first_request, max_id=None):
-        """
-        @is_first_request is True, max_id parameter is not included in the request.
-        @max_id is to get the maximum quantity of tweets per request.
-        """
-        tweets = []
-        time_to_return = start_time
-        try:
-            # Sleep to avoid (104, 'Connection reset by peer')
-            # https://stackoverflow.com/questions/383738/104-connection-reset-by-peer-socket-error-or-when-does-closing-a-socket-resu
-            time.sleep(0.01)
-            max_tweets_request_parameter = ConfigurationManager().get_int('max_tweets_parameter')
-            if is_first_request:
-                tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
-                                                   count=max_tweets_request_parameter)
-            else:
-                tweets = twitter.get_user_timeline(user_id=follower, include_rts=True, tweet_mode='extended',
-                                                   count=max_tweets_request_parameter, max_id=max_id)
-        except TwythonRateLimitError:
-            duration = int(time.time() - start_time)
-            cls.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
-            # By default, wait 900 segs
-            time_default = ConfigurationManager().get_int('tweets_download_sleep_seconds')
-            time_to_sleep = time_default
-            # If 900 >= execution time
-            if time_default >= duration:
-                time_to_sleep = time_default - duration
-            time.sleep(time_to_sleep)
-            time_to_return = time.time()
-            duration = time_to_return - start_time
-            cls.get_logger().info(f'Waiting done. Resuming follower updating. Wait for: {duration}')
-        except TwythonError as error:
-            if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
-                    error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
-                cls.update_follower_as_private(follower)
-            elif not error or not error.error_code or error.error_code < 199 or error.error_code >= 500:
-                # Twitter API error
-                # More information: https://developer.twitter.com/en/docs/basics/response-codes.html
-                cls.get_logger().error('Twitter API error. Try again later.')
-            else:
-                cls.get_logger().error(
-                    f'An unknown error occurred while trying to download tweets from: {follower}.')
-                cls.get_logger().error(error)
-        except (ProtocolError, ConnectionResetError):
-            # ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
-            cls.get_logger().error('Connection error. Try again later.')
-        return (tweets, time_to_return)
 
     @classmethod
     def update_follower_as_private(cls, follower):
@@ -182,7 +205,7 @@ class TweetUpdateService:
             cls.get_logger().error(error)
 
     @classmethod
-    def update_complete_follower(cls, follower, tweet):
+    def update_complete_follower(cls, follower, tweet, last_tweet_date):
         """ Update follower's last download date. """
         try:
             today = datetime.datetime.today()
@@ -191,7 +214,9 @@ class TweetUpdateService:
                 updated_raw_follower = RawFollower(**{
                     'id': follower,
                     'downloaded_on': today,
+                    'last_tweet_date': last_tweet_date,
                     'is_private': False,
+                    'has_tweets': True,
                     'location': user_information['location'],
                     'followers_count': user_information['followers_count'],
                     'friends_count': user_information['friends_count'],
@@ -212,13 +237,7 @@ class TweetUpdateService:
         try:
             raw_follower = RawFollowerDAO().get(follower)
             if not raw_follower.is_private:
-                today = datetime.datetime.today()
-                updated_raw_follower = RawFollower(**{
-                    'id': follower,
-                    'downloaded_on': today,
-                    'is_private': False
-                })
-                RawFollowerDAO().update_follower_data(updated_raw_follower)
+                RawFollowerDAO().update_follower_downloaded_on(follower)
                 # cls.get_logger().info(f'{follower} is updated with 0 tweets.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
@@ -244,10 +263,12 @@ class TweetUpdateService:
                     UserHashtagService().insert_hashtags_of_one_tweet(tweet_copy)
                     updated_tweets += 1
                 except DuplicatedTweetError:
+                    #cls.get_logger().info(
+                    #    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
                     return
             else:
-                # cls.get_logger().info(
-                #    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
+                #cls.get_logger().info(
+                #   f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
                 return
 
     @classmethod
@@ -266,6 +287,20 @@ class TweetUpdateService:
         except ValueError as error:
             cls.get_logger().error(f'Invalid date format {date}.')
             cls.get_logger().error(f'{error}')
+
+    @classmethod
+    def send_stopped_tread_notification(cls, credential_id):
+        cls.get_logger().warning(f'Stoping follower updating proccess with {credential_id}.')
+        SlackHelper().post_message_to_channel(
+            "Un thread del servicio TweetUpdateService dejo de funcionar.", "#errors")
+        CredentialService().unlock_credential(credential_id, cls.__name__)
+
+    @classmethod
+    def shut_down_credential_and_notify(cls, log_error, slack_error):
+        cls.get_logger().error(log_error)
+        SlackHelper().post_message_to_channel(
+            slack_error, "#errors")
+        raise BlockedCredentialError()
 
     @classmethod
     def get_logger(cls):

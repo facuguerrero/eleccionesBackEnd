@@ -14,10 +14,7 @@ class SlackHelper(metaclass=Singleton):
     def send_server_status(cls):
         yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
         followers_updated = RawFollowerDAO().get_users_updated_since_date(yesterday)
-        tweets_updated = RawTweetDAO().get_count()
-        init_date = datetime.datetime(2019, 5, 20, 0, 0, 0)
-        total_followers_updated = RawFollowerDAO().get_users_updated_since_date(init_date)
-        # new_followers = CandidatesFollowersDAO().get()
+        tweets_updated = RawTweetDAO().get_count()  # new_followers = CandidatesFollowersDAO().get()
 
         message = f'Cantidad de tweets descargados hasta el momento: {tweets_updated} \n ' \
             f'Usuarios actualizados durante el día de ayer: {followers_updated} \n'
