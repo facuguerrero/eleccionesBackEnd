@@ -101,8 +101,10 @@ class FollowersQueueService(metaclass=Singleton):
         followers = self.add_followers(users_to_be_updated)
         self.updating_followers.update(followers)
 
+        date = datetime(2019, 7, 3, 10, 0, 0)
         users_to_be_updated = RawFollowerDAO().get_with_limit({
             '$and': [
+                {'downloaded_on': {'$lt': date}},
                 {'has_tweets': {'$ne': True}},
                 {'is_private': {'$ne': True}}
             ]},
