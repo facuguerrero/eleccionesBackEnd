@@ -76,7 +76,7 @@ class FollowersQueueService(metaclass=Singleton):
             self.logger.error('Can\'t retrieve followers to update their tweets. ')
             raise NoMoreFollowersToUpdateTweetsError()
         self.updating_followers.update(new_followers)
-        # self.add_private_users()
+        self.add_private_users(25000)
 
     def add_last_downloaded_followers(self):
         self.logger.info('Adding last downloaded followers')
@@ -89,12 +89,22 @@ class FollowersQueueService(metaclass=Singleton):
         self.priority_updating_followers.update(followers)
         self.logger.info('Finishing insertion of last downloaded followers')
 
-    def add_private_users(self, private_users=50000):
+    def add_private_users(self, private_users):
         date = datetime(2019, 6, 24, 0, 0, 0)
         users_to_be_updated = RawFollowerDAO().get_with_limit({
             '$and': [
                 {'is_private': True},
                 {'downloaded_on': {'$lt': date}}
+            ]},
+            None,
+            private_users)
+        followers = self.add_followers(users_to_be_updated)
+        self.updating_followers.update(followers)
+
+        users_to_be_updated = RawFollowerDAO().get_with_limit({
+            '$and': [
+                {'has_tweets': {'$ne': True}},
+                {'is_private': {'$ne': True}}
             ]},
             None,
             private_users)
