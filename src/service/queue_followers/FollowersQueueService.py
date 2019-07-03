@@ -77,6 +77,7 @@ class FollowersQueueService(metaclass=Singleton):
             raise NoMoreFollowersToUpdateTweetsError()
         self.updating_followers.update(new_followers)
         self.add_private_users(10000)
+        self.add_other_users(30000)
 
     def add_last_downloaded_followers(self):
         self.logger.info('Adding last downloaded followers')
@@ -101,6 +102,7 @@ class FollowersQueueService(metaclass=Singleton):
         followers = self.add_followers(users_to_be_updated)
         self.updating_followers.update(followers)
 
+    def add_other_users(self, limit):
         date = datetime(2019, 7, 3, 10, 0, 0)
         users_to_be_updated = RawFollowerDAO().get_with_limit({
             '$and': [
@@ -109,7 +111,7 @@ class FollowersQueueService(metaclass=Singleton):
                 {'is_private': {'$ne': True}}
             ]},
             None,
-            private_users)
+            limit)
         followers = self.add_followers(users_to_be_updated)
         self.updating_followers.update(followers)
 
