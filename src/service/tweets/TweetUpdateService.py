@@ -152,9 +152,9 @@ class TweetUpdateService:
         # If error code matches private_user or not_found
         if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                 error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
-            # If throws this error 300 times in a row
+            # If throws this error 400 times in a row
             # Shut down this credential
-            if self.contiguous_private_users >= 300:
+            if self.contiguous_private_users >= 400:
                 self.shut_down_credential_and_notify('Too many private users. Shut down this credential',
                                                      "Muchos usuarios privados.")
             self.contiguous_private_users += 1
