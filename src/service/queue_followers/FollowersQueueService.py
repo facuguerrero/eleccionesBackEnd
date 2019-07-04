@@ -77,7 +77,7 @@ class FollowersQueueService(metaclass=Singleton):
             raise NoMoreFollowersToUpdateTweetsError()
         self.updating_followers.update(new_followers)
         self.add_private_users(10000)
-        self.add_other_users(30000)
+        self.add_other_users(50000)
 
     def add_last_downloaded_followers(self):
         self.logger.info('Adding last downloaded followers')
