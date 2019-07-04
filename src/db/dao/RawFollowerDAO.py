@@ -101,7 +101,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         # Con un total de 1.250.435 usuarios que tienen tweets
         # Seteo ventana de 37 hs, lo que nos da 96k de base para actualizar + 31k por hora
 
-        date = datetime.datetime.today() - datetime.timedelta(hours=48)
+        date = datetime.datetime.today() - datetime.timedelta(hours=60)
         # date = datetime.datetime(2019, 7, 1, 0, 0, 0)
         documents = self.aggregate([
             {"$match":
@@ -110,7 +110,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                     {'downloaded_on': {'$lt': date}}
                 ]}
             },
-            {"$sample": {"size": 60000}},
+            {"$sample": {"size": 40000}},
             {"$group":
                  {"_id": "$_id",
                   "last_tweet_date": {"$first": "$last_tweet_date"}
