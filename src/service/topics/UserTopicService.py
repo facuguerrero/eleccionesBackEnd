@@ -36,10 +36,22 @@ class UserTopicService:
 
             if sum(user_hashtags_vector) > 0:
                 # guardar el vector en la matriz
+                # TODO que el vector tenga norma 1
                 users_row.append(user)
                 data.append(user_hashtags_vector)
 
         cls.create_matrix_and_save(data)
+        # TODO seguir con eso
+
+        # Agrupar a los usuarios por partido
+        # Hacer con el producto con la traspuesta por cada par de matriz que encontremos
+        # Hacer un histograma de la data de cada matriz
+        # A esta matriz calcularle la media y guardarlo en una colección de mongo
+
+        # Hacer el producto de 2 matrices de grupo de usuarios distintos
+        # Tiene que haber una diferencia con el resto
+
+
 
     @classmethod
     def get_necessary_data(cls):
