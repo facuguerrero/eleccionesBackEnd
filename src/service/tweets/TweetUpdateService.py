@@ -125,26 +125,29 @@ class TweetUpdateService:
 
         # If throws twython rate limit_error_sleep_time error 5 times in a row
         # Shut down this credential
-        if self.contiguous_limit_error >= 6:
+        elif self.contiguous_limit_error >= 6:
             self.shut_down_credential_and_notify('Shut down this credential because is raising '
                                                  'twython rate limit error frequently.',
                                                  "Por prevención se freno el update de una credencial.")
+        # The first contiguous rate limit error
+        else:
+            # Execution duration is now - init
+            duration = (datetime.datetime.today() - self.start_time).seconds
+
+            # By default, wait 900 segs
+            time_default = ConfigurationManager().get_int('tweets_download_sleep_seconds')
+            self.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
+
+            # If duration is greater than 900 then sleep 900. Else sleep 900 - duration
+            time_to_sleep = (time_default - duration) if (time_default >= duration) else time_default
+            time.sleep(time_to_sleep)
+
+            self.get_logger().info(f'Waiting done. Resuming follower updating. Wait '
+                                   f'for: {(datetime.datetime.today() - self.start_time).seconds}')
+            self.start_time = datetime.datetime.today()
+
         self.contiguous_limit_error += 1
 
-        # Execution duration is now - init
-        duration = (datetime.datetime.today() - self.start_time).seconds
-
-        # By default, wait 900 segs
-        time_default = ConfigurationManager().get_int('tweets_download_sleep_seconds')
-        self.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
-
-        # If duration is greater than 900 then sleep 900. Else sleep 900 - duration
-        time_to_sleep = (time_default - duration) if (time_default >= duration) else time_default
-        time.sleep(time_to_sleep)
-
-        self.get_logger().info(f'Waiting done. Resuming follower updating. Wait '
-                               f'for: {(datetime.datetime.today() - self.start_time).seconds}')
-        self.start_time = datetime.datetime.today()
 
     def handle_twython_generic_error(self, error, follower):
         """ Method wich handles twython generic error. """
@@ -152,9 +155,9 @@ class TweetUpdateService:
         # If error code matches private_user or not_found
         if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                 error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
-            # If throws this error 300 times in a row
+            # If throws this error 400 times in a row
             # Shut down this credential
-            if self.contiguous_private_users >= 300:
+            if self.contiguous_private_users >= 400:
                 self.shut_down_credential_and_notify('Too many private users. Shut down this credential',
                                                      "Muchos usuarios privados.")
             self.contiguous_private_users += 1
