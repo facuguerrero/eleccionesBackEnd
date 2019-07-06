@@ -1,8 +1,9 @@
 import datetime
 
-import numpy as np
+import pandas as pd
 from scipy.sparse import csr_matrix, save_npz
 from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.preprocessing import normalize
 
 from src.db.dao.CoocurrenceGraphsDAO import CoocurrenceGraphsDAO
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
@@ -16,33 +17,20 @@ class UserTopicService:
         """ This method calculate the user-topic matrix. """
 
         # Retrieve necessary data
-        hashtags_by_users, topics_by_hashtags, all_topics = cls.get_necessary_data()
-        hashtags_quantity = len(all_topics)
+        # Todo normalizar
+        users_hashtags_matrix, hashtags_topics_matrix = cls.get_necessary_data()
 
-        # Initialise row's vector matrix and data vector
-        users_row = []
-        data = []
+        # Multiply this matrix and get users_topics matrix
+        users_topics_matrix = users_hashtags_matrix.multiply(hashtags_topics_matrix)
 
-        for user, hashtags in hashtags_by_users.items():
-            user_hashtags_vector = [0] * hashtags_quantity
-            # For all user's hashtags
-            for hashtag in hashtags:
-                # Get the hashtag's topics
-                topics_hashtag = topics_by_hashtags.get(hashtag, [])
-                # For all hashtag's topics
-                for topic in topics_hashtag:
-                    index = all_topics.index(topic)
-                    user_hashtags_vector[index] += 1
+        # Apply TF-IDF
+        tfidf_transformer = TfidfTransformer()
+        tf_idf_matrix = tfidf_transformer.fit_transform(users_topics_matrix)
 
-            if sum(user_hashtags_vector) > 0:
-                # guardar el vector en la matriz
-                # TODO que el vector tenga norma 1
-                users_row.append(user)
-                data.append(user_hashtags_vector)
+        # Save matrix
+        cls.save_matrix(tf_idf_matrix)
 
-        cls.create_matrix_and_save(data)
         # TODO seguir con eso
-
         # Agrupar a los usuarios por partido
         # Hacer con el producto con la traspuesta por cada par de matriz que encontremos
         # Hacer un histograma de la data de cada matriz
@@ -50,45 +38,40 @@ class UserTopicService:
 
         # Hacer el producto de 2 matrices de grupo de usuarios distintos
         # Tiene que haber una diferencia con el resto
-
-
+        # Despues de multiplicarlas pueden quedar 0
+        # Calcular el promedio con 0 y sin 0
+        # No contarlos para dividir por el total.
+        # Si tenemos 70 numeros, y 10 son 0 es como tener 60
 
     @classmethod
     def get_necessary_data(cls):
         """ Retrieve from database all necessary data. """
 
-        # Retrieve yesterday's hashtags gruped by user
-        # { 'user_id': [ hashtags ] }
-        hashtags_by_users = UserHashtagDAO().get_hashtags_yesterday_aggregated_by_user()
-
-        # Create hashtag's list and retrieve their topics
-        # { 'hashtag_id' [topics] }
-        yesterday_hashtags = cls.get_yesterday_hashtags(hashtags_by_users)
-        hashtags_by_topics = HashtagsTopicsDAO().get_required_hashtags(yesterday_hashtags)
-
-        # Retrieve all topics
+        # Retrieve all topics sorted list
         all_topics = CoocurrenceGraphsDAO().get_all_sorted_topics()
 
-        return hashtags_by_users, hashtags_by_topics, all_topics
+        # Retrieve all hashtags sorted alphabetically
+        last_3_days_hashtags = UserHashtagDAO().get_last_3_days_hashtags()
+
+        # Get users-hashtags matrix
+        users_hashtags_data = UserHashtagDAO().get_last_3_days_users_and_hashtags(last_3_days_hashtags)
+        users_hashtags_matrix = cls.get_matrix_from_data(users_hashtags_data)
+        # Axis 1 normalize by row
+        normalized_user_hashtag_matrix = normalize(users_hashtags_matrix, norm='l1', axis=1)
+
+        # Get hashtags-topics matrix
+        hashtags_topics_data = HashtagsTopicsDAO().get_required_hashtags(all_topics, last_3_days_hashtags)
+        hashtags_topics_matrix = cls.get_matrix_from_data(hashtags_topics_data)
+
+        return normalized_user_hashtag_matrix, hashtags_topics_matrix
 
     @classmethod
-    def get_yesterday_hashtags(self, hashtags_by_users):
-        total_hashtags = set()
-        for hashtags in hashtags_by_users.values():
-            total_hashtags.update(hashtags)
-        return list(total_hashtags)
+    def get_matrix_from_data(cls, data):
+        table = pd.DataFrame(data, columns=['x', 'y', 'weight'])
+        return csr_matrix((table.weight, (table.x, table.y)))
 
     @classmethod
-    def create_matrix_and_save(cls, data):
-        """ Method which receive vector data and create a csr matrix.
-        After that apply TF-IDF and save it."""
-        # Create np array to be used in the matrix
-        np_data = np.array(data)
-        matrix = csr_matrix(np_data)
-
-        # Apply TF-IDF
-        tfidf_transformer = TfidfTransformer()
-        tf_idf_matrix = tfidf_transformer.fit_transform(matrix)
-
+    def save_matrix(cls, matrix):
+        """ Method which saves tf-idf matrix"""
         date = datetime.datetime.today()
-        save_npz(f'{str(date.year)}-{str(date.month)}-{str(date.day)}', tf_idf_matrix)
+        save_npz(f'{str(date.year)}-{str(date.month)}-{str(date.day)}', matrix)

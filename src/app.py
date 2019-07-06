@@ -14,10 +14,8 @@ from src.api.PingResource import PingResource
 from src.api.RawFollowerResource import RawFollowerResource
 from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.db.Mongo import Mongo
-from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
-from src.service.hashtags.UserHashtagService import UserHashtagService
+from src.db.db_initialization import create_indexes, create_base_entries
 from src.service.topics.UserTopicService import UserTopicService
-from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
@@ -52,13 +50,13 @@ def set_up_context(db_name, authorization, environment):
     with app.app_context():
         create_indexes()
         create_base_entries()
-        create_queue_entries()
+        # create_queue_entries()
 
 
 def init_services():
-    UserHashtagService().insert_hashtags_of_already_downloaded_tweets()
+    #UserHashtagService().insert_hashtags_of_already_downloaded_tweets()
     UserTopicService().calculate_users_topics_matrix()
-    TweetUpdateServiceInitializer().initialize_tweet_update_service()
+    #TweetUpdateServiceInitializer().initialize_tweet_update_service()
 
 
 def parse_arguments():
