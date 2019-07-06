@@ -56,9 +56,9 @@ def set_up_context(db_name, authorization, environment):
 
 
 def init_services():
-    #UserHashtagService().insert_hashtags_of_already_downloaded_tweets()
+    # UserHashtagService().insert_hashtags_of_already_downloaded_tweets()
     UserTopicService().calculate_users_topics_matrix()
-    #TweetUpdateServiceInitializer().initialize_tweet_update_service()
+    # TweetUpdateServiceInitializer().initialize_tweet_update_service()
 
 
 def parse_arguments():
