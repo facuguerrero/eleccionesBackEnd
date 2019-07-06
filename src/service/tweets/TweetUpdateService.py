@@ -148,7 +148,6 @@ class TweetUpdateService:
 
         self.contiguous_limit_error += 1
 
-
     def handle_twython_generic_error(self, error, follower):
         """ Method wich handles twython generic error. """
 
@@ -157,7 +156,7 @@ class TweetUpdateService:
                 error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
             # If throws this error 400 times in a row
             # Shut down this credential
-            if self.contiguous_private_users >= 400:
+            if self.contiguous_private_users >= 300:
                 self.shut_down_credential_and_notify('Too many private users. Shut down this credential',
                                                      "Muchos usuarios privados.")
             self.contiguous_private_users += 1
