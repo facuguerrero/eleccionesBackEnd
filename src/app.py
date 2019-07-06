@@ -9,6 +9,7 @@ from src.api.CSVLoadingResource import CSVLoadingResource
 from src.api.CandidateResource import CandidateResource
 from src.api.CooccurrenceAnalysisResource import CooccurrenceAnalysisResource
 from src.api.CooccurrenceGraphResource import CooccurrenceGraphResource
+from src.api.DashboardResource import DashboardResource
 from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
 from src.api.RawFollowerResource import RawFollowerResource
@@ -38,6 +39,7 @@ api.add_resource(CooccurrenceAnalysisResource, '/cooccurrence')
 api.add_resource(RawFollowerResource, '/raw_followers', '/raw_followers/<candidate_name>')
 api.add_resource(CandidateResource, '/candidates', '/candidates/<screen_name>')
 api.add_resource(CooccurrenceGraphResource, '/cooccurrence_graphs')
+api.add_resource(DashboardResource, '/dashboard')
 
 
 def set_up_context(db_name, authorization, environment):

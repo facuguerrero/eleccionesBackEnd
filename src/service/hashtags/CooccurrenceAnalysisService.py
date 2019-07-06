@@ -17,14 +17,15 @@ class CooccurrenceAnalysisService:
     @classmethod
     def analyze(cls):
         """ Run cooccurrence analysis for the last day and the accumulated since 2019-01-01. """
-        last_day = datetime.combine((datetime.now() - timedelta(days=1)).date(), datetime.min.time())
         # Run for previous day
+        last_day = datetime.combine((datetime.now() - timedelta(days=1)).date(), datetime.min.time())
         cls.get_logger().info(f'Starting cooccurrence analysis for single day {last_day.date()}.')
         cls.analyze_cooccurrence_for_window(last_day)
         cls.get_logger().info('Daily cooccurrence analysis done.')
         # Run accumulated
+        last_day = last_day + timedelta(days=1) - timedelta(seconds=1)  # This works because Python's sum is immutable
         cls.get_logger().info(f'Starting cooccurrence analysis for full period from first day until yesterday.')
-        cls.analyze_cooccurrence_for_window(cls.START_DAY, last_day)
+        cls.analyze_cooccurrence_for_window(cls.START_DAY, last_day)  # Last day at 23:59:59
         cls.get_logger().info(f'Accumulated cooccurrence analysis done.')
 
     @classmethod

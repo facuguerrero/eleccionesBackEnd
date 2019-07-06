@@ -1,3 +1,5 @@
+import pymongo
+
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
 from src.exception.NoCooccurrenceGraphError import NoCooccurrenceGraphError
@@ -26,3 +28,7 @@ class CooccurrenceGraphDAO(GenericDAO, metaclass=Singleton):
         if not document:
             raise NoCooccurrenceGraphError(start_date, end_date)
         return document['graph']
+
+    def create_indexes(self):
+        self.logger.info('Creating topic_id index for collection cooccurrence_graphs.')
+        Mongo().get().db.cooccurrence_graphs.create_index([('topic_id', pymongo.DESCENDING)])

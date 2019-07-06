@@ -1,5 +1,7 @@
 import datetime
 
+import pymongo
+
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
 from src.exception.NoDocumentsFoundError import NoDocumentsFoundError
@@ -141,11 +143,6 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         # We need to extract the element from the document because of the format they come in
         return {document['_id'] for document in documents}
 
-    def get_if_value(self, document, key):
-        if key in document:
-            return document[key]
-        return None
-
     def get_all_with_cursor(self, start, limit):
         """ Get all raw_follower documents using the received information as cursor. """
         documents = self.get_with_cursor(sort='_id', skip=start, limit=limit)
@@ -154,17 +151,12 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                                                              'follows': document['follows'],
                                                              'downloaded_on': document['downloaded_on'],
                                                              'is_private': document['is_private'],
-                                                             'location': self.get_if_value(document, 'location'),
-                                                             'followers_count': self.get_if_value(document,
-                                                                                                  'followers_count'),
-                                                             'friends_count': self.get_if_value(document,
-                                                                                                'friends_count'),
-                                                             'listed_count': self.get_if_value(document,
-                                                                                               'listed_count'),
-                                                             'favourites_count': self.get_if_value(document,
-                                                                                                   'favourites_count'),
-                                                             'statuses_count': self.get_if_value(document,
-                                                                                                 'statuses_count')
+                                                             'location': document.get('location', None),
+                                                             'followers_count': document.get('followers_count', None),
+                                                             'friends_count': document.get('friends_count', None),
+                                                             'listed_count': document.get('listed_count', None),
+                                                             'favourites_count': document.get('favourites_count', None),
+                                                             'statuses_count': document.get('statuses_count', None)
                                                              })
                                               for document in documents])
 
@@ -179,20 +171,17 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                                                              'follows': document['follows'],
                                                              'downloaded_on': document['downloaded_on'],
                                                              'is_private': document['is_private'],
-                                                             'location': self.get_if_value(document, 'location'),
-                                                             'followers_count': self.get_if_value(document,
-                                                                                                  'followers_count'),
-                                                             'friends_count': self.get_if_value(document,
-                                                                                                'friends_count'),
-                                                             'listed_count': self.get_if_value(document,
-                                                                                               'listed_count'),
-                                                             'favourites_count': self.get_if_value(document,
-                                                                                                   'favourites_count'),
-                                                             'statuses_count': self.get_if_value(document,
-                                                                                                 'statuses_count')
+                                                             'location': document.get('location', None),
+                                                             'followers_count': document.get('followers_count', None),
+                                                             'friends_count': document.get('friends_count', None),
+                                                             'listed_count': document.get('listed_count', None),
+                                                             'favourites_count': document.get('favourites_count', None),
+                                                             'statuses_count': document.get('statuses_count', None)
                                                              })
                                               for document in documents])
 
     def create_indexes(self):
         self.logger.info('Creating is_private index for collection raw_followers.')
         Mongo().get().db.raw_followers.create_index('is_private')
+        self.logger.info('Creating has_tweets index for collection raw_followers.')
+        Mongo().get().db.raw_followers.create_index([('has_tweets', pymongo.DESCENDING)])
