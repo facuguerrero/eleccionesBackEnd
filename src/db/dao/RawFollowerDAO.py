@@ -104,7 +104,6 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         # Seteo ventana de 37 hs, lo que nos da 96k de base para actualizar + 31k por hora
 
         date = datetime.datetime.today() - datetime.timedelta(hours=60)
-        # date = datetime.datetime(2019, 7, 1, 0, 0, 0)
         documents = self.aggregate([
             {"$match":
                 {"$and": [
