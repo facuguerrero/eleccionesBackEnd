@@ -56,9 +56,11 @@ class FollowersQueueService(metaclass=Singleton):
         return followers_to_update
 
     def check_if_have_followers(self, max_users_per_window):
+
         if len(self.updating_followers) <= 2 * max_users_per_window:
             # Retrieve more candidates from db
-            self.add_followers_to_be_updated()
+            # TODO change by add_followers_to_be_updated
+            self.add_other_users()
 
         if len(self.updating_followers) == 0:
             SlackHelper().post_message_to_channel(
@@ -99,7 +101,7 @@ class FollowersQueueService(metaclass=Singleton):
         followers = self.add_followers(users_to_be_updated)
         self.updating_followers.update(followers)
 
-    def add_other_users(self, limit):
+    def add_other_users(self, limit=50000):
         date = datetime(2019, 7, 3, 10, 0, 0)
         users_to_be_updated = RawFollowerDAO().get_with_limit({
             '$and': [

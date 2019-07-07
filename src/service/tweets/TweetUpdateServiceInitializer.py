@@ -1,5 +1,6 @@
 from threading import Thread
 
+from src.exception.BlockedCredentialError import BlockedCredentialError
 from src.exception.CredentialsAlreadyInUseError import CredentialsAlreadyInUseError
 from src.exception.NoAvailableCredentialsError import NoAvailableCredentialsError
 from src.service.credentials.CredentialService import CredentialService
@@ -28,7 +29,10 @@ class TweetUpdateServiceInitializer(metaclass=Singleton):
             cls.get_logger().warning('Tweets updating process skipped.')
             return
         # Run tweet update process
-        AsyncThreadPoolExecutor().run(cls.initialize_with_credential, credentials)
+        try:
+            AsyncThreadPoolExecutor().run(cls.initialize_with_credential, credentials)
+        except BlockedCredentialError as error:
+            cls.restart_credential(error.credential)
         # self.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stopped tweet updating')
         SlackHelper().post_message_to_channel(
