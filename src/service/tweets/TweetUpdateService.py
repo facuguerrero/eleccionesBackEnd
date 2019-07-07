@@ -42,7 +42,7 @@ class TweetUpdateService:
             self.credential = credential.id
         except BlockedCredentialError:
             self.get_logger().error(f'credential with id {credential.id} seems to be blocked')
-            time.sleep(3600)
+            time.sleep(ConfigurationManager().get_int('limit_error_sleep_time'))
             raise BlockedCredentialError(credential.id)
         except Exception as e:
             self.get_logger().error(e)
