@@ -58,7 +58,7 @@ class GraphUtils:
         bound = ConfigurationManager().get_int('max_nodes_showable_graphs')
         showable_graphs = {'main': graphs.pop('main')}
         # Find main topics
-        main_topics = [node['id'] for node in graphs['main']['nodes']]
+        main_topics = [node['id'] for node in showable_graphs['main']['nodes']]
         # Create a graph for each topic
         for main_topic in main_topics:
             graph = graphs[main_topic]
@@ -89,7 +89,7 @@ class GraphUtils:
             cls.__add_to_nodes(nodes, cluster1, main_communities[cluster1], community_leaders, add=False)
             cls.__add_to_nodes(nodes, cluster2, main_communities[cluster2], community_leaders, add=False)
         # Keep only an specific number of links
-        links = cls.__filter_links(links, [node['id'] for node in nodes])
+        links = cls.__filter_links(links, nodes.keys())
         return {'links': links, 'nodes': list(nodes.values())}
 
     @classmethod
@@ -196,7 +196,7 @@ class GraphUtils:
     def __filter_links(cls, links, nodes_ids):
         """ Keep only a number N of links. Keeping at least one link per node. """
         max_links = ConfigurationManager().get_int('max_edges_showable_graphs')
-        links_copy = links[:]
+        links_copy = sorted(links, key=lambda l: l['weight'], reverse=True)
         used_nodes = set()
         result = list()
         added_links = 0
@@ -213,9 +213,9 @@ class GraphUtils:
                 links_copy.remove(link)
                 result.append(link)
                 added_links += 1
-        # Get random links. The number of links will be the minimum between
+        # Get first N links. The number of links will be the minimum between
         # the configurable value and the remaining links
-        random_links = sample(links_copy, min(max_links-added_links, len(links_copy)))
+        random_links = links_copy[:min(max_links-added_links, len(links_copy))]
         # Return the sum of the first links and the sample
         return result + random_links
 
