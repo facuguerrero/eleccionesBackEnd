@@ -48,7 +48,6 @@ class TweetUpdateServiceInitializer(metaclass=Singleton):
         SlackHelper().post_message_to_channel(
             "Se freno la credencial que fue re-starteada.", "#errors")
 
-
     @classmethod
     def initialize_with_credential(cls, credential):
         TweetUpdateService().download_tweets_with_credential(credential)
