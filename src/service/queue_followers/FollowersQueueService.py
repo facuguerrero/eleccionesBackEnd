@@ -56,6 +56,7 @@ class FollowersQueueService(metaclass=Singleton):
         return followers_to_update
 
     def check_if_have_followers(self, max_users_per_window):
+
         if len(self.updating_followers) <= 2 * max_users_per_window:
             # Retrieve more candidates from db
             # TODO change by add_followers_to_be_updated
