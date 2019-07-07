@@ -17,6 +17,7 @@ from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceS
 from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.hashtags.UserHashtagService import UserHashtagService
 from src.service.queue_followers.FollowersQueueService import FollowersQueueService
+from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
@@ -42,6 +43,8 @@ class TweetUpdateService:
             self.credential = credential.id
         except BlockedCredentialError:
             self.get_logger().error(f'credential with id {credential.id} seems to be blocked')
+            time.sleep(3600)
+            TweetUpdateServiceInitializer().restart_credential(credential.id)
         except Exception as e:
             self.get_logger().error(e)
             self.send_stopped_tread_notification(credential.id)
@@ -148,7 +151,6 @@ class TweetUpdateService:
 
         self.contiguous_limit_error += 1
 
-
     def handle_twython_generic_error(self, error, follower):
         """ Method wich handles twython generic error. """
 
@@ -157,7 +159,7 @@ class TweetUpdateService:
                 error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
             # If throws this error 400 times in a row
             # Shut down this credential
-            if self.contiguous_private_users >= 400:
+            if self.contiguous_private_users >= 300:
                 self.shut_down_credential_and_notify('Too many private users. Shut down this credential',
                                                      "Muchos usuarios privados.")
             self.contiguous_private_users += 1
