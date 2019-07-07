@@ -13,17 +13,17 @@ class DashboardResource(Resource):
     @staticmethod
     def get():
         # Get count of analyzed tweets
-        tweets = RawTweetDAO().get_count()
+        tweets = RawTweetDAO().get_count({}, {})
         # Get total count of users
-        users = RawFollowerDAO().get_count()
+        users = RawFollowerDAO().get_count({}, {})
         # Get count of active users
-        active_users = RawFollowerDAO().get_count({'has_tweets': True})
+        active_users = RawFollowerDAO().get_count({'has_tweets': True}, {})
         # Get count of found topics
-        topics = CooccurrenceGraphDAO().get_count({'topic_id': {'$ne': 'main'}})
+        topics = CooccurrenceGraphDAO().get_count({'topic_id': {'$ne': 'main'}}, {})
         # Get count of known hashtags
-        hashtags = HashtagDAO().get_count()
+        hashtags = HashtagDAO().get_count({}, {})
         # Get count of hashtag cooccurrences
-        cooccurrences = CooccurrenceDAO().get_count()
+        cooccurrences = CooccurrenceDAO().get_count({}, {})
         # Build response object
         response = {'tweets': tweets,
                     'total_users': users,
