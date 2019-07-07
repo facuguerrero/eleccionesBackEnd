@@ -55,7 +55,7 @@ class GraphUtils:
     def __generate_showable_graphs(cls, graphs):
         """ Generate graphs from the main topics with a limited number of nodes. """
         bound = ConfigurationManager().get_int('max_nodes_showable_graphs')
-        showable_graphs = dict()
+        showable_graphs = {'main': graphs['main']}
         # Find main topics
         main_topics = [node['id'] for node in graphs['main']['nodes']]
         # Create a graph for each topic
