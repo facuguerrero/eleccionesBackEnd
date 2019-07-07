@@ -17,7 +17,6 @@ from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceS
 from src.service.hashtags.HashtagOriginService import HashtagOriginService
 from src.service.hashtags.UserHashtagService import UserHashtagService
 from src.service.queue_followers.FollowersQueueService import FollowersQueueService
-from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
@@ -44,7 +43,7 @@ class TweetUpdateService:
         except BlockedCredentialError:
             self.get_logger().error(f'credential with id {credential.id} seems to be blocked')
             time.sleep(3600)
-            TweetUpdateServiceInitializer().restart_credential(credential.id)
+            raise BlockedCredentialError(credential.id)
         except Exception as e:
             self.get_logger().error(e)
             self.send_stopped_tread_notification(credential.id)
