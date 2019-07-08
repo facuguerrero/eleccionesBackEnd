@@ -32,6 +32,7 @@ class TweetUpdateServiceInitializer(metaclass=Singleton):
         try:
             AsyncThreadPoolExecutor().run(cls.initialize_with_credential, credentials)
         except BlockedCredentialError as error:
+            cls.get_logger().info(f'After waiting, restart credential {error.credential}.')
             cls.restart_credential(error.credential)
         # self.download_tweets_with_credential(credentials[0])
         cls.get_logger().info('Stopped tweet updating')
@@ -40,7 +41,6 @@ class TweetUpdateServiceInitializer(metaclass=Singleton):
 
     @classmethod
     def restart_credential(cls, credential_id):
-        cls.get_logger().info('Restarting credential.')
         try:
             credential = CredentialService().get_credential_with_id_for_service(credential_id, cls.__name__)
         except NoAvailableCredentialsError:
