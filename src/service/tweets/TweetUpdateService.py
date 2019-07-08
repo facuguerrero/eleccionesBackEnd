@@ -40,10 +40,14 @@ class TweetUpdateService:
         try:
             self.tweets_update_process(twitter, credential.id)
             self.credential = credential.id
+
         except BlockedCredentialError:
+            from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
+
             self.get_logger().error(f'credential with id {credential.id} seems to be blocked')
             time.sleep(ConfigurationManager().get_int('limit_error_sleep_time'))
-            raise BlockedCredentialError(credential.id)
+            TweetUpdateServiceInitializer().restart_credential(credential.id)
+
         except Exception as e:
             self.get_logger().error(e)
             self.send_stopped_tread_notification(credential.id)
