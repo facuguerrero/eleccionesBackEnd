@@ -38,6 +38,7 @@ class FollowerSupportService:
 
     @classmethod
     def get_necessary_data(cls):
+        """ Retrieve db fata and create candidates list. """
         candidate_index = CandidateDAO().get_required_candidates()
         candidates_list = list(candidate_index.keys())
         candidates_rt_cursor = RawTweetDAO().get_rt_to_candidates_cursor(candidates_list)
