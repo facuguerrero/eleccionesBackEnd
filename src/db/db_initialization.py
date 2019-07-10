@@ -1,5 +1,4 @@
 from src.db.dao.CandidateDAO import CandidateDAO
-from src.db.dao.CooccurrenceDAO import CooccurrenceDAO
 from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
@@ -13,7 +12,7 @@ def create_indexes():
     # RawTweetDAO().create_indexes()
     UserHashtagDAO().create_indexes()
     CooccurrenceGraphDAO().create_indexes()
-    CooccurrenceDAO().create_indexes()
+    # CooccurrenceDAO().create_indexes()
 
 
 def create_base_entries():
