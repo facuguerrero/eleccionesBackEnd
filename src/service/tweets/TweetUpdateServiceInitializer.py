@@ -1,6 +1,5 @@
 from threading import Thread
 
-from src.exception.BlockedCredentialError import BlockedCredentialError
 from src.exception.CredentialsAlreadyInUseError import CredentialsAlreadyInUseError
 from src.exception.NoAvailableCredentialsError import NoAvailableCredentialsError
 from src.service.credentials.CredentialService import CredentialService
@@ -28,29 +27,27 @@ class TweetUpdateServiceInitializer(metaclass=Singleton):
             cls.get_logger().error(caiue.message)
             cls.get_logger().warning('Tweets updating process skipped.')
             return
-        # Run tweet update process
-        try:
-            AsyncThreadPoolExecutor().run(cls.initialize_with_credential, credentials)
-        except BlockedCredentialError as error:
-            cls.restart_credential(error.credential)
-        # self.download_tweets_with_credential(credentials[0])
-        cls.get_logger().info('Stopped tweet updating')
-        SlackHelper().post_message_to_channel(
-            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
+        cls.run_process_with_credentials(credentials)
 
     @classmethod
     def restart_credential(cls, credential_id):
-        cls.get_logger().info('Restarting credential.')
+        cls.get_logger().error('After waiting, restart credential.')
         try:
             credential = CredentialService().get_credential_with_id_for_service(credential_id, cls.__name__)
         except NoAvailableCredentialsError:
             cls.get_logger().error('Can not restart credential.')
             return
-        AsyncThreadPoolExecutor().run(cls.initialize_with_credential, [credential])
+        cls.get_logger().error(f'Restarting credential with id: {credential_id}.')
+        cls.run_process_with_credentials([credential])
+
+    @classmethod
+    def run_process_with_credentials(cls, credentials):
+        # Run tweet update process
+        AsyncThreadPoolExecutor().run(cls.initialize_with_credential, credentials)
         # self.download_tweets_with_credential(credentials[0])
-        cls.get_logger().info('Stopped tweet updating with restarted credential')
+        cls.get_logger().info('Stopped tweet updating')
         SlackHelper().post_message_to_channel(
-            "Se freno la credencial que fue re-starteada.", "#errors")
+            "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
 
     @classmethod
     def initialize_with_credential(cls, credential):
