@@ -35,7 +35,7 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
             If one tweet has retweeted_status field
             then this tweet is rt without comments or extra text.
         """
-        return self.find(
+        return self.get_all(
             {"$and": [
                 {'retweeted_status': {'$exists': True}},
                 {'retweeted_status.user.screen_name': {'$in': candidates}}
