@@ -146,18 +146,20 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         """ Get all raw_follower documents using the received information as cursor. """
         documents = self.get_with_cursor(sort='_id', skip=start, limit=limit)
         # Create DTO from JSON data
-        return RawFollowerResponseMapper.map([RawFollower(**{'id': document['_id'],
-                                                             'follows': document['follows'],
-                                                             'downloaded_on': document['downloaded_on'],
-                                                             'is_private': document['is_private'],
-                                                             'location': document.get('location', None),
-                                                             'followers_count': document.get('followers_count', None),
-                                                             'friends_count': document.get('friends_count', None),
-                                                             'listed_count': document.get('listed_count', None),
-                                                             'favourites_count': document.get('favourites_count', None),
-                                                             'statuses_count': document.get('statuses_count', None)
-                                                             })
-                                              for document in documents])
+        return RawFollowerResponseMapper.map([
+            RawFollower(**{
+                'id': document['_id'],
+                'follows': document['follows'],
+                'downloaded_on': document['downloaded_on'],
+                'is_private': document['is_private'],
+                'location': document.get('location', None),
+                'followers_count': document.get('followers_count', None),
+                'friends_count': document.get('friends_count', None),
+                'listed_count': document.get('listed_count', None),
+                'favourites_count': document.get('favourites_count', None),
+                'statuses_count': document.get('statuses_count', None)
+            })
+            for document in documents])
 
     def get_following_with_cursor(self, candidate_name, start, limit):
         """ Retrieve all raw_followers who follow a given candidate with a cursor. """
@@ -166,18 +168,20 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         if documents.count() == 0:
             raise NoDocumentsFoundError(collection_name='raw_followers', query=f'screen_name={candidate_name}')
         # Create DTO from JSON data
-        return RawFollowerResponseMapper.map([RawFollower(**{'id': document['_id'],
-                                                             'follows': document['follows'],
-                                                             'downloaded_on': document['downloaded_on'],
-                                                             'is_private': document['is_private'],
-                                                             'location': document.get('location', None),
-                                                             'followers_count': document.get('followers_count', None),
-                                                             'friends_count': document.get('friends_count', None),
-                                                             'listed_count': document.get('listed_count', None),
-                                                             'favourites_count': document.get('favourites_count', None),
-                                                             'statuses_count': document.get('statuses_count', None)
-                                                             })
-                                              for document in documents])
+        return RawFollowerResponseMapper.map([
+            RawFollower(**{
+                'id': document['_id'],
+                'follows': document['follows'],
+                'downloaded_on': document['downloaded_on'],
+                'is_private': document['is_private'],
+                'location': document.get('location', None),
+                'followers_count': document.get('followers_count', None),
+                'friends_count': document.get('friends_count', None),
+                'listed_count': document.get('listed_count', None),
+                'favourites_count': document.get('favourites_count', None),
+                'statuses_count': document.get('statuses_count', None)
+            })
+            for document in documents])
 
     def create_indexes(self):
         self.logger.info('Creating is_private index for collection raw_followers.')
