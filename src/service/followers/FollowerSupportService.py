@@ -20,7 +20,7 @@ class FollowerSupportService:
         # {candidate: index}, [candidate_id]
         candidate_index, candidates_list, candidates_rt_cursor = cls.get_necessary_data()
         cls.get_logger().info("Candidates and theirs rt are retrieved correctly. ")
-        candidates_quantity = len(candidates_list) - 1
+        candidates_quantity = int(len(candidates_list) / 2)
         rt_vectors = {}
         for tweet in candidates_rt_cursor:
             # Get user information
