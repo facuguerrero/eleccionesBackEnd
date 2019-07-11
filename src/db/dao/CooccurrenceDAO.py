@@ -30,3 +30,7 @@ class CooccurrenceDAO(GenericDAO, metaclass=Singleton):
     def find_in_window(self, start_date, end_date):
         """ Retrieve all pairs of hashtags in time window. """
         return self.get_all({'created_at': {'$gt': start_date, '$lt': end_date}}, {'pair': 1, '_id': 0})
+
+    def create_indexes(self):
+        self.logger.info('Creating [user_id, pair, created_at] index for collection cooccurrence_graphs.')
+        self.collection.create_index(['user_id', 'pair', 'created_at'])

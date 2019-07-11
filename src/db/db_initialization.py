@@ -12,6 +12,7 @@ def create_indexes():
     # RawTweetDAO().create_indexes()
     UserHashtagDAO().create_indexes()
     CooccurrenceGraphDAO().create_indexes()
+    # CooccurrenceDAO().create_indexes()
 
 
 def create_base_entries():
