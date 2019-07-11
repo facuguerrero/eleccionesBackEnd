@@ -59,8 +59,7 @@ class FollowersQueueService(metaclass=Singleton):
 
         if len(self.updating_followers) <= 2 * max_users_per_window:
             # Retrieve more candidates from db
-            # TODO change by add_followers_to_be_updated
-            self.add_other_users()
+            self.add_followers_to_be_updated()
 
         if len(self.updating_followers) == 0:
             SlackHelper().post_message_to_channel(
