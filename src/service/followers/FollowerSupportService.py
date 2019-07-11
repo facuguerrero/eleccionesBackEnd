@@ -1,3 +1,5 @@
+from threading import Thread
+
 from src.db.dao.CandidateDAO import CandidateDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
@@ -6,6 +8,11 @@ from src.util.logging.Logger import Logger
 
 class FollowerSupportService:
     FACTOR = 0.8
+
+    @classmethod
+    def init_update_support_follower(cls):
+        thread = Thread(target=FollowerSupportService.update_follower_support)
+        thread.start()
 
     @classmethod
     def update_follower_support(cls):
@@ -28,6 +35,8 @@ class FollowerSupportService:
             # Calculate probability vector and save it
             probability_vector = [sum(x) for x in zip(final_rt, final_follows)]
             cls.save_follower_vectors(user_id, probability_vector, rt_vector)
+        cls.get_logger().info("Finishing FollowerSupport updating.")
+
 
     @classmethod
     def get_users_rt_vector(cls):
