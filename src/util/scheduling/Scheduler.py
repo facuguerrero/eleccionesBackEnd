@@ -29,5 +29,7 @@ class Scheduler(metaclass=Singleton):
         # Update followers support
         self.scheduler.add_job(func=FollowerSupportService.init_update_support_follower, trigger='cron',
                                day_of_week='sun', hour=16)
+        self.scheduler.add_job(func=FollowerSupportService.init_update_support_follower, trigger='cron',
+                               day_of_week='sun', hour=16)
         self.scheduler.start()
         atexit.register(lambda: self.scheduler.shutdown())

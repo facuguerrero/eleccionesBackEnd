@@ -37,7 +37,6 @@ class FollowerSupportService:
             cls.save_follower_vectors(user_id, probability_vector, rt_vector)
         cls.get_logger().info("Finishing FollowerSupport updating.")
 
-
     @classmethod
     def get_users_rt_vector(cls):
         """ Get data from db and create users_rt_vectors. """
