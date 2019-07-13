@@ -118,10 +118,7 @@ class FollowerSupportService:
     @classmethod
     def update_followers_vector(cls, user, data):
         """ For every user, update their rt_vector. """
-        RawFollowerDAO().update_first(
-            {'_id': user},
-            {'$set': data}
-        )
+        RawFollowerDAO().update_first({'_id': user}, data)
 
     @classmethod
     def get_logger(cls):

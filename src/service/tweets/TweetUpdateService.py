@@ -35,6 +35,7 @@ class TweetUpdateService:
 
     def download_tweets_with_credential(self, credential):
         """ Update followers' tweets with an specific Twitter Api Credential. """
+        time.sleep(randint(0, 9))
         self.get_logger().info(f'Starting follower updating with credential {credential.id}.')
         # Create Twython instance for credential
         twitter = TwitterUtils.twitter_with_app_auth(credential)
@@ -60,8 +61,6 @@ class TweetUpdateService:
         # While there are followers to update
         self.start_time = datetime.datetime.today()
         while followers:
-            # Random wait for threads
-            time.sleep(randint(0, 9))
             for follower, last_update in followers.items():
                 self.continue_downloading = False
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
