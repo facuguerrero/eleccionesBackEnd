@@ -1,5 +1,6 @@
 import datetime
 import time
+from random import randint
 
 import pytz
 from twython import TwythonRateLimitError, TwythonError
@@ -59,6 +60,8 @@ class TweetUpdateService:
         # While there are followers to update
         self.start_time = datetime.datetime.today()
         while followers:
+            # Random wait for threads
+            time.sleep(randint(0, 9))
             for follower, last_update in followers.items():
                 self.continue_downloading = False
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
@@ -145,7 +148,8 @@ class TweetUpdateService:
             self.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
 
             # If duration is greater than 900 then sleep 900. Else sleep 900 - duration
-            time_to_sleep = (time_default - duration) if (time_default >= duration) else time_default
+            # Add randint for starting threads at different times
+            time_to_sleep = (time_default + randint(1, 5) - duration) if (time_default >= duration) else time_default
             time.sleep(time_to_sleep)
 
             self.get_logger().info(f'Waiting done. Resuming follower updating. Wait '
