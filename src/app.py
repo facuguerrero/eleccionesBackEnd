@@ -59,7 +59,7 @@ def set_up_context(db_name, authorization, environment):
 def init_services():
     # This is not necessary
     # UserHashtagService().insert_hashtags_of_already_downloaded_tweets()
-    FollowerSupportService().update_follower_support()
+    FollowerSupportService().init_update_support_follower()
     TweetUpdateServiceInitializer().initialize_tweet_update_service()
 
 

@@ -22,16 +22,13 @@ class FollowerSupportService:
 
         # Get followers which have tweets
         followers_with_tweets = RawFollowerDAO().get_all({'has_tweets': True})
+        cls.get_logger().info("Calculating probability vector support")
         for follower in followers_with_tweets:
             user_id = follower['_id']
             rt_vector = rt_vectors.get(user_id, [0] * groups_quantity)
             follows_vector = cls.get_follows_vector(follower, candidate_index, groups_quantity)
 
-            # Multiply all elements by factor / total_elements for normalization.
-            final_rt = cls.multiply_by_factor(rt_vector, FollowerSupportService.FACTOR, sum(rt_vector))
-            final_follows = cls.multiply_by_factor(follows_vector, 1.0 - FollowerSupportService.FACTOR,
-                                                   sum(follows_vector))
-
+            final_rt, final_follows = cls.get_final_vectors(rt_vector, follows_vector)
             # Calculate probability vector and save it
             probability_vector = [sum(x) for x in zip(final_rt, final_follows)]
             cls.save_follower_vectors(user_id, probability_vector, rt_vector)
@@ -57,6 +54,8 @@ class FollowerSupportService:
 
             if sum(user_rt_vector) > 0:
                 rt_vectors[user] = user_rt_vector
+
+        cls.get_logger().info("RT vectors are created correctly. ")
         return rt_vectors, candidate_index, groups_quantity
 
     @classmethod
@@ -83,6 +82,17 @@ class FollowerSupportService:
     def multiply_by_factor(cls, vector, factor, normalization):
         """Multiplies all elements by given factor"""
         return vector if normalization == 0 else map(lambda x: x * (factor / normalization), vector)
+
+    @classmethod
+    def get_final_vectors(cls, rt_vector, follows_vector):
+        """ If two vectors have elements, then multiply all elements by factor / total_elements for normalization.
+        Else, return vectors without any modification. """
+        total_rt = sum(rt_vector)
+        total_follows = sum(follows_vector)
+        if total_rt > 0 and total_follows > 0:
+            return cls.multiply_by_factor(rt_vector, FollowerSupportService.FACTOR, total_rt), \
+                   cls.multiply_by_factor(follows_vector, 1.0 - FollowerSupportService.FACTOR, total_follows)
+        return rt_vector, follows_vector
 
     @classmethod
     def save_follower_vectors(cls, user, probability_vector, rt_vector):
