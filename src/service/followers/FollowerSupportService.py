@@ -4,6 +4,7 @@ from src.db.dao.CandidateDAO import CandidateDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.util.logging.Logger import Logger
+from src.util.slack.SlackHelper import SlackHelper
 
 
 class FollowerSupportService:
@@ -11,11 +12,20 @@ class FollowerSupportService:
 
     @classmethod
     def init_update_support_follower(cls):
-        thread = Thread(target=FollowerSupportService.update_follower_support)
+        thread = Thread(target=FollowerSupportService.init_process)
         thread.start()
 
     @classmethod
-    def update_follower_support(cls):
+    def init_process(cls):
+        try:
+            cls.update_support_follower()
+        except Exception as e:
+            cls.get_logger().error("FollowerSupport updating failed.")
+            cls.get_logger().error(e)
+            SlackHelper().post_message_to_channel('Fallo el update de follower support.', '#errors')
+
+    @classmethod
+    def update_support_follower(cls):
         """ Method for updating follower support's vector. """
         cls.get_logger().info("Starting FollowerSupport updating.")
         rt_vectors, candidate_index, groups_quantity = cls.get_users_rt_vector()
@@ -110,9 +120,7 @@ class FollowerSupportService:
         """ For every user, update their rt_vector. """
         RawFollowerDAO().update_first(
             {'_id': user},
-            {'$set':
-                 data
-             }
+            {'$set': data}
         )
 
     @classmethod
