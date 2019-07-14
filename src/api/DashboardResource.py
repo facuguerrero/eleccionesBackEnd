@@ -22,12 +22,13 @@ class DashboardResource(Resource):
         active_users = RawFollowerDAO().get_count({'has_tweets': True})
         # Get count of followers for each candidate
         candidates = list(map(lambda c: c.screen_name, CandidateService().get_all()))
-        results = AsyncThreadPoolExecutor().run(DashboardResource.count_by_candidate, candidates)
         followers_by_candidate = dict()
-        candidates = iter(candidates)
-        for result in results:
-            candidate_name = next(candidates)
-            followers_by_candidate[candidate_name] = result
+        for candidate in candidates:
+            followers = RawFollowerDAO().get_count({'follows': candidate})
+            active_followers = RawFollowerDAO().get_count({'follows': candidate, 'has_tweets': True})
+            followers_by_candidate[candidate] = {'followers': followers,
+                                                 'active_followers': active_followers,
+                                                 'proportion': active_followers / followers}
         # Get count of found topics
         topics = CooccurrenceGraphDAO().get_count({'topic_id': {'$ne': 'main'}})
         # Get count of known hashtags
@@ -45,11 +46,3 @@ class DashboardResource(Resource):
                     'cooccurrences_count': cooccurrences}
         # Respond request
         return ResponseBuilder.build(response, 200)
-
-    @staticmethod
-    def count_by_candidate(candidate_name):
-        followers = RawFollowerDAO().get_count({'follows': candidate_name})
-        active_followers = RawFollowerDAO().get_count({'follows': candidate_name, 'has_tweets': True})
-        return {'followers': followers,
-                'active_followers': active_followers,
-                'proportion': active_followers / followers}
