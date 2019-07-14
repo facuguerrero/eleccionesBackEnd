@@ -12,6 +12,6 @@ class AsyncThreadPoolExecutor:
         max_workers = ConfigurationManager().get_int("max_pool_workers")
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = [executor.submit(executable, args) for args in args_list]
-        results = [as_completed(future) for future in futures]
+            results = [future.result() for future in as_completed(futures)]
         Logger(self.__class__.__name__).info("Finished executing tasks in asynchronous thread pool.")
         return results
