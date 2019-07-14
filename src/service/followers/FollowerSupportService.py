@@ -85,7 +85,9 @@ class FollowerSupportService:
         follows_vector = follower.get('follows', [])
         vector_to_return = [0] * groups_quantity
         for candidate in follows_vector:
-            vector_to_return[candidate_index[candidate]] += 1
+            # Don't count candidates like massa
+            if candidate in candidate_index:
+                vector_to_return[candidate_index[candidate]] += 1
         return vector_to_return
 
     @classmethod
