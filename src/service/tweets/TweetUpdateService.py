@@ -1,5 +1,6 @@
 import datetime
 import time
+from random import randint
 
 import pytz
 from twython import TwythonRateLimitError, TwythonError
@@ -34,6 +35,7 @@ class TweetUpdateService:
 
     def download_tweets_with_credential(self, credential):
         """ Update followers' tweets with an specific Twitter Api Credential. """
+        time.sleep(randint(0, 9))
         self.get_logger().info(f'Starting follower updating with credential {credential.id}.')
         # Create Twython instance for credential
         twitter = TwitterUtils.twitter_with_app_auth(credential)
@@ -145,7 +147,8 @@ class TweetUpdateService:
             self.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
 
             # If duration is greater than 900 then sleep 900. Else sleep 900 - duration
-            time_to_sleep = (time_default - duration) if (time_default >= duration) else time_default
+            # Add randint for starting threads at different times
+            time_to_sleep = (time_default + randint(1, 5) - duration) if (time_default >= duration) else time_default
             time.sleep(time_to_sleep)
 
             self.get_logger().info(f'Waiting done. Resuming follower updating. Wait '
@@ -160,9 +163,9 @@ class TweetUpdateService:
         # If error code matches private_user or not_found
         if (error.error_code == ConfigurationManager().get_int('private_user_error_code') or
                 error.error_code == ConfigurationManager().get_int('not_found_user_error_code')):
-            # If throws this error 400 times in a row
+            # If throws this error 100 times in a row
             # Shut down this credential
-            if self.contiguous_private_users >= 300:
+            if self.contiguous_private_users >= 10:
                 self.shut_down_credential_and_notify('Too many private users. Shut down this credential',
                                                      "Muchos usuarios privados.")
             self.contiguous_private_users += 1

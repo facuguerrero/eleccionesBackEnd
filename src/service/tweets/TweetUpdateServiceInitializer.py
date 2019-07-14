@@ -33,7 +33,9 @@ class TweetUpdateServiceInitializer(metaclass=Singleton):
     def restart_credential(cls, credential_id):
         cls.get_logger().error('After waiting, restart credential.')
         try:
-            credential = CredentialService().get_credential_with_id_for_service(credential_id, cls.__name__)
+            # Use TweetUpdateService class name due to the credential is unlocked in that class.
+            credential = CredentialService().get_credential_with_id_for_service(credential_id,
+                                                                                TweetUpdateService.__class__.__name__)
         except NoAvailableCredentialsError:
             cls.get_logger().error('Can not restart credential.')
             return
@@ -45,6 +47,7 @@ class TweetUpdateServiceInitializer(metaclass=Singleton):
         # Run tweet update process
         AsyncThreadPoolExecutor().run(cls.initialize_with_credential, credentials)
         # self.download_tweets_with_credential(credentials[0])
+
         cls.get_logger().info('Stopped tweet updating')
         SlackHelper().post_message_to_channel(
             "El servicio TweetUpdateService dejo de funcionar. Se frenaron todos los threads.", "#errors")
