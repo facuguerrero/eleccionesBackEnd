@@ -180,3 +180,5 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         Mongo().get().db.raw_followers.create_index('is_private')
         self.logger.info('Creating has_tweets index for collection raw_followers.')
         Mongo().get().db.raw_followers.create_index([('has_tweets', pymongo.DESCENDING)])
+        self.logger.info('Creating follows index for collection raw_followers.')
+        Mongo().get().db.raw_followers.create_index('follows')
