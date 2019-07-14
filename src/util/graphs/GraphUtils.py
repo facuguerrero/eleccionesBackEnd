@@ -55,9 +55,9 @@ class GraphUtils:
     def __generate_showable_graphs(cls, graphs):
         """ Generate graphs from the main topics with a limited number of nodes. """
         bound = ConfigurationManager().get_int('max_nodes_showable_graphs')
-        showable_graphs = dict()
+        showable_graphs = {'main': graphs.pop('main')}
         # Find main topics
-        main_topics = [node['id'] for node in graphs['main']['nodes']]
+        main_topics = [node['id'] for node in showable_graphs['main']['nodes']]
         # Create a graph for each topic
         for main_topic in main_topics:
             graph = graphs[main_topic]
@@ -66,6 +66,8 @@ class GraphUtils:
             nodes_ids = [node['id'] for node in top_nodes]
             # Keep only the edges between the top nodes
             links = [link for link in graph['links'] if link['source'] in nodes_ids and link['target'] in nodes_ids]
+            # Keep only an specific number of links
+            links = cls.__filter_links(links, nodes_ids)
             # Store in showable graphs dict
             showable_graphs[main_topic] = {'links': links, 'nodes': top_nodes}
         return showable_graphs
@@ -85,6 +87,8 @@ class GraphUtils:
             # Create a node for each hashtag
             cls.__add_to_nodes(nodes, cluster1, main_communities[cluster1], community_leaders, add=False)
             cls.__add_to_nodes(nodes, cluster2, main_communities[cluster2], community_leaders, add=False)
+        # Keep only an specific number of links
+        links = cls.__filter_links(links, nodes.keys())
         return {'links': links, 'nodes': list(nodes.values())}
 
     @classmethod
@@ -186,6 +190,33 @@ class GraphUtils:
     def __calculate_strengths(cls, groups):
         """ Returns a dict mapping each community to its strength. """
         return {str(name): sum(group.weight) for name, group in groups}
+
+    @classmethod
+    def __filter_links(cls, links, nodes_ids):
+        """ Keep only a number N of links. Keeping at least one link per node. """
+        max_links = ConfigurationManager().get_int('max_edges_showable_graphs')
+        links_copy = sorted(links, key=lambda l: l['weight'], reverse=True)
+        used_nodes = set()
+        result = list()
+        added_links = 0
+        # Get a link for each node
+        for node_id in nodes_ids:
+            # Only search if this node was not yet "touched"
+            if node_id not in used_nodes:
+                # Get a link connected to the current node
+                link = next(filter(lambda l: l['source'] == node_id or l['target'] == node_id, links_copy))
+                # Mark the currently used nodes
+                used_nodes.add(link['source'])
+                used_nodes.add(link['target'])
+                # Remove the link from the list and append to result
+                links_copy.remove(link)
+                result.append(link)
+                added_links += 1
+        # Get first N links. The number of links will be the minimum between
+        # the configurable value and the remaining links
+        random_links = links_copy[:min(max_links - added_links, len(links_copy))]
+        # Return the sum of the first links and the sample
+        return result + random_links
 
     @classmethod
     def __add_to_graph(cls, links, nodes, node1, node2, weight, mapper=None):

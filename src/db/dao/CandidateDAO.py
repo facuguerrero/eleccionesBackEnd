@@ -77,3 +77,11 @@ class CandidateDAO(GenericDAO, metaclass=Singleton):
         # Write to file
         with open(CandidateDAO.FILE_PATH, 'w') as file:
             json.dump(candidates, file)
+
+    def get_required_candidates(self):
+        """ Retrieve dictionary like: {candidate: index}. """
+        candidates = self.get_all({'index': {'$exists': True}})
+        candidate_index = {}
+        for candidate in candidates:
+            candidate_index[candidate['_id']] = candidate['index']
+        return candidate_index

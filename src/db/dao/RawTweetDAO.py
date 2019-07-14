@@ -30,6 +30,22 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
         """ Mark tweet as checked for hashtag origin. """
         self.update_first({'_id': tweet['_id']}, {'hashtag_origin_checked': True})
 
-    def create_indexes(self):
-        self.logger.info('Creating user_id index for collection raw_tweets.')
-        Mongo().get().db.raw_followers.create_index('user_id')
+    def get_rt_to_candidates_cursor(self, candidates):
+        """ Get tweets which are rt to one candidate.
+            If one tweet has retweeted_status field
+            then this tweet is rt without comments or extra text.
+        """
+        return self.get_all(
+            {"$and": [
+                {'retweeted_status': {'$exists': True}},
+                {'retweeted_status.user.screen_name': {'$in': candidates}}
+            ]}
+        )
+
+#   def create_indexes(self):
+# self.logger.info('Creating user_id index for collection raw_tweets.')
+# Mongo().get().db.tweets.create_index('user_id')
+# self.logger.info('Creating retweeted_status index for collection raw_tweets.')
+# Mongo().get().db.tweets.create_index('retweeted_status')
+# self.logger.info('Creating created_at index for collection raw_tweets.')
+# Mongo().get().db.tweets.create_index('created_at')

@@ -56,6 +56,7 @@ class FollowersQueueService(metaclass=Singleton):
         return followers_to_update
 
     def check_if_have_followers(self, max_users_per_window):
+
         if len(self.updating_followers) <= 2 * max_users_per_window:
             # Retrieve more candidates from db
             self.add_followers_to_be_updated()
@@ -67,17 +68,15 @@ class FollowersQueueService(metaclass=Singleton):
             raise NoMoreFollowersToUpdateTweetsError()
 
     def add_followers_to_be_updated(self):
-        # TODO Analizar productor y consumidor en python.
         self.logger.info(
             f'Adding new followers to update their tweets. Actual size: {str(len(self.updating_followers))}')
-        new_followers = RawFollowerDAO().get_random_followers_sample()
+        followers = RawFollowerDAO().get_random_followers_sample()
+        new_followers = self.add_followers(followers)
         if len(new_followers) == 0:
             # If there are no new results
             self.logger.error('Can\'t retrieve followers to update their tweets. ')
             raise NoMoreFollowersToUpdateTweetsError()
         self.updating_followers.update(new_followers)
-        self.add_private_users(10000)
-        self.add_other_users(50000)
 
     def add_last_downloaded_followers(self):
         self.logger.info('Adding last downloaded followers')
@@ -90,36 +89,11 @@ class FollowersQueueService(metaclass=Singleton):
         self.priority_updating_followers.update(followers)
         self.logger.info('Finishing insertion of last downloaded followers')
 
-    def add_private_users(self, private_users):
-        date = datetime(2019, 6, 24, 0, 0, 0)
-        users_to_be_updated = RawFollowerDAO().get_with_limit({
-            '$and': [
-                {'is_private': True},
-                {'downloaded_on': {'$lt': date}}
-            ]},
-            None,
-            private_users)
-        followers = self.add_followers(users_to_be_updated)
-        self.updating_followers.update(followers)
-
-    def add_other_users(self, limit):
-        date = datetime(2019, 7, 3, 10, 0, 0)
-        users_to_be_updated = RawFollowerDAO().get_with_limit({
-            '$and': [
-                {'downloaded_on': {'$lt': date}},
-                {'has_tweets': {'$ne': True}},
-                {'is_private': {'$ne': True}}
-            ]},
-            None,
-            limit)
-        followers = self.add_followers(users_to_be_updated)
-        self.updating_followers.update(followers)
-
     def add_followers(self, downloaded):
         followers = {}
         for follower in downloaded:
             date = datetime(2019, 1, 1)
-            if 'last_tweet_date' in follower:
+            if 'last_tweet_date' in follower and follower['last_tweet_date'] is not None:
                 date = follower['last_tweet_date']
             if date is None:
                 self.logger.warning(f"None type for: {follower['_id']}")

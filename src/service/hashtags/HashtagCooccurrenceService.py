@@ -57,8 +57,10 @@ class HashtagCooccurrenceService:
             # Generate documents for cooccurrence collection and store
             for i in range(len(hashtags) - 1):
                 for j in range(i + 1, len(hashtags)):
-                    # Store in database
-                    CooccurrenceDAO().store(tweet, sorted([hashtags[i], hashtags[j]]))
+                    pair = sorted([hashtags[i], hashtags[j]])
+                    # Store only if the same user didn't use that pair of hashtags in the same day
+                    if not CooccurrenceDAO().exists_in_tweet_day(tweet, pair):
+                        CooccurrenceDAO().store(tweet, pair)
         # Mark tweet as already used
         RawTweetDAO().cooccurrence_checked(tweet)
 
