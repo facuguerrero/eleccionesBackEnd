@@ -63,7 +63,6 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
     def aggregate_last_3_days_data(self):
         """ Get iterator of last 3 days user-hashtags aggregated. """
         init_first_hour, yesterday_last_hour = self.get_init_and_end_dates()
-        date = datetime.datetime.today() - datetime.timedelta(days=3)
         return self.aggregate([
             {'$match':
                 {'$and': [
