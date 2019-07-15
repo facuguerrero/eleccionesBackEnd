@@ -24,9 +24,10 @@ class UserTopicService:
     @classmethod
     def init_process(cls):
         try:
+            cls.get_logger().info("Calculating User-Topic Matrix")
             cls.calculate_users_topics_matrix()
         except Exception as e:
-            cls.get_logger().error("Calculating User-Topic Matrix")
+            cls.get_logger().error("Error Calculating User-Topic Matrix")
             cls.get_logger().error(e)
             # SlackHelper().post_message_to_channel('Fallo el update de follower support.', '#errors')
 
@@ -53,7 +54,6 @@ class UserTopicService:
         # Multiply this matrix and get users_topics matrix
         users_topics_matrix = users_hashtags_matrix.multiply(hashtags_topics_matrix)
         cls.get_logger().info("Users_topics matrix created correctly. ")
-
 
         # Apply TF-IDF
         tfidf_transformer = TfidfTransformer()
