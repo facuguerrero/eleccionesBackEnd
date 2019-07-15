@@ -30,7 +30,9 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
             {'timestamp': {'$lte': yesterday_last_hour}}
         ]})
 
-    def get_init_and_end_dates(self):
+    @staticmethod
+    def get_init_and_end_dates():
+        # TODO cambiar por 3 dias
         init_date = datetime.datetime.today() - datetime.timedelta(days=2)
         init_first_hour = DateUtils().date_at_first_hour(init_date)
         yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
@@ -40,11 +42,11 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
 
     def get_last_3_days_users_and_hashtags(self, all_hashtags_sorted):
         """ Get las 3 days hashtag's list. """
-        users_hashtags = self.aggregate_last_3_days_data()
         users_index = {}
         index = 0
         position_vectors = []
 
+        users_hashtags = self.aggregate_last_3_days_data()
         for user_hashtag in users_hashtags:
             user = user_hashtag['_id']['user']
             if user in users_index:

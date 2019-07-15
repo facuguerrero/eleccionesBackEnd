@@ -83,7 +83,7 @@ class UserTopicService:
 
         # Retrieve last 3 days hashtags list sorted alphabetically
         last_3_days_hashtags = UserHashtagDAO().get_last_3_days_hashtags()
-        cls.get_logger().info("All hashtags retrieved ")
+        cls.get_logger().info("All hashtags retrieved")
 
         # Get users-hashtags data and users index structure {user: matrix_index}
         # Users_index are the user's row in matrix
