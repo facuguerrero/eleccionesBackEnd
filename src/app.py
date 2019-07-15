@@ -17,6 +17,7 @@ from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
 from src.service.topics.UserTopicService import UserTopicService
+from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 
@@ -60,7 +61,7 @@ def init_services():
     # UserHashtagService().insert_hashtags_of_already_downloaded_tweets()
     UserTopicService().calculate_users_topics_matrix()
     # FollowerSupportService().init_update_support_follower()
-    # TweetUpdateServiceInitializer().initialize_tweet_update_service()
+    TweetUpdateServiceInitializer().initialize_tweet_update_service()
 
 
 def parse_arguments():

@@ -1,4 +1,5 @@
 import datetime
+from threading import Thread
 
 import pandas as pd
 from scipy.sparse import csr_matrix, save_npz
@@ -8,11 +9,26 @@ from sklearn.preprocessing import normalize
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
+from src.util.logging.Logger import Logger
 
 
 class UserTopicService:
     # TODO fle path
     # FILE_PATH = f"{abspath(join(dirname(__file__), '../../'))}/resources/candidates.json"
+
+    @classmethod
+    def init_update_support_follower(cls):
+        thread = Thread(target=UserTopicService.init_process)
+        thread.start()
+
+    @classmethod
+    def init_process(cls):
+        try:
+            cls.calculate_users_topics_matrix()
+        except Exception as e:
+            cls.get_logger().error("Calculating User-Topic Matrix")
+            cls.get_logger().error(e)
+            # SlackHelper().post_message_to_channel('Fallo el update de follower support.', '#errors')
 
     @classmethod
     def calculate_users_topics_matrix(cls):
@@ -33,20 +49,25 @@ class UserTopicService:
 
         # Retrieve necessaries data
         users_hashtags_matrix, hashtags_topics_matrix, users_index = cls.get_necessary_data()
+        cls.get_logger().info("Data retrieved correctly. ")
         # Multiply this matrix and get users_topics matrix
         users_topics_matrix = users_hashtags_matrix.multiply(hashtags_topics_matrix)
+        cls.get_logger().info("Users_topics matrix created correctly. ")
+
 
         # Apply TF-IDF
         tfidf_transformer = TfidfTransformer()
         tf_idf_matrix = tfidf_transformer.fit_transform(users_topics_matrix)
         # Save matrix
         cls.save_matrix(tf_idf_matrix)
+        cls.get_logger().info("Finished process ")
+
 
         # Retrieve users grouped
-        grouped_users = cls.get_grouped_users(users_index)
-        for group, users_list in grouped_users.items():
-            group_vector = cls.get_matrix_from_data(users_list)
-            group_matrix = cls.get_group_matrix(tf_idf_matrix, group_vector)
+        # grouped_users = cls.get_grouped_users(users_index)
+        # for group, users_list in grouped_users.items():
+        # group_vector = cls.get_matrix_from_data(users_list)
+        # group_matrix = cls.get_group_matrix(tf_idf_matrix, group_vector)
 
     @classmethod
     def get_necessary_data(cls):
@@ -111,3 +132,7 @@ class UserTopicService:
         """ Return group matrix without 0's"""
         group_matrix = tf_idf_matrix.multiply(group_vector)
         return group_matrix[group_matrix.getnnz(1) > 0]
+
+    @classmethod
+    def get_logger(cls):
+        return Logger('FollowerSupportService')
