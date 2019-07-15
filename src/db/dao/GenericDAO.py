@@ -106,4 +106,4 @@ class GenericDAO:
         """
         Aggregate documents by given stages
         """
-        return self.collection.aggregate(stages, allowDiskUse=True)
+        return self.collection.aggregate(stages, {'allowDiskUse': True})
