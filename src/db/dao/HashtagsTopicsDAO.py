@@ -19,13 +19,15 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
                      for hashtag, topics in hashtags_topics.items()]
         self.collection.insert_many(documents)
 
-    def get_required_hashtags(self, all_topics, all_hashtags):
+    def get_required_hashtags(self, all_hashtags):
         """ Retrieve all topics by hashtags. """
         hashtags_topics = self.get_all()
         position_vectors = []
 
         for hashtag_topics in hashtags_topics:
-            hashtag_index = all_hashtags.index(hashtag_topics['hashtag'])
-            for topic in hashtag_topics['topics']:
-                position_vectors.append([hashtag_index, int(topic), 1])
+            # TODO esto no deberia estar
+            if hashtag_topics['hashtag'] in all_hashtags:
+                hashtag_index = all_hashtags.index(hashtag_topics['hashtag'])
+                for topic in hashtag_topics['topics']:
+                    position_vectors.append([hashtag_index, int(topic), 1])
         return position_vectors

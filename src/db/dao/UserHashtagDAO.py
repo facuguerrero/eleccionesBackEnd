@@ -2,6 +2,7 @@ import datetime
 
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
+from src.util.DateUtils import DateUtils
 from src.util.logging.Logger import Logger
 from src.util.meta.Singleton import Singleton
 
@@ -22,8 +23,20 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
 
     def retrieve_last_3_days_data(self):
         """ Get iterator of last 3 days user-hashtags. """
-        date = datetime.datetime.today() - datetime.timedelta(days=3)
-        return self.get_all({'timestamp': {'$lt': date}})
+        init_first_hour, yesterday_last_hour = self.get_init_and_end_dates()
+
+        return self.get_all({'$and': [
+            {'timestamp': {'$gte': init_first_hour}},
+            {'timestamp': {'$lte': yesterday_last_hour}}
+        ]})
+
+    def get_init_and_end_dates(self):
+        init_date = datetime.datetime.today() - datetime.timedelta(days=3)
+        init_first_hour = DateUtils().date_at_first_hour(init_date)
+        yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
+        yesterday_last_hour = DateUtils().date_at_last_hour(yesterday)
+
+        return init_first_hour, yesterday_last_hour
 
     def get_last_3_days_users_and_hashtags(self, all_hashtags_sorted):
         """ Get las 3 days hashtag's list. """
@@ -45,16 +58,18 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
             count = user_hashtag['count']
             position_vectors.append([user_index, hashtag_index, count])
 
-        return position_vectors
+        return position_vectors, users_index
 
     def aggregate_last_3_days_data(self):
         """ Get iterator of last 3 days user-hashtags aggregated. """
+        init_first_hour, yesterday_last_hour = self.get_init_and_end_dates()
         date = datetime.datetime.today() - datetime.timedelta(days=3)
         return self.aggregate([
             {'$match':
-                 {'timestamp':
-                      {'$lt': date}
-                  }
+                {'$and': [
+                    {'timestamp': {'$gte': init_first_hour}},
+                    {'timestamp': {'$lte': yesterday_last_hour}}
+                ]}
              },
             {'$group': {
                 '_id': {
