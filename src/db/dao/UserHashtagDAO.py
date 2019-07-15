@@ -104,7 +104,6 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
         hashtags_list = list(all_hashtags)
         return hashtags_by_user, sorted(hashtags_list)
 
-
     def create_indexes(self):
         self.logger.info('Creating timestamp index for collection user_hashtag.')
         Mongo().get().db.user_hashtag.create_index('timestamp')

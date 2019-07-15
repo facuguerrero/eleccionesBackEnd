@@ -138,4 +138,4 @@ class UserTopicService:
 
     @classmethod
     def get_logger(cls):
-        return Logger('FollowerSupportService')
+        return Logger('UserTopicService')
