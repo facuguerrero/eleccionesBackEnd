@@ -41,7 +41,7 @@ class UserTopicService:
         cls.get_logger().info("Data retrieved correctly. ")
         # Multiply this matrix and get users_topics matrix
         users_topics_matrix = users_hashtags_matrix.multiply(hashtags_topics_matrix)
-        cls.get_logger().info("Users_topics matrix created correctly. ")
+        cls.get_logger().info("Users_topics matrix created correctly.")
 
         # Apply TF-IDF
         tfidf_transformer = TfidfTransformer()

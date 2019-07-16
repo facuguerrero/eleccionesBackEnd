@@ -20,6 +20,7 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
         hashtags = set()
         self.user_hashtags_count = {}
 
+        self.logger.info(f'Cantidad de usarios-hashtags: {len(users_hashtags)}')
         for user_hashtag in users_hashtags:
             user = user_hashtag['user']
             hashtag = user_hashtag['hashtag']
@@ -40,7 +41,6 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
     @staticmethod
     def get_init_and_end_dates():
         """ Return 3 days ago at 00:00 and yesterday at 23:59"""
-        # TODO change 3 days
         init_date = datetime.datetime.today() - datetime.timedelta(days=3)
         init_first_hour = DateUtils().date_at_first_hour(init_date)
         yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
@@ -48,7 +48,7 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
         return init_first_hour, yesterday_last_hour
 
     def get_last_3_days_users_and_hashtags(self, all_hashtags_sorted):
-        """ Get las 3 days hashtag's list. """
+        """ Get las 3 days hashtag's list from cached data. """
         users_index = {}
         index = 0
         position_vectors = []
@@ -70,6 +70,7 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
 
     def aggregate_last_3_days_data(self):
         """ Get iterator of last 3 days user-hashtags aggregated. """
+        # TODO Delete method
         init_first_hour, yesterday_last_hour = self.get_init_and_end_dates()
         return self.aggregate([
             {'$match':
@@ -90,7 +91,7 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
 
     def get_yesterday_hashtags(self):
         # FILTRAR POR LOS ULTIMOS 3 DIAS
-        # TODO preguntar a que hora correrlo.
+        # TODO Delete method.
         date = datetime.datetime.today()
         documents = self.aggregate([
             {'$match': {'timestamp': {'$lt': date}}},
