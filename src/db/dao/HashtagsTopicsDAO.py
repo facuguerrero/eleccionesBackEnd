@@ -29,9 +29,13 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
             {'start_date': init_first_hour},
             {'end_date': yesterday_last_hour}
         ]})
-        position_vectors = []
 
+        position_vectors = []
+        x = 0
         for hashtag_topics in hashtags_topics:
+            x += 1
+            if x % 10000 == 0:
+                self.logger.info("Hashtags topics retrieved")
             # TODO esto no deberia estar
             # if hashtag_topics['hashtag'] in all_hashtags:
             hashtag_index = all_hashtags.index(hashtag_topics['hashtag'])
