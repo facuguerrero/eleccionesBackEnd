@@ -44,7 +44,6 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                               'favourites_count': raw_follower.favourites_count,
                               'statuses_count': raw_follower.statuses_count,
                               'is_private': raw_follower.is_private,
-                              'has_tweets': raw_follower.has_tweets
                               }
                      })
 
