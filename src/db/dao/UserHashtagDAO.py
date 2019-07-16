@@ -53,7 +53,11 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
         position_vectors = []
 
         self.logger.info(f'Cantidad de usarios-hashtags: {len(self.user_hashtags_count)}')
+        x = 0
         for user_hashtag_tuple, count in self.user_hashtags_count.items():
+            if x == 1 or x % 10000 == 0:
+                self.logger.info(f'Cantidad de usarios-hashtags: {x}')
+            x += 1
             user = user_hashtag_tuple[0]
             if user in users_index:
                 user_index = users_index[user]
