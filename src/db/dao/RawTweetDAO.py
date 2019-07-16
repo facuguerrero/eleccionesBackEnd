@@ -42,7 +42,6 @@ class RawTweetDAO(GenericDAO, metaclass=Singleton):
             ]}
         )
 
-
 #   def create_indexes(self):
 # self.logger.info('Creating user_id index for collection raw_tweets.')
 # Mongo().get().db.tweets.create_index('user_id')

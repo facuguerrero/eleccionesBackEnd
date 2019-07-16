@@ -216,7 +216,7 @@ class GraphUtils:
                 added_links += 1
         # Get first N links. The number of links will be the minimum between
         # the configurable value and the remaining links
-        random_links = links_copy[:min(max_links-added_links, len(links_copy))]
+        random_links = links_copy[:min(max_links - added_links, len(links_copy))]
         # Return the sum of the first links and the sample
         return result + random_links
 

@@ -16,6 +16,16 @@ class DateUtils:
         return datetime.today().date() == value.date()
 
     @staticmethod
+    def date_at_first_hour(value):
+        """ Returns a new datetime object at 00:00:00 of given date. """
+        return value.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    @staticmethod
+    def date_at_last_hour(value):
+        """ Returns a new datetime object at 23:59:59 of given date. """
+        return value.replace(hour=23, minute=59, second=59, microsecond=0)
+
+    @staticmethod
     def last_second_of_day(value):
         """ Returns a new datetime object from a datetime at 00:00:00 in the same day but at 23:59:59. """
         return value + timedelta(days=1) - timedelta(seconds=1)

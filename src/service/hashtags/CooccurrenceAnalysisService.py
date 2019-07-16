@@ -11,7 +11,6 @@ from src.util.logging.Logger import Logger
 
 
 class CooccurrenceAnalysisService:
-
     START_DAY = datetime.combine(datetime.strptime('2019-01-01', '%Y-%m-%d').date(), datetime.min.time())
 
     @classmethod
