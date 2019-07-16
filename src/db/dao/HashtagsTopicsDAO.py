@@ -25,6 +25,12 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
     def get_required_hashtags(self, all_hashtags, all_topics_sorted):
         """ Retrieve all topics by hashtags. """
         init_first_hour, yesterday_last_hour = self.get_init_and_end_dates()
+        count = hashtags_topics = self.get_all({'$and': [
+            {'start_date': init_first_hour},
+            {'end_date': yesterday_last_hour}
+        ]}).count()
+        self.logger.info(f"Count {count}")
+
         hashtags_topics = self.get_all({'$and': [
             {'start_date': init_first_hour},
             {'end_date': yesterday_last_hour}
