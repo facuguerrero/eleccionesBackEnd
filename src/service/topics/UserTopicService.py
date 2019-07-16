@@ -68,6 +68,12 @@ class UserTopicService:
         last_3_days_hashtags = UserHashtagDAO().get_last_3_days_hashtags()
         cls.get_logger().info("All hashtags from 3 days ago are retrieved")
 
+        # Get hashtags-topics matrix
+        all_topics_sorted = CoocurrenceGraphsDAO().get_all_sorted_topics()
+        hashtags_topics_data = HashtagsTopicsDAO().get_required_hashtags(last_3_days_hashtags, all_topics_sorted)
+        cls.get_logger().info("Hashtags topics retrieved")
+        hashtags_topics_matrix = cls.get_matrix_from_data(hashtags_topics_data)
+
         # Get users-hashtags data and users index structure {user: matrix_index}
         # Users_index are the user's row in matrix
         users_hashtags_data, users_index = UserHashtagDAO().get_last_3_days_users_and_hashtags(last_3_days_hashtags)
@@ -75,12 +81,6 @@ class UserTopicService:
         users_hashtags_matrix = cls.get_matrix_from_data(users_hashtags_data)
         # Axis 1 normalize by row
         normalized_user_hashtag_matrix = normalize(users_hashtags_matrix, norm='l1', axis=1)
-
-        # Get hashtags-topics matrix
-        all_topics_sorted = CoocurrenceGraphsDAO().get_all_sorted_topics()
-        hashtags_topics_data = HashtagsTopicsDAO().get_required_hashtags(last_3_days_hashtags, all_topics_sorted)
-        cls.get_logger().info("Hashtags topics retrieved")
-        hashtags_topics_matrix = cls.get_matrix_from_data(hashtags_topics_data)
 
         return normalized_user_hashtag_matrix, hashtags_topics_matrix, users_index
 
