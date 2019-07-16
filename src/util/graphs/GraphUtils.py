@@ -1,5 +1,4 @@
 from itertools import islice
-from random import sample
 
 import pandas as pd
 
@@ -26,6 +25,7 @@ class GraphUtils:
         joined = graph.merge(nodes_communities, left_on='hashtag_id_1', right_on='hashtag_id')
         joined = joined.merge(nodes_communities, left_on='hashtag_id_2', right_on='hashtag_id')
         # Keep only those fields in which both nodes belong to the same community
+        joined = joined[joined.hashtag_id_1 != joined.hashtag_id_2]
         reduced_join = joined[['hashtag_id_1', 'hashtag_id_2', 'weight', 'community_id_x', 'community_id_y']]
         communities_graph = reduced_join[reduced_join.community_id_x == reduced_join.community_id_y]
         communities_graph = communities_graph[['hashtag_id_1', 'hashtag_id_2', 'weight', 'community_id_x']]
@@ -39,7 +39,7 @@ class GraphUtils:
         # Generate all community graphs
         graphs = cls.__generate_community_graph(grouped, mappings, hashtags_topics)
         # Get each community's identifying hashtag
-        community_leaders = cls.__find_community_leaders(graphs)
+        community_leaders = cls.__find_community_leaders(graphs, hashtags_topics)
         # Create community strength data frame
         community_strength = cls.__calculate_strengths(grouped)
         # Generate main graph (community connection graph)
@@ -86,8 +86,8 @@ class GraphUtils:
             cluster1, cluster2 = key.split('-')
             links.append({'source': cluster1, 'target': cluster2, 'weight': int(weight)})
             # Create a node for each hashtag
-            cls.__add_to_nodes(nodes, cluster1, main_communities[cluster1], community_leaders, add=False)
-            cls.__add_to_nodes(nodes, cluster2, main_communities[cluster2], community_leaders, add=False)
+            cls.__add_to_nodes(nodes, cluster1, main_communities[cluster1], mapper=community_leaders, add=False)
+            cls.__add_to_nodes(nodes, cluster2, main_communities[cluster2], mapper=community_leaders, add=False)
         # Keep only an specific number of links
         links = cls.__filter_links(links, nodes.keys())
         return {'links': links, 'nodes': list(nodes.values())}
@@ -120,7 +120,6 @@ class GraphUtils:
             links = []
             nodes = dict()
             # Iterate through all links
-            # TODO: Write .csv files?
             for _, row in group.iterrows():
                 hashtag_1 = mappings[str(row['hashtag_id_1'])]
                 hashtag_2 = mappings[str(row['hashtag_id_2'])]
@@ -173,15 +172,17 @@ class GraphUtils:
         return mappings
 
     @classmethod
-    def __find_community_leaders(cls, community_graphs):
+    def __find_community_leaders(cls, community_graphs, hashtags_topics):
         """ Find the most important node of each community. For most important we refer to the one with the highest
         grade in the graph. """
         number_of_nodes = ConfigurationManager().get_int('representing_nodes')
         leaders = dict()
         for community_id, graph in community_graphs.items():
-            # Get the 3 biggest nodes
-            sorted_nodes = sorted(graph['nodes'], key=lambda node: node['size'], reverse=True)[:number_of_nodes]
-            # Get the ids of these 3 hashtags
+            # Keep only those hashtags that appeared only in the current community
+            unique_nodes = list(filter(lambda node: len(hashtags_topics[node['id']]) == 1, graph['nodes']))
+            # Get the N biggest nodes
+            sorted_nodes = sorted(unique_nodes, key=lambda node: node['size'], reverse=True)[:number_of_nodes]
+            # Get the ids of these N hashtags
             sorted_nodes = list(map(lambda node: str(node['id']), sorted_nodes))
             # Store the set in the community
             leaders[community_id] = sorted_nodes
@@ -220,15 +221,15 @@ class GraphUtils:
         return result + random_links
 
     @classmethod
-    def __add_to_graph(cls, links, nodes, node1, node2, weight, mapper=None):
+    def __add_to_graph(cls, links, nodes, node1, node2, weight):
         """ Use given link information to add to given graph. """
         links.append({'source': node1, 'target': node2, 'weight': weight})
         # Create a node for each hashtag
-        cls.__add_to_nodes(nodes, node1, weight, mapper)
-        cls.__add_to_nodes(nodes, node2, weight, mapper)
+        cls.__add_to_nodes(nodes, node1, weight)
+        cls.__add_to_nodes(nodes, node2, weight)
 
     @classmethod
-    def __add_to_nodes(cls, nodes, node, edge_weight, mapper, add=True):
+    def __add_to_nodes(cls, nodes, node, edge_weight, mapper=None, add=True):
         """ Add to nested node dictionary. Has id repeated because it will be unpacked later. """
         if node not in nodes:
             nodes[node] = {'id': node, 'size': 0}
