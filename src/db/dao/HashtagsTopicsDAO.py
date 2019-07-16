@@ -29,6 +29,8 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
             {'start_date': init_first_hour},
             {'end_date': yesterday_last_hour}
         ]}).count()
+        self.logger.info(f"Init {init_first_hour}")
+        self.logger.info(f"End {yesterday_last_hour}")
         self.logger.info(f"Count {count}")
 
         hashtags_topics = self.get_all({'$and': [
