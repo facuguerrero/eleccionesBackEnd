@@ -23,7 +23,7 @@ class DateUtils:
     @staticmethod
     def date_at_last_hour(value):
         """ Returns a new datetime object at 23:59:59 of given date. """
-        return datetime.combine(value.date(), datetime.max.time())
+        return value.replace(hour=23, minute=59, second=59, microsecond=0)
 
     @staticmethod
     def last_second_of_day(value):
