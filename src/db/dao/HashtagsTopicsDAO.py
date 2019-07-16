@@ -32,7 +32,11 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
         ]})
 
         position_vectors = []
+        x = 0
         for hashtag_topics in hashtags_topics:
+            x += 1
+            if x % 10000 == 0 or x == 1:
+                self.logger.info(x)
             if hashtag_topics['hashtag'] in all_hashtags:
                 hashtag_index = all_hashtags.index(hashtag_topics['hashtag'])
                 for topic in hashtag_topics['topics']:
