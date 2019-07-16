@@ -27,7 +27,8 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
         init_first_hour, yesterday_last_hour = self.get_init_and_end_dates()
         hashtags_topics = self.get_all({'$and': [
             {'start_date': init_first_hour},
-            {'end_date': yesterday_last_hour}
+            {'end_date': yesterday_last_hour},
+            {'hashtag': {'$in': all_hashtags}}
         ]})
 
         position_vectors = []
