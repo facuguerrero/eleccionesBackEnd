@@ -12,19 +12,26 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
     def __init__(self):
         super(UserHashtagDAO, self).__init__(Mongo().get().db.user_hashtag)
         self.logger = Logger(self.__class__.__name__)
+        self.user_hashtags_count = {}
 
     def get_last_3_days_hashtags(self):
         """ Get las 3 days hashtag's list. """
         users_hashtags = self.retrieve_last_3_days_data()
         hashtags = set()
+        self.user_hashtags_count = {}
+
         for user_hashtag in users_hashtags:
-            hashtags.add(user_hashtag['hashtag'])
+            user = user_hashtag['user']
+            hashtag = user_hashtag['hashtag']
+            key = (user, hashtag)
+
+            hashtags.add(hashtag)
+            self.user_hashtags_count[key] = self.user_hashtags_count[key] + 1 if key in self.user_hashtags_count else 1
         return sorted(list(hashtags))
 
     def retrieve_last_3_days_data(self):
         """ Get iterator of last 3 days user-hashtags. """
         init_first_hour, yesterday_last_hour = self.get_init_and_end_dates()
-
         return self.get_all({'$and': [
             {'timestamp': {'$gte': init_first_hour}},
             {'timestamp': {'$lte': yesterday_last_hour}}
@@ -32,12 +39,12 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
 
     @staticmethod
     def get_init_and_end_dates():
-        # TODO cambiar por 3 dias
-        init_date = datetime.datetime.today() - datetime.timedelta(days=1)
+        """ Return 3 days ago at 00:00 and yesterday at 23:59"""
+        # TODO change 3 days
+        init_date = datetime.datetime.today() - datetime.timedelta(days=3)
         init_first_hour = DateUtils().date_at_first_hour(init_date)
         yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
         yesterday_last_hour = DateUtils().date_at_last_hour(yesterday)
-
         return init_first_hour, yesterday_last_hour
 
     def get_last_3_days_users_and_hashtags(self, all_hashtags_sorted):
@@ -46,9 +53,8 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
         index = 0
         position_vectors = []
 
-        users_hashtags = self.aggregate_last_3_days_data()
-        for user_hashtag in users_hashtags:
-            user = user_hashtag['_id']['user']
+        for user_hashtag_tuple, count in self.user_hashtags_count.items():
+            user = user_hashtag_tuple[0]
             if user in users_index:
                 user_index = users_index[user]
             else:
@@ -56,8 +62,8 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
                 users_index[user] = user_index
                 index += 1
 
-            hashtag_index = all_hashtags_sorted.index(user_hashtag['_id']['hashtag'])
-            count = user_hashtag['count']
+            hashtag = user_hashtag_tuple[1]
+            hashtag_index = all_hashtags_sorted.index(hashtag)
             position_vectors.append([user_index, hashtag_index, count])
 
         return position_vectors, users_index
