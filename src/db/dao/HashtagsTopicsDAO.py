@@ -34,10 +34,10 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
         for hashtag_topics in hashtags_topics:
             if hashtag_topics['hashtag'] in all_hashtags:
                 hashtag_index = all_hashtags.index(hashtag_topics['hashtag'])
+                for topic in hashtag_topics['topics']:
+                    position_vectors.append([hashtag_index, int(topic), 1])
             else:
                 self.logger.error(hashtag_topics['hashtag'])
-            for topic in hashtag_topics['topics']:
-                position_vectors.append([hashtag_index, int(topic), 1])
         return position_vectors
 
     @staticmethod
