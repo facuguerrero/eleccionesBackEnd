@@ -96,7 +96,7 @@ class TweetUpdateService:
         try:
             # Sleep to avoid (104, 'Connection reset by peer')
             # https://stackoverflow.com/questions/383738/104-connection-reset-by-peer-socket-error-or-when-does-closing-a-socket-resu
-            time.sleep(0.01)
+            # time.sleep(0.01)
             max_tweets_request_parameter = ConfigurationManager().get_int('max_tweets_parameter')
 
             if is_first_request:
