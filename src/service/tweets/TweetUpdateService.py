@@ -185,10 +185,11 @@ class TweetUpdateService:
     def store_tweets_and_update_follower(self, follower_download_tweets, follower, min_tweet_date):
         if len(follower_download_tweets) != 0:
             last_tweet_date = self.get_formatted_date(follower_download_tweets[0]['created_at'])
-            self.update_complete_follower(follower, follower_download_tweets[0], last_tweet_date)
-            self.store_new_tweets(follower_download_tweets, min_tweet_date)
-        else:
-            self.update_follower_with_no_tweets(follower)
+            if min_tweet_date < last_tweet_date:
+                self.update_complete_follower(follower, follower_download_tweets[0], last_tweet_date)
+                self.store_new_tweets(follower_download_tweets, min_tweet_date)
+                return
+        self.update_follower_with_no_tweets(follower)
 
     @classmethod
     def get_followers_to_update(cls):
@@ -221,25 +222,26 @@ class TweetUpdateService:
         """ Update follower's last download date. """
         try:
             today = datetime.datetime.today()
+            updated_raw_follower = RawFollower(**{
+                'id': follower,
+                'downloaded_on': today,
+                'last_tweet_date': last_tweet_date,
+                'is_private': False,
+                'has_tweets': True
+            })
+
             if 'user' in tweet:
                 user_information = tweet['user']
-                updated_raw_follower = RawFollower(**{
-                    'id': follower,
-                    'downloaded_on': today,
-                    'last_tweet_date': last_tweet_date,
-                    'is_private': False,
-                    'has_tweets': True,
-                    'location': user_information['location'],
-                    'followers_count': user_information['followers_count'],
-                    'friends_count': user_information['friends_count'],
-                    'listed_count': user_information['listed_count'],
-                    'favourites_count': user_information['favourites_count'],
-                    'statuses_count': user_information['statuses_count']
-                })
-                RawFollowerDAO().update_follower_data(updated_raw_follower)
+                updated_raw_follower.location = user_information['location']
+                updated_raw_follower.followers_count = user_information['followers_count']
+                updated_raw_follower.friends_count = user_information['friends_count']
+                updated_raw_follower.listed_count = user_information['listed_count']
+                updated_raw_follower.favourites_count = user_information['favourites_count']
+                updated_raw_follower.statuses_count = user_information['statuses_count']
                 # cls.get_logger().info(f'{follower} is completely updated.')
-            else:
-                cls.update_follower_with_no_tweets(follower)
+
+            RawFollowerDAO().update_follower_data(updated_raw_follower)
+
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
 

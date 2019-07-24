@@ -46,7 +46,7 @@ class TweetUpdateServiceInitializer(metaclass=Singleton):
     def run_process_with_credentials(cls, credentials):
         # Run tweet update process
         AsyncThreadPoolExecutor().run(cls.initialize_with_credential, credentials)
-        # self.download_tweets_with_credential(credentials[0])
+        # cls.initialize_with_credential(credentials[0])
 
         cls.get_logger().info('Stopped tweet updating')
         SlackHelper().post_message_to_channel(
