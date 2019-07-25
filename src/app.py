@@ -19,6 +19,7 @@ from src.db.db_initialization import create_indexes, create_base_entries, create
 from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
+from src.util.slack.SlackHelper import SlackHelper
 
 DBNAME = 'elections'
 AUTH = ''
@@ -49,6 +50,7 @@ def set_up_context(db_name, authorization, environment):
     app.config['MONGO_DBNAME'] = db_name
     app.config['MONGO_URI'] = f'mongodb://{authorization}localhost:27017/{db_name}'
     Mongo().db.init_app(app)
+    SlackHelper.initialize(environment)
     with app.app_context():
         create_indexes()
         create_base_entries()

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 
 class DateUtils:
@@ -33,3 +33,7 @@ class DateUtils:
     @staticmethod
     def date_to_timestamp(date):
         return datetime.combine(date, datetime.min.time()).timestamp()
+
+    @staticmethod
+    def today():
+        return datetime.combine(date.today(), datetime.min.time())
