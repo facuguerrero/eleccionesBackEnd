@@ -28,8 +28,8 @@ class FollowersQueueService(metaclass=Singleton):
         if len(followers_to_update) == 0:
             followers_to_update = self.get_followers_with_tweets_to_update()
 
-        self.processing_followers = self.processing_followers.difference(followers_to_delete)
         self.processing_followers = self.processing_followers.update(set(followers_to_update.keys()))
+        self.processing_followers = self.processing_followers.difference(followers_to_delete)
         ConcurrencyUtils().release_lock('followers_for_update_tweets')
 
         return followers_to_update
