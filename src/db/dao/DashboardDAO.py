@@ -17,8 +17,8 @@ class DashboardDAO(GenericDAO, metaclass=Singleton):
         # Store document
         self.collection.insert_one(data)
 
-    def data_on_day(self, day):
-        """ Returns dashboard data for requested day. """
-        document = self.get_first({'date': day})
+    def dashboard_data(self):
+        """ Returns most recent dashboard data. """
+        document = next(self.get_with_cursor(sort=[('date', -1)], limit=1))
         document.pop('_id')
         return document

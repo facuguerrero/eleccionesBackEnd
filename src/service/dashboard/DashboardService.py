@@ -1,11 +1,7 @@
-from datetime import datetime, timedelta
-
 from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.DashboardDAO import DashboardDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.service.candidates.CandidateService import CandidateService
-from src.util.DateUtils import DateUtils
-from src.util.config.ConfigurationManager import ConfigurationManager
 
 
 class DashboardService:
@@ -13,10 +9,7 @@ class DashboardService:
     @staticmethod
     def dashboard_data():
         """ Retrieve dashboard for the last day in which it was calculated. """
-        date = DateUtils.today() - timedelta(days=1)
-        if datetime.now().hour > ConfigurationManager().get_int('dashboard_updating_time'):
-            date = DateUtils.today()
-        return DashboardDAO().data_on_day(date)
+        return DashboardDAO().dashboard_data()
 
     @staticmethod
     def update_dashboard_data():
