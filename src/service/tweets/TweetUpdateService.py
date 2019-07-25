@@ -56,7 +56,7 @@ class TweetUpdateService:
 
     def tweets_update_process(self, twitter, credential_id):
         """ Method to catch any exception """
-        followers = self.get_followers_to_update()
+        followers = self.get_followers_to_update([])
 
         # While there are followers to update
         self.start_time = datetime.datetime.today()
@@ -74,7 +74,7 @@ class TweetUpdateService:
 
                 self.store_tweets_and_update_follower(follower_download_tweets, follower, min_tweet_date)
                 # cls.get_logger().warning(f'Follower updated {follower}.')
-            followers = self.get_followers_to_update()
+            followers = self.get_followers_to_update(list(followers.keys()))
         self.send_stopped_tread_notification(credential_id)
 
     def download_tweets_and_validate(self, twitter, follower, min_tweet_date, is_first_request, max_id=None):
@@ -192,11 +192,11 @@ class TweetUpdateService:
         self.update_follower_with_no_tweets(follower)
 
     @classmethod
-    def get_followers_to_update(cls):
+    def get_followers_to_update(cls, followers):
         """ Get the followers to be updated from FollowersQueueService. """
         try:
             # FollowersQueueService consumer
-            return FollowersQueueService().get_followers_to_update()
+            return FollowersQueueService().get_followers_to_update(set(followers))
         except NoMoreFollowersToUpdateTweetsError:
             return None
 
