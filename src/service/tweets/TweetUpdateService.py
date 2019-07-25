@@ -259,7 +259,6 @@ class TweetUpdateService:
     @classmethod
     def store_new_tweets(cls, follower_download_tweets, min_tweet_date):
         """ Store new follower's tweet since last update. """
-        updated_tweets = 0
         for tweet in follower_download_tweets:
             tweet_date = cls.get_formatted_date(tweet['created_at'])
             if tweet_date >= min_tweet_date:
@@ -275,7 +274,6 @@ class TweetUpdateService:
                     HashtagOriginService().process_tweet(tweet_copy)
                     HashtagCooccurrenceService().process_tweet(tweet_copy)
                     UserHashtagService().insert_hashtags_of_one_tweet(tweet_copy)
-                    updated_tweets += 1
                 except DuplicatedTweetError:
                     #cls.get_logger().info(
                     #    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
