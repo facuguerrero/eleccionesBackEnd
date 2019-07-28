@@ -13,3 +13,4 @@ slackclient
 flask-cors
 scipy
 sklearn
+expiringdict
