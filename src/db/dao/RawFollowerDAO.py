@@ -98,7 +98,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
     def get_random_followers_sample(self, actual_processing):
         """ Get random follower's sample """
 
-        date = datetime.datetime.today() - datetime.timedelta(hours=55)
+        date = datetime.datetime.today() - datetime.timedelta(hours=48)
         documents = self.aggregate([
             {"$match":
                 {"$and": [
