@@ -2,7 +2,6 @@ import pymongo
 
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
-from src.exception.NoCooccurrenceGraphError import NoCooccurrenceGraphError
 from src.util.logging.Logger import Logger
 from src.util.meta.Singleton import Singleton
 
@@ -21,13 +20,14 @@ class CooccurrenceGraphDAO(GenericDAO, metaclass=Singleton):
                       'end_date': end_date}
                      for key, graph in graphs.items()]
         self.collection.insert_many(documents)
-
-    def find(self, start_date, end_date):
-        """ Retrieve graph in given window. """
-        document = self.get_first({'start_date': start_date, 'end_date': end_date})
-        if not document:
-            raise NoCooccurrenceGraphError(start_date, end_date)
-        return document['graph']
+        
+    def get_all_sorted_topics(self):
+        graphs = self.get_all({}, {'topic_id': 1})
+        topic_ids = set()
+        for graph in graphs:
+            topic_ids.add(graph['topic_id'])
+        topics_list = list(topic_ids)
+        return sorted(topics_list)
 
     def create_indexes(self):
         self.logger.info('Creating topic_id index for collection cooccurrence_graphs.')

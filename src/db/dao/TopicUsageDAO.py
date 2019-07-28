@@ -19,10 +19,3 @@ class TopicUsageDAO(GenericDAO, metaclass=Singleton):
                     'date_axis': date_axis,
                     'count_axis': count_axis}
         self.insert(document)
-
-    def find(self, topic_id, start_date, end_date):
-        """ Retrieves plottable data for a topic in a given time window. """
-        document = self.get_first({'topic_id': topic_id, 'start_date': start_date, 'end_date': end_date})
-        if not document:
-            raise NoDocumentsFoundError(topic_id, None)
-        return {'date_axis': document['date_axis'], 'count_axis': document['count_axis']}

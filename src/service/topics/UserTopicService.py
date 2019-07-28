@@ -6,7 +6,7 @@ from scipy.sparse import csr_matrix, save_npz
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.preprocessing import normalize
 
-from src.db.dao.CoocurrenceGraphsDAO import CoocurrenceGraphsDAO
+from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
@@ -69,7 +69,7 @@ class UserTopicService:
         cls.get_logger().info("All hashtags from 3 days ago are retrieved")
 
         # Get hashtags-topics matrix
-        all_topics_sorted = CoocurrenceGraphsDAO().get_all_sorted_topics()
+        all_topics_sorted = CooccurrenceGraphDAO().get_all_sorted_topics()
         hashtags_topics_data = HashtagsTopicsDAO().get_required_hashtags(last_3_days_hashtags, all_topics_sorted)
         cls.get_logger().info("Hashtags topics retrieved")
         hashtags_topics_matrix = cls.get_matrix_from_data(hashtags_topics_data)

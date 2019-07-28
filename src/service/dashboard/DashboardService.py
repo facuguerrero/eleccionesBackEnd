@@ -7,11 +7,6 @@ from src.service.candidates.CandidateService import CandidateService
 class DashboardService:
 
     @staticmethod
-    def dashboard_data():
-        """ Retrieve dashboard for the last day in which it was calculated. """
-        return DashboardDAO().dashboard_data()
-
-    @staticmethod
     def update_dashboard_data():
         """ Recalculate non-counting dashboard data and store. """
         # Get total count of users

@@ -6,15 +6,9 @@ from flask_cors import CORS
 from flask_restful import Api
 
 from src.api.CSVLoadingResource import CSVLoadingResource
-from src.api.CandidateResource import CandidateResource
 from src.api.CooccurrenceAnalysisResource import CooccurrenceAnalysisResource
-from src.api.CooccurrenceGraphResource import CooccurrenceGraphResource
-from src.api.DashboardResource import DashboardResource
 from src.api.FollowerUpdatingResource import FollowerUpdatingResource
-from src.api.HashtagUsageResource import HashtagUsageResource
 from src.api.PingResource import PingResource
-from src.api.RawFollowerResource import RawFollowerResource
-from src.api.TopicUsageResource import TopicUsageResource
 from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
@@ -37,13 +31,6 @@ api.add_resource(CSVLoadingResource, '/csv/load')
 api.add_resource(FollowerUpdatingResource, '/followers/update')
 api.add_resource(TweetUpdatingResource, '/tweets')
 api.add_resource(CooccurrenceAnalysisResource, '/cooccurrence')
-# The following are endpoints used by the Front End application
-api.add_resource(RawFollowerResource, '/raw_followers', '/raw_followers/<candidate_name>')
-api.add_resource(CandidateResource, '/candidates', '/candidates/<screen_name>')
-api.add_resource(CooccurrenceGraphResource, '/cooccurrence_graphs')
-api.add_resource(DashboardResource, '/dashboard')
-api.add_resource(HashtagUsageResource, '/hashtag_usage/<hashtag_name>')
-api.add_resource(TopicUsageResource, '/topic_usage/<topic_id>')
 
 
 def set_up_context(db_name, authorization, environment):

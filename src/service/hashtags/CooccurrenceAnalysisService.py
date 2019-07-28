@@ -48,12 +48,6 @@ class CooccurrenceAnalysisService:
         ShowableGraphDAO().store(data['showable_graphs'], start_date, end_date)
 
     @classmethod
-    def get_graph_for_window(cls, start_date, end_date):
-        """ Returns, if existent, the cooccurrence graph that belongs to the given date window. """
-        end_date = cls.__validate_end_date(start_date, end_date)
-        return CooccurrenceGraphDAO().find(start_date, end_date)
-
-    @classmethod
     def __validate_end_date(cls, start_date, end_date):
         # If there is only one day or both dates are the same, then we take from 00:00:00 to 23:59:59
         if end_date is None or start_date.date() == end_date.date():

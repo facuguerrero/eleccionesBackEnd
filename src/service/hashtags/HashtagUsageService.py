@@ -5,7 +5,6 @@ from src.db.dao.CooccurrenceDAO import CooccurrenceDAO
 from src.db.dao.HashtagUsageDAO import HashtagUsageDAO
 from src.db.dao.ShowableGraphDAO import ShowableGraphDAO
 from src.db.dao.TopicUsageDAO import TopicUsageDAO
-from src.mapper.response.HashtagUsageResponseMapper import HashtagUsageResponseMapper
 from src.util.DateUtils import DateUtils
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
@@ -16,18 +15,6 @@ class HashtagUsageService:
     """ Service designated to the calculation of the usage of hashtags in a given window of time. """
     # TODO: Move this to a single place (it is duplicated now)
     START_DAY = datetime.combine(datetime.strptime('2019-01-01', '%Y-%m-%d').date(), datetime.min.time())
-
-    @classmethod
-    def find_hashtag(cls, hashtag_name, start_date, end_date):
-        end_date = cls.__validate_end_date(start_date, end_date)
-        document = HashtagUsageDAO().find(hashtag_name, start_date, end_date)
-        return HashtagUsageResponseMapper.map_one(document)
-
-    @classmethod
-    def find_topic(cls, topic_id, start_date, end_date):
-        end_date = cls.__validate_end_date(start_date, end_date)
-        document = TopicUsageDAO().find(topic_id, start_date, end_date)
-        return HashtagUsageResponseMapper.map_one(document)
 
     @classmethod
     def __validate_end_date(cls, start_date, end_date):
