@@ -87,8 +87,8 @@ class FollowersQueueService(metaclass=Singleton):
         self.logger.info('Adding last downloaded followers')
         users_to_be_updated = RawFollowerDAO().get_all({
             '$and': [
-                {'has_tweets': None},
-                {'is_private': False}
+                {'has_tweets': {'$exists': False}},
+                {"is_private": {'$exists': False}}
             ]})
         followers = self.add_followers(users_to_be_updated)
         self.priority_updating_followers.update(followers)
