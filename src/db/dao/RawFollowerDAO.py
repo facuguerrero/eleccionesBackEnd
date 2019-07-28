@@ -44,10 +44,12 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
     def get_complete_data(self, raw_follower):
         data = self.get_partial_data(raw_follower)
         data['has_tweets'] = raw_follower.has_tweets
+        return data
 
     def get_partial_data_and_is_private(self, raw_follower):
         data = self.get_partial_data(raw_follower)
         data['is_private'] = raw_follower.is_private
+        return data
 
     @staticmethod
     def get_partial_data(raw_follower):
