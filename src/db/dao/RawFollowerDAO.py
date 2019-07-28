@@ -34,18 +34,32 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                      '$setOnInsert': {'is_private': raw_follower.is_private}
                      })
 
-    def update_follower_data(self, raw_follower):
-        self.upsert({'_id': raw_follower.id},
-                    {'$set': {'downloaded_on': raw_follower.downloaded_on,
-                              'location': raw_follower.location,
-                              'followers_count': raw_follower.followers_count,
-                              'friends_count': raw_follower.friends_count,
-                              'listed_count': raw_follower.listed_count,
-                              'favourites_count': raw_follower.favourites_count,
-                              'statuses_count': raw_follower.statuses_count,
-                              'is_private': raw_follower.is_private,
-                              }
-                     })
+    def update_follower_data_with_has_tweets(self, raw_follower):
+        data = self.get_partial_data(raw_follower)
+        data['has_tweets'] = raw_follower.has_tweets
+        self.upsert(
+            {'_id': raw_follower.id},
+            {'$set': data}
+        )
+
+    def update_follower_data_without_has_tweets(self, raw_follower):
+        self.upsert(
+            {'_id': raw_follower.id},
+            {'$set': self.get_partial_data(raw_follower)}
+        )
+
+    @staticmethod
+    def get_partial_data(raw_follower):
+        return {
+            'downloaded_on': raw_follower.downloaded_on,
+            'location': raw_follower.location,
+            'followers_count': raw_follower.followers_count,
+            'friends_count': raw_follower.friends_count,
+            'listed_count': raw_follower.listed_count,
+            'favourites_count': raw_follower.favourites_count,
+            'statuses_count': raw_follower.statuses_count,
+            'is_private': raw_follower.is_private,
+        }
 
     def update_follower_downloaded_on(self, id_follower):
         self.upsert({'_id': id_follower},
