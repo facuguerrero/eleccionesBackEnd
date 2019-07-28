@@ -212,7 +212,7 @@ class TweetUpdateService:
                 'is_private': True
             })
             RawFollowerDAO().update_follower_data_without_has_tweets(updated_raw_follower)
-            cls.get_logger().info(f'{follower} is tagged as private.')
+            # cls.get_logger().info(f'{follower} is tagged as private.')
         except NonExistentRawFollowerError as error:
             cls.get_logger().error(f'{follower} can not be tagged as private because does not exists.')
             cls.get_logger().error(error)
@@ -240,7 +240,7 @@ class TweetUpdateService:
                 updated_raw_follower.statuses_count = user_information['statuses_count']
 
             RawFollowerDAO().update_follower_data_with_has_tweets(updated_raw_follower)
-            cls.get_logger().info(f'{follower} is completely updated.')
+            # cls.get_logger().info(f'{follower} is completely updated.')
 
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
@@ -252,7 +252,7 @@ class TweetUpdateService:
             raw_follower = RawFollowerDAO().get(follower)
             if not raw_follower.is_private:
                 RawFollowerDAO().update_follower_downloaded_on(follower)
-                cls.get_logger().info(f'{follower} is updated with 0 tweets.')
+                # cls.get_logger().info(f'{follower} is updated with 0 tweets.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
 
