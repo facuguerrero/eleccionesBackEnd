@@ -13,9 +13,9 @@ class ConcurrencyUtils(metaclass=Singleton):
         if lock_id not in self.locks:
             self.locks[lock_id] = Lock()
 
-    def acquire_lock(self, lock_id):
+    def acquire_lock(self, lock_id, block=True):
         """ Acquire lock with given id. """
-        self.locks[lock_id].acquire(True)
+        return self.locks[lock_id].acquire(block)
 
     def release_lock(self, lock_id):
         """ Release lock with given id. """
