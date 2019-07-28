@@ -95,19 +95,16 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
             followers_to_return[document['_id']] = "date"
         return followers_to_return
 
-    def get_random_followers_sample(self):
+    def get_random_followers_sample(self, actual_processing):
         """ Get random follower's sample """
-        # Aproximadamente vamos a actualizar 1300 * 4 * 7 ~ 36.4 K usuarios por hora
-        # 36.4K * 24hs ~ 874 K por dia
-        # Con un total de 1.600 K  usuarios que tienen tweets
-        # Seteo ventana de 39 hs, lo que nos da 46k de base para actualizar + 36k por hora
 
-        date = datetime.datetime.today() - datetime.timedelta(hours=39)
+        date = datetime.datetime.today() - datetime.timedelta(hours=48)
         documents = self.aggregate([
             {"$match":
                 {"$and": [
                     {"has_tweets": True},
-                    {'downloaded_on': {'$lt': date}}
+                    {'downloaded_on': {'$lt': date}},
+                    {'_id': {'$nin': actual_processing}}
                 ]}
             },
             {"$sample": {"size": 37000}},

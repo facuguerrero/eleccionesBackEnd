@@ -56,7 +56,7 @@ class TweetUpdateService:
 
     def tweets_update_process(self, twitter, credential_id):
         """ Method to catch any exception """
-        followers = self.get_followers_to_update()
+        followers = self.get_followers_to_update([])
 
         # While there are followers to update
         self.start_time = datetime.datetime.today()
@@ -74,7 +74,7 @@ class TweetUpdateService:
 
                 self.store_tweets_and_update_follower(follower_download_tweets, follower, min_tweet_date)
                 # cls.get_logger().warning(f'Follower updated {follower}.')
-            followers = self.get_followers_to_update()
+            followers = self.get_followers_to_update(list(followers.keys()))
         self.send_stopped_tread_notification(credential_id)
 
     def download_tweets_and_validate(self, twitter, follower, min_tweet_date, is_first_request, max_id=None):
@@ -96,7 +96,7 @@ class TweetUpdateService:
         try:
             # Sleep to avoid (104, 'Connection reset by peer')
             # https://stackoverflow.com/questions/383738/104-connection-reset-by-peer-socket-error-or-when-does-closing-a-socket-resu
-            time.sleep(0.01)
+            # time.sleep(0.01)
             max_tweets_request_parameter = ConfigurationManager().get_int('max_tweets_parameter')
 
             if is_first_request:
@@ -192,11 +192,11 @@ class TweetUpdateService:
         self.update_follower_with_no_tweets(follower)
 
     @classmethod
-    def get_followers_to_update(cls):
+    def get_followers_to_update(cls, followers):
         """ Get the followers to be updated from FollowersQueueService. """
         try:
             # FollowersQueueService consumer
-            return FollowersQueueService().get_followers_to_update()
+            return FollowersQueueService().get_followers_to_update(set(followers))
         except NoMoreFollowersToUpdateTweetsError:
             return None
 
@@ -259,7 +259,6 @@ class TweetUpdateService:
     @classmethod
     def store_new_tweets(cls, follower_download_tweets, min_tweet_date):
         """ Store new follower's tweet since last update. """
-        updated_tweets = 0
         for tweet in follower_download_tweets:
             tweet_date = cls.get_formatted_date(tweet['created_at'])
             if tweet_date >= min_tweet_date:
@@ -275,7 +274,6 @@ class TweetUpdateService:
                     HashtagOriginService().process_tweet(tweet_copy)
                     HashtagCooccurrenceService().process_tweet(tweet_copy)
                     UserHashtagService().insert_hashtags_of_one_tweet(tweet_copy)
-                    updated_tweets += 1
                 except DuplicatedTweetError:
                     #cls.get_logger().info(
                     #    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
