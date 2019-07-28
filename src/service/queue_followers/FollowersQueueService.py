@@ -7,6 +7,7 @@ from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 from src.util.meta.Singleton import Singleton
+from src.util.slack.SlackHelper import SlackHelper
 
 
 class FollowersQueueService(metaclass=Singleton):
@@ -61,14 +62,13 @@ class FollowersQueueService(metaclass=Singleton):
 
     def check_if_have_followers(self, max_users_per_window):
 
-        # Todo descomentar
-        # if len(self.updating_followers) <= 2 * max_users_per_window:
+        if len(self.updating_followers) <= 2 * max_users_per_window:
             # Retrieve more candidates from db
-        # self.add_followers_to_be_updated()
+            self.add_followers_to_be_updated()
 
         if len(self.updating_followers) == 0:
-            # SlackHelper().post_message_to_channel(
-            #   "No se obtuvieron seguidores de la base de datos.")
+            SlackHelper().post_message_to_channel(
+                "No se obtuvieron seguidores de la base de datos.")
             self.logger.error('There are not followers to update their tweets.')
             raise NoMoreFollowersToUpdateTweetsError()
 
@@ -91,8 +91,7 @@ class FollowersQueueService(metaclass=Singleton):
                 {'is_private': False}
             ]})
         followers = self.add_followers(users_to_be_updated)
-        # TODO cambiar por priority_updating_followers
-        self.updating_followers.update(followers)
+        self.priority_updating_followers.update(followers)
         self.logger.info('Finishing insertion of last downloaded followers')
 
     def add_followers(self, downloaded):
