@@ -31,6 +31,11 @@ class CooccurrenceDAO(GenericDAO, metaclass=Singleton):
         """ Retrieve all pairs of hashtags in time window. """
         return self.get_all({'created_at': {'$gt': start_date, '$lt': end_date}}, {'pair': 1, '_id': 0})
 
+    def distinct_users(self, hashtag, start_date, end_date):
+        """ Returns a list of all the different users that used the given hashtag in the given window. """
+        query = {'pair': hashtag, 'created_at': {'$gt': start_date, '$lt': end_date}}
+        return self.collection.distinct('user_id', query)
+
     def create_indexes(self):
         self.logger.info('Creating [user_id, pair, created_at] index for collection cooccurrence_graphs.')
         self.collection.create_index(['user_id', 'pair', 'created_at'])

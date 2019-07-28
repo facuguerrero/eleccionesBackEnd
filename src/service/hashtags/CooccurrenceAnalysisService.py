@@ -5,6 +5,7 @@ from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
 from src.db.dao.ShowableGraphDAO import ShowableGraphDAO
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
+from src.service.hashtags.HashtagUsageService import HashtagUsageService
 from src.service.hashtags.OSLOMService import OSLOMService
 from src.util.graphs.GraphUtils import GraphUtils
 from src.util.logging.Logger import Logger
@@ -26,6 +27,8 @@ class CooccurrenceAnalysisService:
         cls.get_logger().info(f'Starting cooccurrence analysis for full period from first day until yesterday.')
         cls.analyze_cooccurrence_for_window(cls.START_DAY, last_day)  # Last day at 23:59:59
         cls.get_logger().info(f'Accumulated cooccurrence analysis done.')
+        # Run usage analysis as soon as possible
+        HashtagUsageService.calculate_today_topics_hashtag_usage()
 
     @classmethod
     def analyze_cooccurrence_for_window(cls, start_date, end_date=None):
