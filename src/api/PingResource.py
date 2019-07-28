@@ -9,7 +9,3 @@ class PingResource(Resource):
     @staticmethod
     def get():
         return ResponseBuilder.build(f'Ping.', 200)
-
-    @staticmethod
-    def post():
-        HashtagUsageService.calculate_today_topics_hashtag_usage()
