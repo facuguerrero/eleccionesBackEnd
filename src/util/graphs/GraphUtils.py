@@ -206,7 +206,9 @@ class GraphUtils:
             # Only search if this node was not yet "touched"
             if node_id not in used_nodes:
                 # Get a link connected to the current node
-                link = next(filter(lambda l: l['source'] == node_id or l['target'] == node_id, links_copy))
+                link = next(filter(lambda l: l['source'] == node_id or l['target'] == node_id, links_copy), None)
+                # There could be isolated nodes!
+                if not link: continue
                 # Mark the currently used nodes
                 used_nodes.add(link['source'])
                 used_nodes.add(link['target'])
