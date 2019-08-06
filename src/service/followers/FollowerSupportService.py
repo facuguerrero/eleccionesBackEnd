@@ -28,7 +28,7 @@ class FollowerSupportService:
     def update_support_follower(cls):
         """ Method for updating follower support's vector. """
         cls.get_logger().info("Starting FollowerSupport updating.")
-        rt_vectors, candidate_index, groups_quantity = cls.get_users_rt_vector()
+        rt_vectors, candidate_index, groups_quantity, candidate_group = cls.get_users_rt_vector()
 
         # Get followers which have tweets
         followers_with_tweets = RawFollowerDAO().get_all({'has_tweets': True})
@@ -41,14 +41,14 @@ class FollowerSupportService:
             final_rt, final_follows = cls.get_final_vectors(rt_vector, follows_vector)
             # Calculate probability vector and save it
             probability_vector = [sum(x) for x in zip(final_rt, final_follows)]
-            cls.save_follower_vectors(user_id, probability_vector, rt_vector)
+            cls.save_follower_vectors(user_id, probability_vector, rt_vector, candidate_group)
         cls.get_logger().info("Finishing FollowerSupport updating.")
 
     @classmethod
     def get_users_rt_vector(cls):
         """ Get data from db and create users_rt_vectors. """
         # {candidate: index}, [candidate_id]
-        candidate_index, candidates_list, candidates_rt_cursor = cls.get_necessary_data()
+        candidate_index, candidates_list, candidate_group, candidates_rt_cursor = cls.get_necessary_data()
         cls.get_logger().info("Candidates and theirs rt are retrieved correctly. ")
         groups_quantity = max(candidate_index.values()) + 1
         rt_vectors = {}
@@ -66,15 +66,15 @@ class FollowerSupportService:
                 rt_vectors[user] = user_rt_vector
 
         cls.get_logger().info("RT vectors are created correctly. ")
-        return rt_vectors, candidate_index, groups_quantity
+        return rt_vectors, candidate_index, groups_quantity, candidate_group
 
     @classmethod
     def get_necessary_data(cls):
-        """ Retrieve db fata and create candidates list. """
-        candidate_index = CandidateDAO().get_required_candidates()
+        """ Retrieve db data and create candidates list. """
+        candidate_index, candidate_group = CandidateDAO().get_required_candidates()
         candidates_list = list(candidate_index.keys())
         candidates_rt_cursor = RawTweetDAO().get_rt_to_candidates_cursor(candidates_list)
-        return candidate_index, candidates_list, candidates_rt_cursor
+        return candidate_index, candidates_list, candidate_group, candidates_rt_cursor
 
     @classmethod
     def get_user_vector_or_default(cls, user, candidates_quantity, rt_vectors):
@@ -107,13 +107,24 @@ class FollowerSupportService:
         return rt_vector, follows_vector
 
     @classmethod
-    def save_follower_vectors(cls, user, probability_vector, rt_vector):
+    def save_follower_vectors(cls, user, probability_vector, rt_vector, candidate_group):
         """ If follower have non zero vectors, save them"""
         data_to_save = {}
+
+        # Adds probability vector
         if sum(probability_vector) > 0:
             data_to_save['probability_vector_support'] = probability_vector
+
+        # Adds retweets vector
         if sum(rt_vector) > 0:
             data_to_save['rt_vector'] = rt_vector
+
+        # If has one probability greather than 0.5, adds support
+        max_probability = max(probability_vector)
+        if max_probability > 0.5:
+            candidate_index = probability_vector.index(max_probability)
+            data_to_save['support'] = candidate_group[candidate_index]
+
         if len(data_to_save) != 0:
             cls.update_followers_vector(user, data_to_save)
 

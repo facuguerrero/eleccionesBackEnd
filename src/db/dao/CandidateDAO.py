@@ -82,6 +82,8 @@ class CandidateDAO(GenericDAO, metaclass=Singleton):
         """ Retrieve dictionary like: {candidate: index}. """
         candidates = self.get_all({'index': {'$exists': True}})
         candidate_index = {}
+        candidate_group = {}
         for candidate in candidates:
             candidate_index[candidate['_id']] = candidate['index']
-        return candidate_index
+            candidate_group[candidate['_id']] = candidate['group']
+        return candidate_index, candidate_group
