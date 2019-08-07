@@ -32,7 +32,7 @@ class Scheduler(metaclass=Singleton):
         self.scheduler.add_job(func=FollowerSupportService.init_update_support_follower, trigger='cron',
                                day_of_week='sat', hour=16)
         self.scheduler.add_job(func=FollowerSupportService.init_update_support_follower, trigger='cron',
-                               day_of_week='wed', hour=13, minute=30)
+                               day_of_week='wed', hour=16)
         # Add dashboard updating job
         update_hour = ConfigurationManager().get_int('dashboard_updating_time')
         self.scheduler.add_job(func=DashboardService.update_dashboard_data, trigger='cron', hour=update_hour)

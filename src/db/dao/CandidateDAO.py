@@ -85,5 +85,5 @@ class CandidateDAO(GenericDAO, metaclass=Singleton):
         candidate_group = {}
         for candidate in candidates:
             candidate_index[candidate['_id']] = candidate['index']
-            candidate_group[candidate['_id']] = candidate['group']
+            candidate_group[candidate['index']] = candidate['group']
         return candidate_index, candidate_group
