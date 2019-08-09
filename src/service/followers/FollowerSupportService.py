@@ -99,12 +99,15 @@ class FollowerSupportService:
     def get_final_vectors(cls, rt_vector, follows_vector):
         """ If two vectors have elements, then multiply all elements by factor / total_elements for normalization.
         Else, return vectors without any modification. """
-        total_rt = sum(rt_vector)
-        total_follows = sum(follows_vector)
-        if total_rt > 0 and total_follows > 0:
-            return cls.multiply_by_factor(rt_vector, FollowerSupportService.FACTOR, total_rt), \
-                   cls.multiply_by_factor(follows_vector, 1.0 - FollowerSupportService.FACTOR, total_follows)
-        return rt_vector, follows_vector
+        return cls.get_final_vector(rt_vector, FollowerSupportService.FACTOR), \
+               cls.get_final_vector(follows_vector, 1.0 - FollowerSupportService.FACTOR)
+
+    @classmethod
+    def get_final_vector(cls, vector, factor):
+        total = sum(vector)
+        if total > 0:
+            return cls.multiply_by_factor(vector, factor, total)
+        return vector
 
     @classmethod
     def save_follower_vectors(cls, user, probability_vector, rt_vector, candidate_group):
