@@ -30,8 +30,6 @@ class Scheduler(metaclass=Singleton):
         self.scheduler.add_job(func=SlackHelper.send_server_status, trigger='cron', hour=8, minute=30, second=0)
         # Update followers support
         self.scheduler.add_job(func=FollowerSupportService.init_update_support_follower, trigger='cron',
-                               day_of_week='fri', hour=19, minute=7)
-        self.scheduler.add_job(func=FollowerSupportService.init_update_support_follower, trigger='cron',
                                day_of_week='sat', hour=16)
         self.scheduler.add_job(func=FollowerSupportService.init_update_support_follower, trigger='cron',
                                day_of_week='wed', hour=16)

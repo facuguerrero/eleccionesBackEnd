@@ -251,6 +251,8 @@ class TweetUpdateService:
         try:
             raw_follower = RawFollowerDAO().get(follower)
             if not raw_follower.is_private:
+                if not raw_follower['has_tweets']:
+                    raw_follower['has_tweets'] = False
                 RawFollowerDAO().update_follower_downloaded_on(follower)
                 # cls.get_logger().info(f'{follower} is updated with 0 tweets.')
         except NonExistentRawFollowerError:
@@ -275,11 +277,11 @@ class TweetUpdateService:
                     HashtagCooccurrenceService().process_tweet(tweet_copy)
                     UserHashtagService().insert_hashtags_of_one_tweet(tweet_copy)
                 except DuplicatedTweetError:
-                    #cls.get_logger().info(
+                    # cls.get_logger().info(
                     #    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
                     return
             else:
-                #cls.get_logger().info(
+                # cls.get_logger().info(
                 #   f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
                 return
 
