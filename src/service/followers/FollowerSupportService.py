@@ -91,16 +91,13 @@ class FollowerSupportService:
         return vector_to_return
 
     @classmethod
-    def multiply_by_factor(cls, vector, factor, normalization):
-        """Multiplies all elements by given factor"""
-        return vector if normalization == 0 else map(lambda x: x * (factor / normalization), vector)
-
-    @classmethod
     def get_final_vectors(cls, rt_vector, follows_vector):
         """ If two vectors have elements, then multiply all elements by factor / total_elements for normalization.
         Else, return vectors without any modification. """
-        return cls.get_final_vector(rt_vector, FollowerSupportService.FACTOR), \
-               cls.get_final_vector(follows_vector, 1.0 - FollowerSupportService.FACTOR)
+        rt_factor = FollowerSupportService.FACTOR if sum(follows_vector) > 0 else 1.0
+        follows_factor = 1.0 - FollowerSupportService.FACTOR if sum(rt_vector) > 0 else 1.0
+        return cls.get_final_vector(rt_vector, rt_factor), \
+               cls.get_final_vector(follows_vector, follows_factor)
 
     @classmethod
     def get_final_vector(cls, vector, factor):
@@ -108,6 +105,11 @@ class FollowerSupportService:
         if total > 0:
             return cls.multiply_by_factor(vector, factor, total)
         return vector
+
+    @classmethod
+    def multiply_by_factor(cls, vector, factor, normalization):
+        """Multiplies all elements by given factor"""
+        return vector if (normalization == 0) else [x * (factor / normalization) for x in vector]
 
     @classmethod
     def save_follower_vectors(cls, user, probability_vector, rt_vector, candidate_group):
