@@ -63,12 +63,16 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
             'statuses_count': raw_follower.statuses_count
         }
 
-    def update_follower_downloaded_on(self, id_follower):
-        self.upsert({'_id': id_follower},
-                    {'$set': {
-                        'downloaded_on': datetime.datetime.today(),
-                        'is_private': False
-                    }
+    def update_follower_downloaded_on(self, raw_follower):
+        data = {
+            'downloaded_on': datetime.datetime.today(),
+            'is_private': False
+        }
+        if raw_follower.has_tweets is not None:
+            data['has_tweets'] = raw_follower.has_tweets
+        self.logger.info(data)
+        self.upsert({'_id': str(raw_follower.id)},
+                    {'$set': data
                  })
 
     def update_follower_id(self, int_id):

@@ -57,28 +57,20 @@ class TweetUpdateService:
     def tweets_update_process(self, twitter, credential_id):
         """ Method to catch any exception """
         followers = self.get_followers_to_update([])
-        self.get_logger().info(f'Que pasa?')
 
         # While there are followers to update
         self.start_time = datetime.datetime.today()
         while followers:
             for follower, last_update in followers.items():
-                self.get_logger().warning(follower)
-
                 self.continue_downloading = False
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
                 follower_download_tweets = self.download_tweets_and_validate(twitter, follower, min_tweet_date, True)
-                self.get_logger().warning(follower_download_tweets)
-
 
                 # While retrieve new tweets
                 while self.continue_downloading:
                     max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
                     follower_download_tweets += self.download_tweets_and_validate(twitter, follower, min_tweet_date,
                                                                                   False, max_id)
-                self.get_logger().warning(follower_download_tweets)
-
-
                 self.store_tweets_and_update_follower(follower_download_tweets, follower, min_tweet_date)
                 # cls.get_logger().warning(f'Follower updated {follower}.')
             followers = self.get_followers_to_update(list(followers.keys()))
@@ -193,13 +185,9 @@ class TweetUpdateService:
         if len(follower_download_tweets) != 0:
             last_tweet_date = self.get_formatted_date(follower_download_tweets[0]['created_at'])
             if min_tweet_date < last_tweet_date:
-                self.get_logger().error(
-                    f'Updating: {follower} COOON tweets.')
                 self.update_complete_follower(follower, follower_download_tweets[0], last_tweet_date)
                 self.store_new_tweets(follower_download_tweets, min_tweet_date)
                 return
-        self.get_logger().error(
-            f'Updating: {follower} sin tweets.')
         self.update_follower_with_no_tweets(follower)
 
     @classmethod
@@ -262,11 +250,9 @@ class TweetUpdateService:
         try:
             raw_follower = RawFollowerDAO().get(follower)
             if not raw_follower.is_private:
-                cls.get_logger().error(f"Antes if: {raw_follower.has_tweets}")
                 if not raw_follower.has_tweets:
                     raw_follower.has_tweets = False
-                    cls.get_logger().error(f"Dentro if: {raw_follower.has_tweets}")
-                RawFollowerDAO().update_follower_downloaded_on(follower)
+                RawFollowerDAO().update_follower_downloaded_on(raw_follower)
                 # cls.get_logger().info(f'{follower} is updated with 0 tweets.')
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
