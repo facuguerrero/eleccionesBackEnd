@@ -70,7 +70,6 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
         }
         if raw_follower.has_tweets is not None:
             data['has_tweets'] = raw_follower.has_tweets
-        self.logger.info(data)
         self.upsert({'_id': str(raw_follower.id)},
                     {'$set': data
                  })
