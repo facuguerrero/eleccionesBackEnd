@@ -251,8 +251,8 @@ class TweetUpdateService:
         try:
             raw_follower = RawFollowerDAO().get(follower)
             if not raw_follower.is_private:
-                if not raw_follower['has_tweets']:
-                    raw_follower['has_tweets'] = False
+                if not raw_follower.has_tweets:
+                    raw_follower.has_tweets = False
                 RawFollowerDAO().update_follower_downloaded_on(follower)
                 # cls.get_logger().info(f'{follower} is updated with 0 tweets.')
         except NonExistentRawFollowerError:
