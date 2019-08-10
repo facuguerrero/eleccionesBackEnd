@@ -58,10 +58,10 @@ class GraphUtils:
         bound = ConfigurationManager().get_int('max_nodes_showable_graphs')
         showable_graphs = {'main': graphs.pop('main')}
         # Find main topics
-        main_topics = [node['id'] for node in showable_graphs['main']['nodes']]
+        main_topics = [node for node in showable_graphs['main']['nodes']]
         # Create a graph for each topic
         for main_topic in main_topics:
-            graph = graphs[main_topic]
+            graph = graphs[main_topic['numeric_id']]
             # Find the 'bound' top nodes in current topic
             top_nodes = [node for node in islice(sorted(graph['nodes'], key=lambda n: n['size'], reverse=True), bound)]
             nodes_ids = [node['id'] for node in top_nodes]
@@ -70,7 +70,7 @@ class GraphUtils:
             # Keep only an specific number of links
             links = cls.__filter_links(links, nodes_ids)
             # Store in showable graphs dict
-            showable_graphs[main_topic] = {'links': links, 'nodes': top_nodes}
+            showable_graphs[main_topic['id']] = {'links': links, 'nodes': top_nodes}
         return showable_graphs
 
     @classmethod
@@ -84,10 +84,14 @@ class GraphUtils:
         nodes = dict()
         for key, weight in community_links.items():
             cluster1, cluster2 = key.split('-')
-            links.append({'source': cluster1, 'target': cluster2, 'weight': int(weight)})
             # Create a node for each hashtag
-            cls.__add_to_nodes(nodes, cluster1, main_communities[cluster1], mapper=community_leaders, add=False)
-            cls.__add_to_nodes(nodes, cluster2, main_communities[cluster2], mapper=community_leaders, add=False)
+            node1 = community_leaders[cluster1][0]
+            node2 = community_leaders[cluster2][0]
+            # Store the main hashtag as the graph's ID and also store the main 5 hashtags
+            cls.__add_to_nodes(nodes, node1, main_communities[cluster1], cluster1, community_leaders, False)
+            cls.__add_to_nodes(nodes, node2, main_communities[cluster2], cluster2, community_leaders, False)
+            # Add link between nodes
+            links.append({'source': node1, 'target': node2, 'weight': int(weight)})
         # Keep only an specific number of links
         links = cls.__filter_links(links, nodes.keys())
         return {'links': links, 'nodes': list(nodes.values())}
@@ -231,12 +235,13 @@ class GraphUtils:
         cls.__add_to_nodes(nodes, node2, weight)
 
     @classmethod
-    def __add_to_nodes(cls, nodes, node, edge_weight, mapper=None, add=True):
+    def __add_to_nodes(cls, nodes, node, edge_weight, mapping_key=None, mapper=None, add=True):
         """ Add to nested node dictionary. Has id repeated because it will be unpacked later. """
         if node not in nodes:
             nodes[node] = {'id': node, 'size': 0}
         if mapper and 'representation' not in nodes[node]:
-            nodes[node]['representation'] = mapper[node]
+            nodes[node]['representation'] = mapper[mapping_key]
+            nodes[node]['numeric_id'] = mapping_key
         if add:
             nodes[node]['size'] += edge_weight
         else:
