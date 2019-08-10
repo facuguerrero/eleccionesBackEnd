@@ -239,7 +239,6 @@ class TweetUpdateService:
                 updated_raw_follower.statuses_count = user_information['statuses_count']
 
             RawFollowerDAO().update_follower_data_with_has_tweets(updated_raw_follower)
-            cls.get_logger().info(f'{follower} is completely updated.')
 
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
