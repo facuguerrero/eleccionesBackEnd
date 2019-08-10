@@ -62,15 +62,21 @@ class TweetUpdateService:
         self.start_time = datetime.datetime.today()
         while followers:
             for follower, last_update in followers.items():
+                self.get_logger().warning(follower)
+
                 self.continue_downloading = False
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
                 follower_download_tweets = self.download_tweets_and_validate(twitter, follower, min_tweet_date, True)
+                self.get_logger().warning(follower_download_tweets)
+
 
                 # While retrieve new tweets
                 while self.continue_downloading:
                     max_id = follower_download_tweets[len(follower_download_tweets) - 1]['id'] - 1
                     follower_download_tweets += self.download_tweets_and_validate(twitter, follower, min_tweet_date,
                                                                                   False, max_id)
+                self.get_logger().warning(follower_download_tweets)
+
 
                 self.store_tweets_and_update_follower(follower_download_tweets, follower, min_tweet_date)
                 # cls.get_logger().warning(f'Follower updated {follower}.')
