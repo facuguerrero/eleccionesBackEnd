@@ -57,6 +57,7 @@ class TweetUpdateService:
     def tweets_update_process(self, twitter, credential_id):
         """ Method to catch any exception """
         followers = self.get_followers_to_update([])
+        self.get_logger().info(f'Que pasa?')
 
         # While there are followers to update
         self.start_time = datetime.datetime.today()
