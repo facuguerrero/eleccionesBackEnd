@@ -186,9 +186,13 @@ class TweetUpdateService:
         if len(follower_download_tweets) != 0:
             last_tweet_date = self.get_formatted_date(follower_download_tweets[0]['created_at'])
             if min_tweet_date < last_tweet_date:
+                self.get_logger().error(
+                    f'Updating: {follower} COOON tweets.')
                 self.update_complete_follower(follower, follower_download_tweets[0], last_tweet_date)
                 self.store_new_tweets(follower_download_tweets, min_tweet_date)
                 return
+        self.get_logger().error(
+            f'Updating: {follower} sin tweets.')
         self.update_follower_with_no_tweets(follower)
 
     @classmethod
@@ -240,7 +244,7 @@ class TweetUpdateService:
                 updated_raw_follower.statuses_count = user_information['statuses_count']
 
             RawFollowerDAO().update_follower_data_with_has_tweets(updated_raw_follower)
-            # cls.get_logger().info(f'{follower} is completely updated.')
+            cls.get_logger().info(f'{follower} is completely updated.')
 
         except NonExistentRawFollowerError:
             cls.get_logger().error(f'Follower {follower} does not exists')
