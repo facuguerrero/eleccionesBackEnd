@@ -124,9 +124,9 @@ class FollowerSupportService:
         if sum(rt_vector) > 0:
             data_to_save['rt_vector'] = rt_vector
 
-        # If has one probability greather than 0.5, adds support
+        # If has one probability greather than all and appear only ones, adds support
         max_probability = max(probability_vector)
-        if max_probability > 0.5:
+        if max_probability > 0.5 or probability_vector.count(max_probability) == 1:
             candidate_index = probability_vector.index(max_probability)
             data_to_save['support'] = candidate_group[candidate_index]
 
