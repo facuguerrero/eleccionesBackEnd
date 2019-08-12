@@ -140,12 +140,13 @@ class TweetUpdateService:
                                                  'twython rate limit error frequently.',
                                                  "Por prevención se freno el update de una credencial.")
 
-        elif duration <= 100:
+        # If reach rate limit error too fast
+        elif 1 <= duration <= 100:
             self.get_logger().warning('Sleeping credential due to reached rate limit too fast.')
             time.sleep(ConfigurationManager().get_int('limit_error_sleep_time'))
+
         # The first contiguous rate limit error
         else:
-
             # By default, wait 900 segs
             time_default = ConfigurationManager().get_int('tweets_download_sleep_seconds')
             self.get_logger().warning(f'Tweets download limit reached. Waiting. Execution time: {str(duration)}')
