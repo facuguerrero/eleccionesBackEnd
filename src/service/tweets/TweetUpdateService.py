@@ -122,6 +122,9 @@ class TweetUpdateService:
     def handle_twython_rate_limit_error(self):
         """ Method wich handles twython rate limit error. """
 
+        # Execution duration is now - init
+        duration = (datetime.datetime.today() - self.start_time).seconds
+
         # If throws twython rate limit error 3 times in a row
         # Sleep by 1 hour
         if 3 <= self.contiguous_limit_error <= 5:
@@ -136,10 +139,12 @@ class TweetUpdateService:
             self.shut_down_credential_and_notify('Shut down this credential because is raising '
                                                  'twython rate limit error frequently.',
                                                  "Por prevención se freno el update de una credencial.")
+
+        elif duration <= 100:
+            self.get_logger().warning('Sleeping credential due to reached rate limit too fast.')
+            time.sleep(ConfigurationManager().get_int('limit_error_sleep_time'))
         # The first contiguous rate limit error
         else:
-            # Execution duration is now - init
-            duration = (datetime.datetime.today() - self.start_time).seconds
 
             # By default, wait 900 segs
             time_default = ConfigurationManager().get_int('tweets_download_sleep_seconds')
