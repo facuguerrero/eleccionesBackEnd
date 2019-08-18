@@ -15,12 +15,12 @@ class CooccurrenceAnalysisResource(Resource):
     def get():
         # Parse input
         try:
-            start_date, end_date = CooccurrenceAnalysisResource._check_query_params(request.args)
+            start_date, end_date, cutting_method = CooccurrenceAnalysisResource._check_query_params(request.args)
         except WrongParametersError as wpe:
             return ResponseBuilder.build_exception(wpe.message, 400)
         # Do function
         try:
-            CooccurrenceAnalysisService.analyze_cooccurrence_for_window(start_date, end_date)
+            CooccurrenceAnalysisService.analyze_cooccurrence_for_window(start_date, end_date, cutting_method)
             return ResponseBuilder.build('Analysis .txt and .csv files were created.', 200)
         except NoHashtagCooccurrenceError as nhce:
             return ResponseBuilder.build_exception(nhce.message, 400)
@@ -32,7 +32,8 @@ class CooccurrenceAnalysisResource(Resource):
         start = CooccurrenceAnalysisResource._parse_raw(raw_start, 'start_date')
         raw_end = query_params.get('end_date', None)
         end = CooccurrenceAnalysisResource._parse_raw(raw_end, 'end_date', nullable=True)
-        return start, end
+        cutting_method = query_params.get('cutting_method', None)
+        return start, end, cutting_method
 
     @staticmethod
     def _parse_raw(raw_date, id, nullable=False):

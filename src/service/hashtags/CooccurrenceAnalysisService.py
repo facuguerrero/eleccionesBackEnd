@@ -31,11 +31,11 @@ class CooccurrenceAnalysisService:
         HashtagUsageService.calculate_today_topics_hashtag_usage()
 
     @classmethod
-    def analyze_cooccurrence_for_window(cls, start_date, end_date=None):
+    def analyze_cooccurrence_for_window(cls, start_date, end_date=None, cutting_method=None):
         """ Analyze cooccurrence for a given time window and generate cooccurrence graph. """
         end_date = cls.__validate_end_date(start_date, end_date)
         # Generate counting and id data
-        HashtagCooccurrenceService.export_counts_for_time_window(start_date, end_date)
+        HashtagCooccurrenceService.export_counts_for_time_window(start_date, end_date, cutting_method)
         # Run OSLOM and complete graph
         OSLOMService.export_communities_for_window(start_date, end_date)
         # Keep only needed data and unpack graph

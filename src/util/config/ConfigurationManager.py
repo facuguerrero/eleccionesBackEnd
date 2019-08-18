@@ -17,6 +17,10 @@ class ConfigurationManager(metaclass=Singleton):
         """ Get value associated to key as integer. """
         return int(self.get(config_key))
 
+    def get_float(self, config_key):
+        """ Get value associated to key as integer. """
+        return float(self.get(config_key))
+
     def get_string(self, config_key):
         """ Get value associated to key as string. """
         return self.get(config_key)

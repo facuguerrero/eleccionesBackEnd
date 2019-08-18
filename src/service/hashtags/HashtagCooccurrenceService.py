@@ -5,6 +5,7 @@ from uuid import uuid4
 from src.db.dao.CooccurrenceDAO import CooccurrenceDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.exception.NoHashtagCooccurrenceError import NoHashtagCooccurrenceError
+from src.service.hashtags.HashtagEntropyService import HashtagEntropyService
 from src.util.FileUtils import FileUtils
 from src.util.logging.Logger import Logger
 
@@ -15,7 +16,7 @@ class HashtagCooccurrenceService:
     THIRTY_ONE_BITS = 0x7fffffff
 
     @classmethod
-    def export_counts_for_time_window(cls, start_date, end_date):
+    def export_counts_for_time_window(cls, start_date, end_date, cutting_method):
         """ Count appearances of each pair of hashtags in the given time window and export to .txt file. """
         cls.get_logger().info(f'Starting hashtag cooccurrence counting for window starting on {start_date}'
                               f' and ending on {end_date}')
@@ -24,7 +25,12 @@ class HashtagCooccurrenceService:
         # Retrieve from database
         documents = CooccurrenceDAO().find_in_window(start_date, end_date)
         # Iterate and count
+        hashtag_entropy_service = HashtagEntropyService()
         for document in documents:
+            # Add only those edges that join two hashtags that should be considered for graph construction
+            if cutting_method and not hashtag_entropy_service.should_use_pair(document['pair'], cutting_method):
+                continue
+            # If both are acceptable, then add edge
             cls.__add_to_counts(counts, document['pair'])
             cls.__add_to_ids(ids, document['pair'])
         # Throw exception if there were no documents found
