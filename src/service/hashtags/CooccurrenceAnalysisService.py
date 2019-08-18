@@ -42,9 +42,9 @@ class CooccurrenceAnalysisService:
         cls.get_logger().info(f'Generating cooccurrence graphs.')
         data = GraphUtils.create_cooccurrence_graphs(start_date, end_date)
         # Store result
-        HashtagsTopicsDAO().store(data['hashtags_topics'], start_date, end_date)
+        HashtagsTopicsDAO().store(data['hashtags_topics'], start_date, end_date, cutting_method)
         CommunityStrengthDAO().store(data['community_strength'], start_date, end_date)
-        CooccurrenceGraphDAO().store(data['graphs'], start_date, end_date)
+        CooccurrenceGraphDAO().store(data['graphs'], start_date, end_date, cutting_method)
         ShowableGraphDAO().store(data['showable_graphs'], start_date, end_date)
 
     @classmethod
