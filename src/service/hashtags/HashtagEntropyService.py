@@ -6,6 +6,7 @@ class HashtagEntropyService:
 
     def __init__(self):
         self.filtered_hashtags = set()
+        self.non_filtered_hashtags = set()
 
     def should_use_pair(self, pair, method):
         """ Returns true if both hashtags should be considered in graph creation. """
@@ -18,6 +19,7 @@ class HashtagEntropyService:
             if vector and self.__should_filter(vector, method):
                 self.filtered_hashtags.add(hashtag)
                 return False
+            self.non_filtered_hashtags.add(hashtag)
         return True
 
     @classmethod
