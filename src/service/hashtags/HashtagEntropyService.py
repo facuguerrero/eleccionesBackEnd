@@ -14,6 +14,8 @@ class HashtagEntropyService:
             # Cache to avoid accessing DB
             if hashtag in self.filtered_hashtags:
                 return False
+            if hashtag in self.non_filtered_hashtags:
+                continue
             # Search database for entropy vector
             vector = HashtagEntropyDAO().find(hashtag)
             if vector and self.__should_filter(vector, method):
