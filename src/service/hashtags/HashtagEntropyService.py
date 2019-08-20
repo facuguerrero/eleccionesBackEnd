@@ -22,7 +22,7 @@ class HashtagEntropyService:
             if document and self.__should_filter(document['vector'], method):
                 self.filtered_hashtags.add(hashtag)
                 key = f'{hashtag}-{method}'
-                Mongo().get().db.filtered.find_one_and_update(filter={'_id': key}, update={'$set': {'method': method}}, upsert=True)
+                Mongo().get().db.filtered.insert({'_id': key})
                 return False
             self.non_filtered_hashtags.add(hashtag)
         return True
@@ -47,4 +47,4 @@ class HashtagEntropyService:
             delta = vector[0]
         else:
             delta = vector[0] - vector[index]
-        return delta > lower_bound
+        return delta < lower_bound
