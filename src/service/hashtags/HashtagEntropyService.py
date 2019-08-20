@@ -22,7 +22,7 @@ class HashtagEntropyService:
             if document and self.__should_filter(document['vector'], method):
                 self.filtered_hashtags.add(hashtag)
                 key = f'{hashtag}-{method}'
-                Mongo().get().db.filtered.find_one_and_update(filter={'_id': key}, update={'method': method}, upsert=True)
+                Mongo().get().db.filtered.find_one_and_update(filter={'_id': key}, update={'$set': {'method': method}}, upsert=True)
                 return False
             self.non_filtered_hashtags.add(hashtag)
         return True
