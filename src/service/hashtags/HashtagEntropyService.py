@@ -1,3 +1,4 @@
+from src.db.Mongo import Mongo
 from src.db.dao.HashtagEntropyDAO import HashtagEntropyDAO
 from src.util.config.ConfigurationManager import ConfigurationManager
 
@@ -20,6 +21,8 @@ class HashtagEntropyService:
             vector = HashtagEntropyDAO().find(hashtag)
             if vector and self.__should_filter(vector, method):
                 self.filtered_hashtags.add(hashtag)
+                key = f'{hashtag}-{method}'
+                Mongo().db.filtered.find_one_and_update(filter={'_id': key}, update={'method': method}, upsert=True)
                 return False
             self.non_filtered_hashtags.add(hashtag)
         return True

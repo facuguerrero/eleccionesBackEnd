@@ -7,7 +7,7 @@ from src.util.meta.Singleton import Singleton
 class HashtagEntropyDAO(GenericDAO, metaclass=Singleton):
 
     def __init__(self):
-        super(HashtagEntropyDAO, self).__init__(Mongo().get().db.hashtags)
+        super(HashtagEntropyDAO, self).__init__(Mongo().get().db.hashtag_entropy)
         self.logger = Logger(self.__class__.__name__)
 
     def store_vector(self, hashtag, vector):
