@@ -12,13 +12,12 @@ class CooccurrenceGraphDAO(GenericDAO, metaclass=Singleton):
         super(CooccurrenceGraphDAO, self).__init__(Mongo().get().db.cooccurrence_graphs)
         self.logger = Logger(self.__class__.__name__)
 
-    def store(self, graphs, start_date, end_date, cutting_method=None):
+    def store(self, graphs, start_date, end_date):
         """ Store main graph and all topic graphs into collection. """
         documents = [{'topic_id': key,
                       'graph': graph,
                       'start_date': start_date,
-                      'end_date': end_date,
-                      'cutting_method': cutting_method}
+                      'end_date': end_date}
                      for key, graph in graphs.items()]
         self.collection.insert_many(documents)
         

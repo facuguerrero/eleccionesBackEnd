@@ -28,6 +28,9 @@ class ConfigurationManager(metaclass=Singleton):
     def get_boolean(self, config_key):
         return self.parser.getboolean(config_key, 'true')
 
+    def get_list(self, config_key):
+        return self.get(config_key).split(',')
+
     def get(self, config_key):
         """ Get value associated to key. """
         return self.parser.get('default', config_key)

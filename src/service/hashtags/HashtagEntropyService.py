@@ -1,4 +1,3 @@
-from src.db.Mongo import Mongo
 from src.db.dao.HashtagEntropyDAO import HashtagEntropyDAO
 from src.util.config.ConfigurationManager import ConfigurationManager
 
@@ -9,20 +8,18 @@ class HashtagEntropyService:
         self.filtered_hashtags = set()
         self.non_filtered_hashtags = set()
 
-    def should_use_pair(self, pair, method):
+    def should_use_pair(self, pair):
         """ Returns true if both hashtags should be considered in graph creation. """
         for hashtag in pair:
             # Cache to avoid accessing DB
-            if hashtag in self.filtered_hashtags:
-                return False
-            if hashtag in self.non_filtered_hashtags:
-                continue
+            if hashtag in self.filtered_hashtags: return False
+            if hashtag in self.non_filtered_hashtags: continue
             # Search database for entropy vector
             document = HashtagEntropyDAO().find(hashtag)
+            # Analyze vector with default cutting method
+            method = ConfigurationManager().get_int('default_cutting_method')
             if document and self.__should_filter(document['vector'], method):
                 self.filtered_hashtags.add(hashtag)
-                key = f'{hashtag}-{method}'
-                Mongo().get().db.filtered.insert({'_id': key})
                 return False
             self.non_filtered_hashtags.add(hashtag)
         return True

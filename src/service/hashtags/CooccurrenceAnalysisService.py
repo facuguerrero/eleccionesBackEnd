@@ -7,6 +7,7 @@ from src.db.dao.ShowableGraphDAO import ShowableGraphDAO
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.service.hashtags.HashtagUsageService import HashtagUsageService
 from src.service.hashtags.OSLOMService import OSLOMService
+from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.graphs.GraphUtils import GraphUtils
 from src.util.logging.Logger import Logger
 
@@ -22,29 +23,38 @@ class CooccurrenceAnalysisService:
         cls.get_logger().info(f'Starting cooccurrence analysis for single day {last_day.date()}.')
         cls.analyze_cooccurrence_for_window(last_day)
         cls.get_logger().info('Daily cooccurrence analysis done.')
-        # Run accumulated
+        # Get last day at 23:59:59
         last_day = last_day + timedelta(days=1) - timedelta(seconds=1)  # This works because Python's sum is immutable
+        # Run for last 3, 7, 10 and 30 days. Ten is for similarities.
+        for delta in ConfigurationManager().get_list('cooccurrence_deltas'):
+            # Calculate start date from delta
+            start_date = datetime.combine((last_day - timedelta(days=int(delta))).date(), datetime.min.time())
+            # Run cooccurrence analysis
+            cls.get_logger().info(f'Starting cooccurrence analysis for last {delta} days.')
+            cls.analyze_cooccurrence_for_window(start_date, last_day)
+            cls.get_logger().info(f'Cooccurrence analysis for last {delta} days done.')
+        # Run for accumulate TODO: Should be removed when the others are working
         cls.get_logger().info(f'Starting cooccurrence analysis for full period from first day until yesterday.')
-        cls.analyze_cooccurrence_for_window(cls.START_DAY, last_day)  # Last day at 23:59:59
+        cls.analyze_cooccurrence_for_window(cls.START_DAY, last_day)
         cls.get_logger().info(f'Accumulated cooccurrence analysis done.')
         # Run usage analysis as soon as possible
         HashtagUsageService.calculate_today_topics_hashtag_usage()
 
     @classmethod
-    def analyze_cooccurrence_for_window(cls, start_date, end_date=None, cutting_method=None):
+    def analyze_cooccurrence_for_window(cls, start_date, end_date=None):
         """ Analyze cooccurrence for a given time window and generate cooccurrence graph. """
         end_date = cls.__validate_end_date(start_date, end_date)
         # Generate counting and id data
-        HashtagCooccurrenceService.export_counts_for_time_window(start_date, end_date, cutting_method)
+        HashtagCooccurrenceService.export_counts_for_time_window(start_date, end_date)
         # Run OSLOM and complete graph
         OSLOMService.export_communities_for_window(start_date, end_date)
         # Keep only needed data and unpack graph
         cls.get_logger().info(f'Generating cooccurrence graphs.')
         data = GraphUtils.create_cooccurrence_graphs(start_date, end_date)
         # Store result
-        HashtagsTopicsDAO().store(data['hashtags_topics'], start_date, end_date, cutting_method)
+        HashtagsTopicsDAO().store(data['hashtags_topics'], start_date, end_date)
         CommunityStrengthDAO().store(data['community_strength'], start_date, end_date)
-        CooccurrenceGraphDAO().store(data['graphs'], start_date, end_date, cutting_method)
+        CooccurrenceGraphDAO().store(data['graphs'], start_date, end_date)
         ShowableGraphDAO().store(data['showable_graphs'], start_date, end_date)
 
     @classmethod

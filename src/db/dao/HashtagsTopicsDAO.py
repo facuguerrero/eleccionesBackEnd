@@ -13,13 +13,12 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
         super(HashtagsTopicsDAO, self).__init__(Mongo().get().db.hashtags_topics)
         self.logger = Logger(self.__class__.__name__)
 
-    def store(self, hashtags_topics, start_date, end_date, cutting_method=None):
+    def store(self, hashtags_topics, start_date, end_date):
         """ Store main graph and all topic graphs into collection. """
         documents = [{'hashtag': hashtag,
                       'topics': list(topics),
                       'start_date': start_date,
-                      'end_date': end_date,
-                      'cutting_method': cutting_method}
+                      'end_date': end_date}
                      for hashtag, topics in hashtags_topics.items()]
         self.collection.insert_many(documents)
 
