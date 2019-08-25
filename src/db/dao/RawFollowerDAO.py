@@ -38,17 +38,22 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
     def update_follower_data_without_has_tweets(self, raw_follower):
         self.upsert(
             {'_id': raw_follower.id},
-            {'$set': self.get_partial_data_and_is_private(raw_follower)}
+            {'$set': self.get_data_for_private(raw_follower)}
         )
 
     def get_complete_data(self, raw_follower):
         data = self.get_partial_data(raw_follower)
         data['has_tweets'] = raw_follower.has_tweets
+        data['is_private'] = raw_follower.is_private
+        data['last_tweet_date'] = raw_follower.last_tweet_date
         return data
 
-    def get_partial_data_and_is_private(self, raw_follower):
-        data = self.get_partial_data(raw_follower)
-        data['is_private'] = raw_follower.is_private
+    @staticmethod
+    def get_data_for_private(raw_follower):
+        data = {
+            'is_private': raw_follower.is_private,
+            'downloaded_on': raw_follower.downloaded_on
+        }
         return data
 
     @staticmethod
