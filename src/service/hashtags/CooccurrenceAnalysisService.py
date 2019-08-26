@@ -16,7 +16,7 @@ class CooccurrenceAnalysisService:
     START_DAY = datetime.combine(datetime.strptime('2019-01-01', '%Y-%m-%d').date(), datetime.min.time())
 
     @classmethod
-    def analyze(cls):
+    def analyze(cls, no_accumulate=False):
         """ Run cooccurrence analysis for the last day and the accumulated since 2019-01-01. """
         # Run for previous day
         last_day = datetime.combine((datetime.now() - timedelta(days=1)).date(), datetime.min.time())
@@ -33,10 +33,11 @@ class CooccurrenceAnalysisService:
             cls.get_logger().info(f'Starting cooccurrence analysis for last {delta} days.')
             cls.analyze_cooccurrence_for_window(start_date, last_day)
             cls.get_logger().info(f'Cooccurrence analysis for last {delta} days done.')
-        # Run for accumulate TODO: Should be removed when the others are working
-        cls.get_logger().info(f'Starting cooccurrence analysis for full period from first day until yesterday.')
-        cls.analyze_cooccurrence_for_window(cls.START_DAY, last_day)
-        cls.get_logger().info(f'Accumulated cooccurrence analysis done.')
+        if not no_accumulate:
+            # Run for accumulate TODO: Should be removed when the other intervals are working
+            cls.get_logger().info(f'Starting cooccurrence analysis for full period from first day until yesterday.')
+            cls.analyze_cooccurrence_for_window(cls.START_DAY, last_day)
+            cls.get_logger().info(f'Accumulated cooccurrence analysis done.')
         # Run usage analysis as soon as possible
         HashtagUsageService.calculate_today_topics_hashtag_usage()
 

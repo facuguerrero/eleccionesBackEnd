@@ -11,13 +11,14 @@ class HashtagUsageDAO(GenericDAO, metaclass=Singleton):
         super(HashtagUsageDAO, self).__init__(Mongo().get().db.hashtag_usage)
         self.logger = Logger(self.__class__.__name__)
 
-    def store(self, hashtag_name, start_date, end_date, date_axis, count_axis):
+    def store(self, hashtag_name, start_date, end_date, date_axis, count_axis, parties_vectors):
         """ Stores plottable data for a hashtag in a given time window. """
         document = {'hashtag_name': hashtag_name,
                     'start_date': start_date,
                     'end_date': end_date,
                     'date_axis': date_axis,
-                    'count_axis': count_axis}
+                    'count_axis': count_axis,
+                    'parties_vectors': parties_vectors}
         self.insert(document)
 
     def find(self, hashtag_name, start_date, end_date):
@@ -25,4 +26,6 @@ class HashtagUsageDAO(GenericDAO, metaclass=Singleton):
         document = self.get_first({'hashtag_name': hashtag_name, 'start_date': start_date, 'end_date': end_date})
         if not document:
             raise NoDocumentsFoundError(hashtag_name, None)
-        return {'date_axis': document['date_axis'], 'count_axis': document['count_axis']}
+        return {'date_axis': document['date_axis'],
+                'count_axis': document['count_axis'],
+                'parties_vectors': document['parties_vectors']}

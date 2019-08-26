@@ -3,11 +3,13 @@ from datetime import timedelta, datetime
 
 from src.db.dao.CooccurrenceDAO import CooccurrenceDAO
 from src.db.dao.HashtagUsageDAO import HashtagUsageDAO
+from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.ShowableGraphDAO import ShowableGraphDAO
 from src.db.dao.TopicUsageDAO import TopicUsageDAO
 from src.util.DateUtils import DateUtils
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
+from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.logging.Logger import Logger
 
 
@@ -15,6 +17,7 @@ class HashtagUsageService:
     """ Service designated to the calculation of the usage of hashtags in a given window of time. """
     # TODO: Move this to a single place (it is duplicated now)
     START_DAY = datetime.combine(datetime.strptime('2019-01-01', '%Y-%m-%d').date(), datetime.min.time())
+    __parties = ['juntosporelcambio', 'frentedetodos', 'frentedespertar', 'consensofederal', 'frentedeizquierda']
 
     @classmethod
     def __validate_end_date(cls, start_date, end_date):
@@ -27,16 +30,26 @@ class HashtagUsageService:
     @classmethod
     def calculate_today_topics_hashtag_usage(cls):
         """ Calculate the usage of all hashtags in today showable topics and the total usage of the topic itself. """
+        supporters = cls.__generate_supporters_map()
         # End time is yesterday at 23:59:59
         end_time = DateUtils.today() - timedelta(seconds=1)
         # Start time is yesterday at 00:00:00
         start_time = DateUtils.today() - timedelta(days=1)
         cls.get_logger().info('Starting daily hashtag usage calculation.')
         # Calculate daily data
-        cls.calculate_hashtag_usage(start_time, end_time, interval='hours')
+        cls.calculate_hashtag_usage(start_time, end_time, interval='hours', supporters=supporters)
+        # Run for different intervals of dates
+        for delta in ConfigurationManager().get_list('showable_cooccurrence_deltas'):
+            # Calculate start date from delta
+            start_date = datetime.combine((end_time - timedelta(days=int(delta))).date(), datetime.min.time())
+            # Calculate data
+            cls.get_logger().info(f'Starting hashtag usage calculation for {delta} days window.')
+            cls.calculate_hashtag_usage(start_date, end_time, interval='days', supporters=supporters)
+            # Log finish for time checking
+            cls.get_logger().info(f'Hashtag usage calculation finished for {delta} days window.')
         # Calculate accumulated data
         cls.get_logger().info('Starting accumulated hashtag usage calculation.')
-        cls.calculate_hashtag_usage(cls.START_DAY, end_time, interval='days')
+        cls.calculate_hashtag_usage(cls.START_DAY, end_time, interval='days', supporters=supporters)
         # Log finish for time checking
         cls.get_logger().info('Hashtag usage calculation finished.')
         # Once we've analyzed hashtags, topic usage calculations are just additions
@@ -50,13 +63,13 @@ class HashtagUsageService:
         cls.get_logger().info('Topic usage calculation finished.')
 
     @classmethod
-    def calculate_hashtag_usage(cls, start, end, interval):
+    def calculate_hashtag_usage(cls, start, end, interval, supporters):
         """ Calculate hashtag usage for given time window"""
         topics = ShowableGraphDAO().find_all(start, end)
         # Set used to calculate only once each hashtag
         processed_hashtags = set()
         # Run all topic analysis in parallel
-        args = [[topic, start, end, interval, processed_hashtags] for topic in topics]
+        args = [[topic, start, end, interval, processed_hashtags, supporters] for topic in topics]
         AsyncThreadPoolExecutor().run_multiple_args(cls.__process_topic, args)
 
     @classmethod
@@ -68,7 +81,7 @@ class HashtagUsageService:
         AsyncThreadPoolExecutor().run_multiple_args(cls.__count_usages_for_topic, args)
 
     @classmethod
-    def __process_topic(cls, topic, start, end, interval, processed_hashtags):
+    def __process_topic(cls, topic, start, end, interval, processed_hashtags, supporters):
         """ Get all the hashtags used in the current topic """
         # Do not process the 'topic of topics'
         if topic['topic_id'] == 'main': return
@@ -85,16 +98,34 @@ class HashtagUsageService:
                 if hashtag in processed_hashtags: continue
                 # Create an interval for each hour of the day or day of the interval
                 dates = cls.__generate_dates_in_interval(start, end, interval)
-                # Get hashtag usage for each hour
+                # Create data structures
                 date_axis = []
                 count_axis = []
+                parties_vectors = dict()
+                supporters_count = dict()
+                for party in cls.__parties:
+                    parties_vectors[party] = []
+                    supporters_count[party] = len(supporters[party])
+                # Get hashtag usage for each date range
                 for init, finish in dates:
                     # Get a list of all the different users that used the hashtag for the given time window
-                    count = len(CooccurrenceDAO().distinct_users(hashtag, init, finish))
+                    users = set(CooccurrenceDAO().distinct_users(hashtag, init, finish))
+                    count = len(users)
                     date_axis.append(init)
                     count_axis.append(count)
+                    # Calculate the proportion of usage for each party
+                    party_counts = []
+                    for party in cls.__parties:
+                        # Get the proportion of users of each party that used the given hashtag
+                        party_counts.append(len(users.intersection(supporters[party]))/supporters_count[party])
+                    # Normalize the proportions vector to leave out the quantity factor
+                    max_proportion = max(party_counts)
+                    party_counts = [round(c/max_proportion, 4) for c in party_counts]
+                    # Append results to each party's vector
+                    for party, i in zip(cls.__parties, range(len(cls.__parties))):
+                        parties_vectors[party].append(party_counts[i])
                 # Store data needed for line plotting
-                HashtagUsageDAO().store(hashtag, start, end, date_axis, count_axis)
+                HashtagUsageDAO().store(hashtag, start, end, date_axis, count_axis, parties_vectors)
                 # Mark as processed
                 processed_hashtags.add(hashtag)
             finally:
@@ -112,18 +143,43 @@ class HashtagUsageService:
         date_axis = [init for init, finish in cls.__generate_dates_in_interval(start, end, interval)]
         # Create count axis array to do additions easier
         count_axis = [0] * len(date_axis)
+        # Create dictionary to keep usage proportions
+        parties_proportions = {party: [0]*len(date_axis) for party in cls.__parties}
         # Iterate through all topic's hashtags and add their counts to the axis
         for hashtag in hashtags:
-            hashtag_count_axis = HashtagUsageDAO().find(hashtag, start, end)['count_axis']
+            document = HashtagUsageDAO().find(hashtag, start, end)
+            hashtag_count_axis = document['count_axis']
             count_axis = list(map(add, count_axis, hashtag_count_axis))
+            # Normalize to avoid showing false numbers
+            maximum_usage = max(count_axis)
+            count_axis = [round(c/maximum_usage, 4) for c in count_axis]
+            # Calculate the usage proportion of each party
+            parties_vectors = document['parties_vectors']
+            for party, vector in parties_vectors.items():
+                # Add all hashtags' usage proportion vectors for each party
+                parties_proportions[party] = [sum(x) for x in zip(vector, parties_proportions[party])]
+        # Normalize parties proportions vector
+        for party, vector in parties_proportions.items():
+            parties_proportions[party] = [x/len(hashtags) for x in vector]
         # Store topic usage data
-        TopicUsageDAO().store(topic['topic_id'], start, end, date_axis, count_axis)
+        TopicUsageDAO().store(topic['topic_id'], start, end, date_axis, count_axis, parties_proportions)
 
     @classmethod
     def __generate_dates_in_interval(cls, start, end, interval):
         """ Returns a list of tuples with start and end dates for a given interval. """
         diff = 24 if interval == 'hours' else (end - start).days
         return [(start + timedelta(**{interval: i}), start + timedelta(**{interval: i + 1})) for i in range(diff)]
+
+    @classmethod
+    def __generate_supporters_map(cls):
+        """ Creates a map which relates each party with a set of its followers. """
+        supporters = dict()
+        for party in cls.__parties:
+            users = [follower['_id'] for follower in RawFollowerDAO().get_all({
+                '$and': [{'probability_vector_support': {'$elemMatch': {'$gte': 0.8}}}, {'support': party}]
+            })]
+            supporters[party] = users
+        return supporters
 
     @classmethod
     def get_logger(cls):
