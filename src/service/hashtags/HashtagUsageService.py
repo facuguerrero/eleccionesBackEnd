@@ -57,6 +57,15 @@ class HashtagUsageService:
         # Daily
         cls.calculate_topic_usage(start_time, end_time, interval='hours')
         cls.get_logger().info('Starting accumulated topic usage calculation.')
+        # Run for different intervals of dates
+        for delta in ConfigurationManager().get_list('showable_cooccurrence_deltas'):
+            # Calculate start date from delta
+            start_date = datetime.combine((end_time - timedelta(days=int(delta))).date(), datetime.min.time())
+            # Calculate data
+            cls.get_logger().info(f'Starting topic usage calculation for {delta} days window.')
+            cls.calculate_topic_usage(start_date, end_time, interval='days')
+            # Log finish for time checking
+            cls.get_logger().info(f'Topic usage calculation finished for {delta} days window.')
         # Accumulated
         cls.calculate_topic_usage(cls.START_DAY, end_time, interval='days')
         # Log finish for time checking
@@ -119,8 +128,9 @@ class HashtagUsageService:
                         # Get the proportion of users of each party that used the given hashtag
                         party_counts.append(len(users.intersection(supporters[party]))/supporters_count[party])
                     # Normalize the proportions vector to leave out the quantity factor
-                    max_proportion = max(party_counts)
-                    party_counts = [round(c/max_proportion, 4) for c in party_counts]
+                    divisor = sum(party_counts)
+                    party_counts = [0]*len(party_counts) if divisor == 0 \
+                        else [c/divisor for c in party_counts]
                     # Append results to each party's vector
                     for party, i in zip(cls.__parties, range(len(cls.__parties))):
                         parties_vectors[party].append(party_counts[i])
@@ -152,7 +162,7 @@ class HashtagUsageService:
             count_axis = list(map(add, count_axis, hashtag_count_axis))
             # Normalize to avoid showing false numbers
             maximum_usage = max(count_axis)
-            count_axis = [round(c/maximum_usage, 4) for c in count_axis]
+            count_axis = [0]*len(count_axis) if maximum_usage == 0 else [c/maximum_usage for c in count_axis]
             # Calculate the usage proportion of each party
             parties_vectors = document['parties_vectors']
             for party, vector in parties_vectors.items():

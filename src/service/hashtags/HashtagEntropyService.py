@@ -17,7 +17,7 @@ class HashtagEntropyService:
             # Search database for entropy vector
             document = HashtagEntropyDAO().find(hashtag)
             # Analyze vector with default cutting method
-            method = ConfigurationManager().get_int('default_cutting_method')
+            method = ConfigurationManager().get_string('default_cutting_method')
             if document and self.__should_filter(document['vector'], method):
                 self.filtered_hashtags.add(hashtag)
                 return False
