@@ -64,6 +64,8 @@ class TweetUpdateService:
             for follower, last_update in followers.items():
                 self.continue_downloading = False
                 min_tweet_date = last_update.astimezone(pytz.timezone('America/Argentina/Buenos_Aires'))
+                self.get_logger().warning(
+                    f'------------------------------------------ Follower: {follower}    Date: {min_tweet_date}.')
                 follower_download_tweets = self.download_tweets_and_validate(twitter, follower, min_tweet_date, True)
 
                 # While retrieve new tweets
@@ -190,6 +192,7 @@ class TweetUpdateService:
     def store_tweets_and_update_follower(self, follower_download_tweets, follower, min_tweet_date):
         if len(follower_download_tweets) != 0:
             last_tweet_date = self.get_formatted_date(follower_download_tweets[0]['created_at'])
+            self.get_logger().warning(f'last tweet date {last_tweet_date}')
             if min_tweet_date < last_tweet_date:
                 self.update_complete_follower(follower, follower_download_tweets[0], last_tweet_date)
                 self.store_new_tweets(follower_download_tweets, min_tweet_date)
@@ -280,6 +283,7 @@ class TweetUpdateService:
                     HashtagOriginService().process_tweet(tweet_copy)
                     HashtagCooccurrenceService().process_tweet(tweet_copy)
                     UserHashtagService().insert_hashtags_of_one_tweet(tweet_copy)
+                    cls.get_logger().warning(f'Stored {tweet_date}.')
                 except DuplicatedTweetError:
                     # cls.get_logger().info(
                     #    f'{updated_tweets} tweets of {tweet["user"]["id"]} are updated. Actual date: {tweet_date}')
