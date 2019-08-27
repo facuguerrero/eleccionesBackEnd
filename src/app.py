@@ -11,7 +11,7 @@ from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
 from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.db.Mongo import Mongo
-from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
+from src.db.db_initialization import create_indexes, create_base_entries
 from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
@@ -45,7 +45,7 @@ def set_up_context(db_name, authorization, environment):
     with app.app_context():
         create_indexes()
         create_base_entries()
-        create_queue_entries()
+        # create_queue_entries()
 
 
 def init_services():

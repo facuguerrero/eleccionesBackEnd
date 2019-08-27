@@ -17,3 +17,4 @@ class RawFollower:
         self.favourites_count = kwargs.get('favourites_count', None)
         self.statuses_count = kwargs.get('statuses_count', None)
         self.has_tweets = kwargs.get('has_tweets', None)
+        self.last_tweet_date = kwargs.get('last_tweet_date', None)
