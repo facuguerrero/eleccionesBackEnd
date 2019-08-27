@@ -22,9 +22,10 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
                      for hashtag, topics in hashtags_topics.items()]
         self.collection.insert_many(documents)
 
-    def get_required_hashtags(self, all_hashtags, all_topics_sorted):
+    def get_required_hashtags(self, all_hashtags, hashtags_index, date):
         """ Retrieve all topics by hashtags. """
-        init_first_hour, yesterday_last_hour = self.get_init_and_end_dates()
+        init_first_hour, yesterday_last_hour = self.get_init_and_end_dates(date)
+
         hashtags_topics = self.get_all({'$and': [
             {'start_date': init_first_hour},
             {'end_date': yesterday_last_hour},
@@ -32,23 +33,22 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
         ]})
 
         position_vectors = []
-        x = 0
         for hashtag_topics in hashtags_topics:
-            x += 1
-            if x % 10000 == 0 or x == 1:
-                self.logger.info(x)
-            if hashtag_topics['hashtag'] in all_hashtags:
-                hashtag_index = all_hashtags.index(hashtag_topics['hashtag'])
-                for topic in hashtag_topics['topics']:
-                    position_vectors.append([hashtag_index, int(topic), 1])
-            else:
-                self.logger.error(hashtag_topics['hashtag'])
+            hashtag = hashtag_topics['hashtag']
+            hashtag_index = hashtags_index[hashtag]
+
+            for topic in hashtag_topics['topics']:
+                position_vectors.append([hashtag_index, int(topic), 1])
+
         return position_vectors
 
     @staticmethod
-    def get_init_and_end_dates():
-        """ Return 3 days ago at 00:00 and yesterday at 23:59"""
-        init_first_hour = datetime.datetime(2019, 1, 1, 0, 0, 0)
+    def get_init_and_end_dates(date):
+        """ Return 10 days ago at 00:00 and yesterday at 23:59"""
+        init_date = date - datetime.timedelta(days=10)
+        init_first_hour = DateUtils().date_at_first_hour(init_date)
+
         yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
         yesterday_last_hour = DateUtils().date_at_last_hour(yesterday)
+
         return init_first_hour, yesterday_last_hour
