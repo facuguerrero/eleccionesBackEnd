@@ -15,7 +15,7 @@ class CooccurrenceAnalysisResource(Resource):
     def post():
         # TODO: Remove this!
         init = datetime.combine(datetime.strptime('2019-06-22', '%Y-%m-%d').date(), datetime.min.time())
-        end = datetime.combine(datetime.strptime('2019-08-26', '%Y-%m-%d').date(), datetime.min.time())
+        end = datetime.combine(datetime.strptime('2019-08-27', '%Y-%m-%d').date(), datetime.min.time())
         dates = [init + timedelta(days=i) for i in range((end-init).days + 1)]
         for date in dates:
             CooccurrenceAnalysisService.analyze(no_accumulate=True, last_day=date)
