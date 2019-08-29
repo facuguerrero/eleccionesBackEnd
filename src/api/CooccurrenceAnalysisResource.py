@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import request
 from flask_restful import Resource
 
@@ -12,40 +12,10 @@ class CooccurrenceAnalysisResource(Resource):
     # TODO: Remove this endpoint and replace for scheduled task
 
     @staticmethod
-    def get():
-        # Parse input
-        try:
-            start_date, end_date = CooccurrenceAnalysisResource._check_query_params(request.args)
-        except WrongParametersError as wpe:
-            return ResponseBuilder.build_exception(wpe.message, 400)
-        # Do function
-        try:
-            CooccurrenceAnalysisService.analyze_cooccurrence_for_window(start_date, end_date)
-            return ResponseBuilder.build('Analysis .txt and .csv files were created.', 200)
-        except NoHashtagCooccurrenceError as nhce:
-            return ResponseBuilder.build_exception(nhce.message, 400)
-
-    @staticmethod
     def post():
         # TODO: Remove this!
-        CooccurrenceAnalysisService.analyze(no_accumulate=True)
-
-    @staticmethod
-    def _check_query_params(query_params):
-        """ Check expected query params and fail if compulsory fields are empty. """
-        raw_start = query_params.get('start_date', None)
-        start = CooccurrenceAnalysisResource._parse_raw(raw_start, 'start_date')
-        raw_end = query_params.get('end_date', None)
-        end = CooccurrenceAnalysisResource._parse_raw(raw_end, 'end_date', nullable=True)
-        return start, end
-
-    @staticmethod
-    def _parse_raw(raw_date, id, nullable=False):
-        # Throw exception if date can't be parsed or if it is None
-        try:
-            if raw_date is None:
-                if nullable: return None
-                else: raise ValueError()
-            return datetime.strptime(raw_date, '%Y-%m-%d')
-        except ValueError:
-            raise WrongParametersError(id)
+        init = datetime.combine(datetime.strptime('2019-06-22', '%Y-%m-%d').date(), datetime.min.time())
+        end = datetime.combine(datetime.strptime('2019-08-26', '%Y-%m-%d').date(), datetime.min.time())
+        dates = [init + timedelta(days=i) for i in range((end-init).days + 1)]
+        for date in dates:
+            CooccurrenceAnalysisService.analyze(no_accumulate=True, last_day=date)

@@ -16,10 +16,11 @@ class CooccurrenceAnalysisService:
     START_DAY = datetime.combine(datetime.strptime('2019-01-01', '%Y-%m-%d').date(), datetime.min.time())
 
     @classmethod
-    def analyze(cls, no_accumulate=False):
-        """ Run cooccurrence analysis for the last day and the accumulated since 2019-01-01. """
+    def analyze(cls, no_accumulate=False, last_day=None):
+        """ Run cooccurrence analysis for the last day with all its intervals. """
         # Run for previous day
-        last_day = datetime.combine((datetime.now() - timedelta(days=1)).date(), datetime.min.time())
+        if not last_day:  # Parameter last_day should be the required day at 00:00:00
+            last_day = datetime.combine((datetime.now() - timedelta(days=1)).date(), datetime.min.time())
         cls.get_logger().info(f'Starting cooccurrence analysis for single day {last_day.date()}.')
         cls.analyze_cooccurrence_for_window(last_day)
         cls.get_logger().info('Daily cooccurrence analysis done.')
