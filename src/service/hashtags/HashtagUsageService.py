@@ -127,10 +127,6 @@ class HashtagUsageService:
                     for party in cls.__parties:
                         # Get the proportion of users of each party that used the given hashtag
                         party_counts.append(len(users.intersection(supporters[party]))/supporters_count[party])
-                    # Normalize the proportions vector to leave out the quantity factor
-                    divisor = sum(party_counts)
-                    party_counts = [0]*len(party_counts) if divisor == 0 \
-                        else [c/divisor for c in party_counts]
                     # Append results to each party's vector
                     for party, i in zip(cls.__parties, range(len(cls.__parties))):
                         parties_vectors[party].append(party_counts[i])
@@ -160,17 +156,11 @@ class HashtagUsageService:
             document = HashtagUsageDAO().find(hashtag, start, end)
             hashtag_count_axis = document['count_axis']
             count_axis = list(map(add, count_axis, hashtag_count_axis))
-            # Normalize to avoid showing false numbers
-            maximum_usage = max(count_axis)
-            count_axis = [0]*len(count_axis) if maximum_usage == 0 else [c/maximum_usage for c in count_axis]
             # Calculate the usage proportion of each party
             parties_vectors = document['parties_vectors']
             for party, vector in parties_vectors.items():
                 # Add all hashtags' usage proportion vectors for each party
                 parties_proportions[party] = [sum(x) for x in zip(vector, parties_proportions[party])]
-        # Normalize parties proportions vector
-        for party, vector in parties_proportions.items():
-            parties_proportions[party] = [x/len(hashtags) for x in vector]
         # Store topic usage data
         TopicUsageDAO().store(topic['topic_id'], start, end, date_axis, count_axis, parties_proportions)
 
