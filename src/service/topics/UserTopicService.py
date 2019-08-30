@@ -21,6 +21,11 @@ class UserTopicService:
     # TODO fle path
     # FILE_PATH = f"{abspath(join(dirname(__file__), '../../'))}/resources/candidates.json"
 
+    # TODO calcular la similitud random a partir de las similitudes ya calculadas.
+    # Hay que hacer algo parecido a lo que se hace en el algoritmo para multiplicar la matriz.
+    # Calcular la similitud random ponderada, es decir la sumatoria de
+    # la similitud calculada * cantidad de usuarios * cantidad usuarios -1 /2
+
     @classmethod
     def init_update_support_follower(cls):
         thread = Thread(target=UserTopicService.init_process)
@@ -95,7 +100,7 @@ class UserTopicService:
         last_3_days_hashtags, users_with_hashtags = UserHashtagDAO().get_last_10_days_hashtags(date)
         hashtags_quantity = len(last_3_days_hashtags)
         users_quantity = len(users_with_hashtags)
-        cls.get_logger().info(f"All hashtags from 3 days ago are retrieved. \
+        cls.get_logger().info(f"All hashtags from 10 days ago are retrieved. \
                                 They are {hashtags_quantity} from {users_quantity} users.")
 
         # Get an auxiliary structure
