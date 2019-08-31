@@ -44,7 +44,7 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
     @staticmethod
     def get_init_and_end_dates(date=datetime.datetime.today()):
         """ Return 3 days ago at 00:00 and yesterday at 23:59"""
-        init_date = date - datetime.timedelta(days=10)
+        init_date = date - datetime.timedelta(days=11)
         init_first_hour = DateUtils().date_at_first_hour(init_date)
 
         yesterday = date - datetime.timedelta(days=1)

@@ -48,10 +48,10 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
     @staticmethod
     def get_init_and_end_dates(date):
         """ Return 10 days ago at 00:00 and yesterday at 23:59"""
-        init_date = date - datetime.timedelta(days=10)
+        init_date = date - datetime.timedelta(days=11)
         init_first_hour = DateUtils().date_at_first_hour(init_date)
 
-        yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
+        yesterday = date - datetime.timedelta(days=1)
         yesterday_last_hour = DateUtils().date_at_last_hour(yesterday)
 
         return init_first_hour, yesterday_last_hour
