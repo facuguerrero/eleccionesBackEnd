@@ -218,6 +218,8 @@ class UserTopicService:
     @classmethod
     def get_matrix_by_group(cls, matrix, group_vector, users_quantity):
         """ Return group matrix without 0's"""
+        cls.get_logger().error(group_vector)
+        cls.get_logger().error(users_quantity)
         selected_users_vector = cls.get_matrix_from_data(group_vector, users_quantity, 1)
 
         group_matrix = matrix.multiply(selected_users_vector)
