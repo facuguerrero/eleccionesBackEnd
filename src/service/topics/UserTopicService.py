@@ -36,6 +36,7 @@ class UserTopicService:
         try:
             cls.get_logger().info("Calculating User-Topic Matrix")
             cls.calculate_users_similarity(datetime.datetime(2019, 8, 1))
+            # SlackHelper().post_message_to_channel('Similitud calculada correctamente.', '#reports')
         except NonExistentDataForMatrixError as e:
             cls.get_logger().error("Error Calculating User-Topic Matrix. No data are retrieved.")
             SlackHelper().post_message_to_channel(
@@ -54,7 +55,10 @@ class UserTopicService:
 
         grouped_matrixes = []
         for group in users_by_group:
-            grouped_matrixes.append(cls.get_matrix_by_group(users_topic_matrix, users_by_group[group], users_quantity))
+            matrix_by_group = cls.get_matrix_by_group(users_topic_matrix, users_by_group[group], users_quantity)
+            cls.get_logger().info(f'Users quantity of group: {matrix_by_group.shape}')
+            grouped_matrixes.append(matrix_by_group)
+        cls.get_logger().info('All matrix by group are calculated correctly.')
 
     @classmethod
     def calculate_and_save_users_topics_matrix(cls, date):
