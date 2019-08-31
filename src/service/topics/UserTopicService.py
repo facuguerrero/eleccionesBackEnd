@@ -139,7 +139,7 @@ class UserTopicService:
 
     @classmethod
     def get_matrix_from_data_with_dtype(cls, data, M, N):
-        return cls.get_matrix_from_data(data, M, N).asType("float32")
+        return cls.get_matrix_from_data(data, M, N).astype("float32")
 
     @classmethod
     def get_matrix_from_data(cls, data, M, N):
