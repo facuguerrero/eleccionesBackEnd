@@ -54,7 +54,7 @@ class UserTopicService:
 
         grouped_matrixes = []
         for group in users_by_group:
-            grouped_matrixes.append(cls.get_matrix_by_group(users_topic_matrix, group, users_quantity))
+            grouped_matrixes.append(cls.get_matrix_by_group(users_topic_matrix, users_by_group[group], users_quantity))
 
     @classmethod
     def calculate_and_save_users_topics_matrix(cls, date):
