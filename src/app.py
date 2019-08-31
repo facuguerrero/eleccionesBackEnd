@@ -12,6 +12,7 @@ from src.api.PingResource import PingResource
 from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
+from src.service.topics.UserTopicService import UserTopicService
 from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
@@ -54,6 +55,7 @@ def init_services():
     # UserTopicService().init_update_support_follower()
     # FollowerSupportService().init_update_support_follower()
     TweetUpdateServiceInitializer().initialize_tweet_update_service()
+    UserTopicService().init_update_support_follower()
 
 
 def parse_arguments():

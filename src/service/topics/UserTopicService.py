@@ -1,5 +1,6 @@
 import csv
 import datetime
+from os.path import abspath, join, dirname
 from threading import Thread
 
 import numpy as np
@@ -16,11 +17,10 @@ from src.exception.NonExistentDataForMatrixError import NonExistentDataForMatrix
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
 
+SAVE_PATH = f"{abspath(join(dirname(__file__), '../../../../'))}/data/"
+
 
 class UserTopicService:
-    # TODO fle path
-    # FILE_PATH = f"{abspath(join(dirname(__file__), '../../'))}/resources/candidates.json"
-
     # TODO calcular la similitud random a partir de las similitudes ya calculadas.
     # Hay que hacer algo parecido a lo que se hace en el algoritmo para multiplicar la matriz.
     # Calcular la similitud random ponderada, es decir la sumatoria de
@@ -35,7 +35,7 @@ class UserTopicService:
     def init_process(cls):
         try:
             cls.get_logger().info("Calculating User-Topic Matrix")
-            cls.calculate_users_similarity(datetime.datetime.today())
+            cls.calculate_users_similarity(datetime.datetime(2019, 8, 1))
         except NonExistentDataForMatrixError as e:
             cls.get_logger().error("Error Calculating User-Topic Matrix. No data are retrieved.")
             SlackHelper().post_message_to_channel(
@@ -85,7 +85,7 @@ class UserTopicService:
 
         # Save matrix
         cls.save_data(clean_matrix, new_users_index, date)
-        cls.get_logger().info("Finished process ")
+        cls.get_logger().info("Finished process. Data are saved correctly.")
         return clean_matrix, new_users_index
 
     @classmethod
@@ -117,6 +117,7 @@ class UserTopicService:
         all_topics_sorted = CooccurrenceGraphDAO().get_all_sorted_topics()
         topics_quantity = len(all_topics_sorted)
         cls.get_logger().info(f"All topics retrieved. They are {topics_quantity}.")
+
         hashtags_topics_data = HashtagsTopicsDAO().get_required_hashtags(last_3_days_hashtags, hashtags_index, date)
         if len(hashtags_topics_data) == 0: raise NonExistentDataForMatrixError("Hashtag-Topic")
         hashtags_topics_matrix = cls.get_matrix_from_data(hashtags_topics_data, hashtags_quantity, topics_quantity)
@@ -137,7 +138,7 @@ class UserTopicService:
     @classmethod
     def get_matrix_from_data(cls, data, M, N):
         table = pd.DataFrame(data, columns=['x', 'y', 'weight'])
-        return csr_matrix((table.weight, (table.x, table.y)), shape=(M, N), dtype='float16')
+        return csr_matrix((table.weight, (table.x, table.y)), shape=(M, N), dtype='float32')
 
     @classmethod
     def get_matrix_with_most_used_topics(cls, users_topics_matrix):
@@ -175,9 +176,9 @@ class UserTopicService:
     def save_data(cls, matrix, users_index, date):
         """ Method which saves tf-idf matrix"""
         date_name = str(date.year) + str(date.month) + str(date.day)
-        save_npz(f'{date_name}-matrix', matrix)
+        save_npz(SAVE_PATH + f'{date_name}-matrix', matrix)
 
-        with open(date_name + '-index-bis.csv', 'w') as csv_file:
+        with open(SAVE_PATH + f'{date_name}-index-bis.csv', 'w') as csv_file:
             writer = csv.writer(csv_file)
             for key, val in users_index.items():
                 writer.writerow([key, val])
@@ -198,7 +199,7 @@ class UserTopicService:
             user_id = user['_id']
 
             # User who have not one probability greater than limit, is discarded
-            if max_probability_support < 0.8 or user_id not in users_index:
+            if max_probability_support <= 0.8 or user_id not in users_index:
                 continue
 
             support_index = support_vector.index(max_probability_support)

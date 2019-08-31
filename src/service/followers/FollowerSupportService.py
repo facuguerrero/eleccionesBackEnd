@@ -64,7 +64,7 @@ class FollowerSupportService:
 
             if sum(user_rt_vector) > 0:
                 rt_vectors[user] = user_rt_vector
-
+        # TODO aca agregar el first_rt_vector
         cls.get_logger().info("RT vectors are created correctly. ")
         return rt_vectors, candidate_index, groups_quantity, candidate_group
 

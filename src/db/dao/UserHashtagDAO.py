@@ -15,7 +15,7 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
         self.user_hashtags_count = {}
 
     def get_last_10_days_hashtags(self, date):
-        """ Get las 3 days hashtag's list. """
+        """ Get las 10 days hashtag's list. """
         users_hashtags = self.retrieve_last_10_days_data(date)
 
         hashtags = set()
@@ -34,7 +34,7 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
         return sorted(list(hashtags)), users
 
     def retrieve_last_10_days_data(self, date):
-        """ Get iterator of last 3 days user-hashtags. """
+        """ Get iterator of last 10 days user-hashtags. """
         init_first_hour, yesterday_last_hour = self.get_init_and_end_dates(date)
         return self.get_all({'$and': [
             {'timestamp': {'$gte': init_first_hour}},

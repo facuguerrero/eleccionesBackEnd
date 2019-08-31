@@ -18,12 +18,12 @@ class DateUtils:
     @staticmethod
     def date_at_first_hour(value):
         """ Returns a new datetime object at 00:00:00 of given date. """
-        return value.replace(hour=0, minute=0, second=0, microsecond=0)
+        return value.replace(hour=0, minute=0, second=0)
 
     @staticmethod
     def date_at_last_hour(value):
         """ Returns a new datetime object at 23:59:59 of given date. """
-        return value.replace(hour=23, minute=59, second=59, microsecond=0)
+        return value.replace(hour=23, minute=59, second=59)
 
     @staticmethod
     def last_second_of_day(value):
