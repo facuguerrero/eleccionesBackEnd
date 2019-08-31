@@ -43,7 +43,6 @@ class UserTopicService:
         except Exception as e:
             cls.get_logger().error("Error Calculating User-Topic Matrix")
             cls.get_logger().error(e)
-            cls.get_logger().error(e.__traceback__)
             # SlackHelper().post_message_to_channel('Fallo el update de follower support.', '#errors')
 
     @classmethod
@@ -101,8 +100,8 @@ class UserTopicService:
         last_3_days_hashtags, users_with_hashtags = UserHashtagDAO().get_last_10_days_hashtags(date)
         hashtags_quantity = len(last_3_days_hashtags)
         users_quantity = len(users_with_hashtags)
-        cls.get_logger().info(f"All hashtags from 10 days ago are retrieved. \
-                                They are {hashtags_quantity} from {users_quantity} users.")
+        cls.get_logger().info(
+            f"All hashtags from 10 days ago are retrieved. They are {hashtags_quantity} from {users_quantity} users.")
 
         # Get an auxiliary structure
         hashtags_index = cls.get_hashtags_index(last_3_days_hashtags)
@@ -111,7 +110,8 @@ class UserTopicService:
         # Users_index are the user's row in matrix
         users_hashtags_data, users_index = UserHashtagDAO().get_last_10_days_users_and_hashtags(hashtags_index)
         if len(users_hashtags_data) == 0: raise NonExistentDataForMatrixError("User-Hashtag")
-        users_hashtags_matrix = cls.get_matrix_from_data(users_hashtags_data, users_quantity, hashtags_quantity)
+        users_hashtags_matrix = cls.get_matrix_from_data_with_dtype(users_hashtags_data, users_quantity,
+                                                                    hashtags_quantity)
         cls.get_logger().info(f"Users-Hashtags Matrix dimentions: N {users_quantity}, M {hashtags_quantity}")
 
         # Get hashtags-topics matrix
@@ -121,7 +121,8 @@ class UserTopicService:
 
         hashtags_topics_data = HashtagsTopicsDAO().get_required_hashtags(last_3_days_hashtags, hashtags_index, date)
         if len(hashtags_topics_data) == 0: raise NonExistentDataForMatrixError("Hashtag-Topic")
-        hashtags_topics_matrix = cls.get_matrix_from_data(hashtags_topics_data, hashtags_quantity, topics_quantity)
+        hashtags_topics_matrix = cls.get_matrix_from_data_with_dtype(hashtags_topics_data, hashtags_quantity,
+                                                                     topics_quantity)
         cls.get_logger().info(f"Hashtags-Topics Matrix dimentions: N {hashtags_quantity}, M {topics_quantity}")
 
         return users_hashtags_matrix, hashtags_topics_matrix, users_index
@@ -137,9 +138,13 @@ class UserTopicService:
         return hashtags_index
 
     @classmethod
+    def get_matrix_from_data_with_dtype(cls, data, M, N):
+        return cls.get_matrix_from_data(data, M, N).asType("float32")
+
+    @classmethod
     def get_matrix_from_data(cls, data, M, N):
         table = pd.DataFrame(data, columns=['x', 'y', 'weight'])
-        return csr_matrix((table.weight, (table.x, table.y)), shape=(M, N), dtype='float32')
+        return csr_matrix((table.weight, (table.x, table.y)), shape=(M, N))
 
     @classmethod
     def get_matrix_with_most_used_topics(cls, users_topics_matrix):
@@ -213,7 +218,7 @@ class UserTopicService:
     @classmethod
     def get_matrix_by_group(cls, matrix, group_vector, users_quantity):
         """ Return group matrix without 0's"""
-        selected_users_vector = cls.get_matrix_from_data(group_vector, users_quantity, 1)
+        selected_users_vector = cls.get_matrix_from_data_with_dtype(group_vector, users_quantity, 1)
 
         group_matrix = matrix.multiply(selected_users_vector)
         group_matrix = group_matrix[group_matrix.getnnz(1) > 0]
