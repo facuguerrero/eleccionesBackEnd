@@ -25,9 +25,6 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
     def get_required_hashtags(self, all_hashtags, hashtags_index, date):
         """ Retrieve all topics by hashtags. """
         init_first_hour, yesterday_last_hour = self.get_init_and_end_dates(date)
-        self.logger.info(init_first_hour)
-        self.logger.info(yesterday_last_hour)
-        self.logger.info(len(all_hashtags))
 
         hashtags_topics = self.get_all({'$and': [
             {'start_date': init_first_hour},
@@ -42,7 +39,6 @@ class HashtagsTopicsDAO(GenericDAO, metaclass=Singleton):
 
             for topic in hashtag_topics['topics']:
                 position_vectors.append([hashtag_index, int(topic), 1])
-        self.logger.info(len(position_vectors))
         return position_vectors
 
     @staticmethod

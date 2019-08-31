@@ -43,6 +43,7 @@ class UserTopicService:
         except Exception as e:
             cls.get_logger().error("Error Calculating User-Topic Matrix")
             cls.get_logger().error(e)
+            cls.get_logger().error(e.__traceback__)
             # SlackHelper().post_message_to_channel('Fallo el update de follower support.', '#errors')
 
     @classmethod
