@@ -92,10 +92,10 @@ class UserTopicService:
                     partial_totals.append(len(partial_matrix_result[slices[x]: slices[x + 1] - 1].data))
                 del partial_matrix_result
 
-            mean = 0
-            for x in range(len(partial_means)):
-                mean += partial_means[x] * partial_totals[x]
-            return mean / sum(partial_totals)
+        mean = 0
+        for x in range(len(partial_means)):
+            mean += partial_means[x] * partial_totals[x]
+        return mean / sum(partial_totals)
 
     @classmethod
     def calculate_and_save_users_topics_matrix(cls, date):
