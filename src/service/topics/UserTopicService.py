@@ -54,38 +54,46 @@ class UserTopicService:
         users_by_group = cls.get_grouped_users(users_index)
 
         # Separate users by support
-        grouped_matrixes = []
+        grouped_matrices = []
         for group in sorted(users_by_group.keys()):
             matrix_by_group = cls.get_matrix_by_group(users_topic_matrix, users_by_group[group], users_quantity)
-            grouped_matrixes.append(cls.get_sliced_matrix(matrix_by_group))
+            grouped_matrices.append(cls.get_sliced_matrix(matrix_by_group))
         cls.get_logger().info('All matrix by group are calculated and sliced correctly.')
 
         # Calculate similarity between all groups
-        # groups_quantity = len(grouped_matrixes)
-        # for x in range(groups_quantity):
+        groups_quantity = len(grouped_matrices)
+        for x in range(groups_quantity):
+            m1 = grouped_matrices[x]
+            for y in range(x, groups_quantity):
+                m2 = grouped_matrices[y]
+                cls.multiply_matrices_and_get_mean(m1, m2)
 
-    # TODO pasar abajo de todo
     @classmethod
-    def get_sliced_matrix(cls, matrix):
-        """ If matrix dimention is greater than 20000, the matrix is sliced. """
-        M = matrix.get_shape()[0]
+    def multiply_matrices_and_get_mean(cls, m1, m2):
+        """ Multiply 2 large matrices and return the result's mean. """
+        partial_means = []
+        partial_totals = []
 
-        if M < 20000:
-            cls.get_logger().info(f'Matrix are not sliced. {M}')
-            return [matrix]
+        # Multiply every matrix's part
+        for slice_m1 in m1:
+            for slice_m2 in m2:
+                partial_matrix_result = slice_m1.dot(slice_m2.transpose()).astype(dtype='float32')
 
-        slices = int(M / 20000)
-        limit = int(M / slices)
-        bounds = [0]
-        for x in range(1, slices):
-            bounds.append(limit * x)
-        bounds.append(M + 1)
+                # Eliminate similarity between same users
+                partial_matrix_result.setdiag(0)
+                partial_matrix_result.eliminate_zeros()
+                M = partial_matrix_result.shape[0]
 
-        sliced_matrix = []
-        for x in range(len(bounds) - 1):
-            sliced_matrix.append(matrix[bounds[x]: (bounds[x + 1] - 1)])
-            cls.get_logger().info(f'Matrix bounds {bounds[x]} - {bounds[x + 1] - 1}')
-        return sliced_matrix
+                slices = cls.get_bounds(M)
+                for x in range(len(slices) - 1):
+                    partial_means.append(partial_matrix_result[slices[x]: slices[x + 1] - 1].mean(dtype='float16'))
+                    partial_totals.append(len(partial_matrix_result[slices[x]: slices[x + 1] - 1].data))
+                del partial_matrix_result
+
+            mean = 0
+            for x in range(len(partial_means)):
+                mean += partial_means[x] * partial_totals[x]
+            cls.get_logger().info(f'Matrix mean is: {mean / sum(partial_totals)}')
 
     @classmethod
     def calculate_and_save_users_topics_matrix(cls, date):
@@ -254,6 +262,31 @@ class UserTopicService:
         group_matrix = matrix.multiply(selected_users_vector)
         group_matrix = group_matrix[group_matrix.getnnz(1) > 0]
         return group_matrix.astype("float32")
+
+    @classmethod
+    def get_sliced_matrix(cls, matrix):
+        """ If matrix dimention is greater than 20000, the matrix is sliced. """
+        M = matrix.get_shape()[0]
+
+        if M < 20000:
+            cls.get_logger().info(f'Matrix are not sliced. {M}')
+            return [matrix]
+
+        bounds = cls.get_bounds(M, int(M / 20000))
+        sliced_matrix = []
+        for x in range(len(bounds) - 1):
+            sliced_matrix.append(matrix[bounds[x]: (bounds[x + 1] - 1)])
+            cls.get_logger().info(f'Matrix bounds {bounds[x]} - {bounds[x + 1] - 1}')
+        return sliced_matrix
+
+    @classmethod
+    def get_bounds(cls, M, slices=4):
+        limit = int(M / slices)
+        bounds = [0]
+        for x in range(1, slices):
+            bounds.append(limit * x)
+        bounds.append(M + 1)
+        return bounds
 
     @classmethod
     def get_logger(cls):
