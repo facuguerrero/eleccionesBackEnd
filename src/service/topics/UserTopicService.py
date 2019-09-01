@@ -57,7 +57,6 @@ class UserTopicService:
         grouped_matrixes = []
         for group in sorted(users_by_group.keys()):
             matrix_by_group = cls.get_matrix_by_group(users_topic_matrix, users_by_group[group], users_quantity)
-            cls.get_logger().info(f'Users quantity of group: {matrix_by_group.shape}')
             grouped_matrixes.append(cls.get_sliced_matrix(matrix_by_group))
         cls.get_logger().info('All matrix by group are calculated and sliced correctly.')
 
@@ -72,8 +71,7 @@ class UserTopicService:
         M = matrix.get_shape()[0]
 
         if M < 20000:
-            cls.get_logger().info(M)
-            cls.get_logger().info('Matrix are not sliced.')
+            cls.get_logger().info(f'Matrix are not sliced. {M}')
             return [matrix]
 
         slices = int(M / 20000)
@@ -86,7 +84,7 @@ class UserTopicService:
         sliced_matrix = []
         for x in range(len(bounds) - 1):
             sliced_matrix.append(matrix[bounds[x]: (bounds[x + 1] - 1)])
-        cls.get_logger().info(f'Matrix are sliced in {len(sliced_matrix)}')
+            cls.get_logger().info(f'Matrix bounds {bounds[x]} - {bounds[x + 1] - 1}')
         return sliced_matrix
 
     @classmethod
