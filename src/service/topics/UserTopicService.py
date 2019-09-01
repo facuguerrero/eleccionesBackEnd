@@ -66,12 +66,12 @@ class UserTopicService:
             m1 = grouped_matrices[x]
             for y in range(x, groups_quantity):
                 m2 = grouped_matrices[y]
-                mean = cls.multiply_matrices_and_get_mean(m1, m2)
+                mean = cls.multiply_matrices_and_get_mean(m1, m2, x == y)
                 cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
         cls.get_logger().info('All similarities are calculated correctly.')
 
     @classmethod
-    def multiply_matrices_and_get_mean(cls, m1, m2):
+    def multiply_matrices_and_get_mean(cls, m1, m2, setdiag):
         """ Multiply 2 large matrices and return the result's mean. """
         partial_means = []
         partial_totals = []
@@ -82,8 +82,9 @@ class UserTopicService:
                 partial_matrix_result = slice_m1.dot(slice_m2.transpose()).astype(dtype='float32')
 
                 # Eliminate similarity between same users
-                partial_matrix_result.setdiag(0)
-                partial_matrix_result.eliminate_zeros()
+                if setdiag:
+                    partial_matrix_result.setdiag(0)
+                    partial_matrix_result.eliminate_zeros()
                 M = partial_matrix_result.shape[0]
 
                 slices = cls.get_bounds(M)
