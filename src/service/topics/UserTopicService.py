@@ -53,12 +53,41 @@ class UserTopicService:
         users_quantity = users_topic_matrix.get_shape()[0]
         users_by_group = cls.get_grouped_users(users_index)
 
+        # Separate users by support
         grouped_matrixes = []
-        for group in users_by_group:
+        for group in sorted(users_by_group.keys()):
             matrix_by_group = cls.get_matrix_by_group(users_topic_matrix, users_by_group[group], users_quantity)
             cls.get_logger().info(f'Users quantity of group: {matrix_by_group.shape}')
-            grouped_matrixes.append(matrix_by_group)
-        cls.get_logger().info('All matrix by group are calculated correctly.')
+            grouped_matrixes.append(cls.get_sliced_matrix(matrix_by_group))
+        cls.get_logger().info('All matrix by group are calculated and sliced correctly.')
+
+        # Calculate similarity between all groups
+        # groups_quantity = len(grouped_matrixes)
+        # for x in range(groups_quantity):
+
+    # TODO pasar abajo de todo
+    @classmethod
+    def get_sliced_matrix(cls, matrix):
+        """ If matrix dimention is greater than 20000, the matrix is sliced. """
+        M = matrix.get_shape()[0]
+
+        if M < 20000:
+            cls.get_logger().info(M)
+            cls.get_logger().info('Matrix are not sliced.')
+            return [matrix]
+
+        slices = int(M / 20000)
+        limit = int(M / slices)
+        bounds = [0]
+        for x in range(1, slices):
+            bounds.append(limit * x)
+        bounds.append(M + 1)
+
+        sliced_matrix = []
+        for x in range(len(bounds) - 1):
+            sliced_matrix.append(matrix[bounds[x]: (bounds[x + 1] - 1)])
+        cls.get_logger().info(f'Matrix are sliced in {len(sliced_matrix)}')
+        return sliced_matrix
 
     @classmethod
     def calculate_and_save_users_topics_matrix(cls, date):
