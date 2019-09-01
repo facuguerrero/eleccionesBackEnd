@@ -66,7 +66,9 @@ class UserTopicService:
             m1 = grouped_matrices[x]
             for y in range(x, groups_quantity):
                 m2 = grouped_matrices[y]
-                cls.multiply_matrices_and_get_mean(m1, m2)
+                mean = cls.multiply_matrices_and_get_mean(m1, m2)
+                cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
+        cls.get_logger().info('All similarities are calculated correctly.')
 
     @classmethod
     def multiply_matrices_and_get_mean(cls, m1, m2):
@@ -93,7 +95,7 @@ class UserTopicService:
             mean = 0
             for x in range(len(partial_means)):
                 mean += partial_means[x] * partial_totals[x]
-            cls.get_logger().info(f'Matrix mean is: {mean / sum(partial_totals)}')
+            return mean / sum(partial_totals)
 
     @classmethod
     def calculate_and_save_users_topics_matrix(cls, date):
