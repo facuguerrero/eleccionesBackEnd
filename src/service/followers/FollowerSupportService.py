@@ -19,6 +19,7 @@ class FollowerSupportService:
     def init_process(cls):
         try:
             cls.update_support_follower()
+            SlackHelper().post_message_to_channel('Se actualizo correctamente a quien apoya cada seguidor.', '#reports')
         except Exception as e:
             cls.get_logger().error("FollowerSupport updating failed.")
             cls.get_logger().error(e)
@@ -71,10 +72,8 @@ class FollowerSupportService:
             user_id = user['_id']
             actual_rt_vector = rt_vectors.get(user_id, None)
             final_rt_vector = user['first_rt_vector']
-            cls.get_logger().info(f'user_id: {user_id}, actual: {actual_rt_vector}, before:{final_rt_vector}')
             if actual_rt_vector:
                 final_rt_vector = [x + y for x, y in zip(actual_rt_vector, final_rt_vector)]
-            cls.get_logger().info(f'user_id: {user_id}, final:{final_rt_vector}')
             rt_vectors[user_id] = final_rt_vector
 
         cls.get_logger().info("RT vectors are created correctly.")
