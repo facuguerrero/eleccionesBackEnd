@@ -35,7 +35,7 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        sdate = datetime.datetime(2019, 6, 20)
+        sdate = datetime.datetime(2019, 6, 24)
         edate = datetime.datetime(2019, 9, 2)
 
         delta = edate - sdate
@@ -51,7 +51,8 @@ class UserTopicService:
         except NonExistentDataForMatrixError as e:
             cls.get_logger().error("Error Calculating User-Topic Matrix. No data are retrieved.")
             SlackHelper().post_message_to_channel(
-                f'Fallo el calculo de similitudes. No se obtuvo data para la matriz {e.matrix}.', '#errors')
+                f'Fallo el calculo de similitudes. No se obtuvo data para la matriz {e.matrix} en el día {str(date)}.',
+                '#errors')
         except Exception as e:
             cls.get_logger().error("Error Calculating User-Topic Matrix")
             cls.get_logger().error(e)
@@ -300,7 +301,7 @@ class UserTopicService:
         M = matrix.get_shape()[0]
 
         if M < 20000:
-            cls.get_logger().info(f'Matrix are not sliced. {M}')
+            # cls.get_logger().info(f'Matrix are not sliced. {M}')
             return [matrix]
 
         bounds = cls.get_bounds(M, int(M / 20000))
