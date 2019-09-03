@@ -47,7 +47,7 @@ class UserTopicService:
         try:
             cls.get_logger().info(f"Calculating User-Topic Matrix for {str(date)}")
             cls.calculate_users_similarity(date)
-            SlackHelper().post_message_to_channel('Similitud calculada correctamente.', '#reports')
+            SlackHelper().post_message_to_channel(f'Similitud calculada correctamente {str(date)}', '#reports')
         except NonExistentDataForMatrixError as e:
             cls.get_logger().error("Error Calculating User-Topic Matrix. No data are retrieved.")
             SlackHelper().post_message_to_channel(
