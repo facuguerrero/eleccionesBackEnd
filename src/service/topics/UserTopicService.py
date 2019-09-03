@@ -12,8 +12,10 @@ from sklearn.preprocessing import normalize
 from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
+from src.db.dao.SimilarityDAO import SimilarityDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.exception.NonExistentDataForMatrixError import NonExistentDataForMatrixError
+from src.model.Similarities import Similarities
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
 
@@ -61,13 +63,23 @@ class UserTopicService:
         cls.get_logger().info('All matrix by group are calculated and sliced correctly.')
 
         # Calculate similarity between all groups
+        means = []
+        totals = []
+        similarities = Similarities(str(date))
         groups_quantity = len(grouped_matrices)
         for x in range(groups_quantity):
             m1 = grouped_matrices[x]
             for y in range(x, groups_quantity):
                 m2 = grouped_matrices[y]
-                mean = cls.multiply_matrices_and_get_mean(m1, m2, x == y)
+                sum_means, total = cls.multiply_matrices_and_get_mean(m1, m2, x == y)
+
+                mean = sum_means / total
+                means.append(mean)
+                totals.append(total)
+
+                similarities.add_similarity(f"{x}-{y}", mean)
                 cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
+        SimilarityDAO().insert_similarities(similarities)
         cls.get_logger().info('All similarities are calculated correctly.')
 
     @classmethod
@@ -84,7 +96,7 @@ class UserTopicService:
                 # Eliminate similarity between same users
                 if setdiag:
                     partial_matrix_result.setdiag(0)
-                    partial_matrix_result.eliminate_zeros()
+                partial_matrix_result.eliminate_zeros()
                 M = partial_matrix_result.shape[0]
 
                 slices = cls.get_bounds(M)
@@ -96,7 +108,7 @@ class UserTopicService:
         mean = 0
         for x in range(len(partial_means)):
             mean += partial_means[x] * partial_totals[x]
-        return mean / sum(partial_totals)
+        return mean, sum(partial_totals)
 
     @classmethod
     def calculate_and_save_users_topics_matrix(cls, date):
