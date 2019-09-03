@@ -36,16 +36,16 @@ class UserTopicService:
     @classmethod
     def init_process(cls):
         sdate = datetime.datetime(2019, 6, 20)
-        edate = datetime.datetime(2019, 6, 22)
+        edate = datetime.datetime(2019, 9, 2)
 
         delta = edate - sdate
         for i in range(delta.days + 1):
-            cls.get_logger().info(sdate + datetime.timedelta(days=i))
+            cls.init_process_with_date(sdate + datetime.timedelta(days=i))
 
     @classmethod
     def init_process_with_date(cls, date):
         try:
-            cls.get_logger().info("Calculating User-Topic Matrix")
+            cls.get_logger().info(f"Calculating User-Topic Matrix for {str(date)}")
             cls.calculate_users_similarity(date)
             SlackHelper().post_message_to_channel('Similitud calculada correctamente.', '#reports')
         except NonExistentDataForMatrixError as e:
@@ -86,7 +86,7 @@ class UserTopicService:
                 totals.append(total)
 
                 similarities.add_similarity(f"{x}-{y}", mean)
-                cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
+                # cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
 
         random_mean = cls.get_weighted_mean(means, totals)
         similarities.add_similarity('random', random_mean)
@@ -307,7 +307,7 @@ class UserTopicService:
         sliced_matrix = []
         for x in range(len(bounds) - 1):
             sliced_matrix.append(matrix[bounds[x]: (bounds[x + 1] - 1)])
-            cls.get_logger().info(f'Matrix bounds {bounds[x]} - {bounds[x + 1] - 1}')
+            # cls.get_logger().info(f'Matrix bounds {bounds[x]} - {bounds[x + 1] - 1}')
         return sliced_matrix
 
     @classmethod
