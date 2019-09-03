@@ -34,12 +34,13 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        sdate = datetime.datetime(2019, 6, 24)
-        edate = datetime.datetime(2019, 9, 2)
+        cls.init_process_with_date(datetime.datetime(2019, 7, 17))
+        # sdate = datetime.datetime(2019, 6, 24)
+        # edate = datetime.datetime(2019, 9, 2)
 
-        delta = edate - sdate
-        for i in range(delta.days + 1):
-            cls.init_process_with_date(sdate + datetime.timedelta(days=i))
+        # delta = edate - sdate
+        # for i in range(delta.days + 1):
+        # cls.init_process_with_date(sdate + datetime.timedelta(days=i))
 
     @classmethod
     def init_process_with_date(cls, date):
