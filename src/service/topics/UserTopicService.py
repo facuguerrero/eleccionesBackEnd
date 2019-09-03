@@ -12,7 +12,6 @@ from sklearn.preprocessing import normalize
 from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
-from src.db.dao.SimilarityDAO import SimilarityDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.exception.NonExistentDataForMatrixError import NonExistentDataForMatrixError
 from src.model.Similarities import Similarities
@@ -69,7 +68,7 @@ class UserTopicService:
         grouped_matrices = []
         for group in sorted(users_by_group.keys()):
             matrix_by_group = cls.get_matrix_by_group(users_topic_matrix, users_by_group[group], users_quantity)
-            grouped_matrices.append(cls.get_sliced_matrix(matrix_by_group))
+            grouped_matrices.append(matrix_by_group)
         cls.get_logger().info('All matrix by group are calculated and sliced correctly.')
 
         # Calculate similarity between all groups
@@ -81,19 +80,34 @@ class UserTopicService:
             m1 = grouped_matrices[x]
             for y in range(x, groups_quantity):
                 m2 = grouped_matrices[y]
-                mean, total = cls.multiply_matrices_and_get_mean(m1, m2, x == y)
+                mean, total = cls.multiply_mat(m1, m2, x == y)
 
                 means.append(mean)
                 totals.append(total)
 
                 similarities.add_similarity(f"{x}-{y}", mean)
-                # cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
+                cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
 
-        random_mean = cls.get_weighted_mean(means, totals)
-        similarities.add_similarity('random', random_mean)
-        SimilarityDAO().insert_similarities(similarities)
+        # random_mean = cls.get_weighted_mean(means, totals)
+        # similarities.add_similarity('random', random_mean)
+        # SimilarityDAO().insert_similarities(similarities)
 
         cls.get_logger().info('All similarities are calculated correctly.')
+
+    @classmethod
+    def multiply_mat(cls, m1, m2, setdiag):
+        """ Multiply 2 large matrices and return the result's mean. """
+
+        partial_matrix_result = m1.dot(m2.transpose()).astype(dtype='float32')
+
+        # Eliminate similarity between same users
+        if setdiag:
+            partial_matrix_result.setdiag(0)
+        partial_matrix_result.eliminate_zeros()
+        M = partial_matrix_result.shape[0]
+
+        return partial_matrix_result.mean(dtype='float16'), len(partial_matrix_result.data)
+
 
     @classmethod
     def multiply_matrices_and_get_mean(cls, m1, m2, setdiag):
