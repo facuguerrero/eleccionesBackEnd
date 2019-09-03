@@ -71,17 +71,18 @@ class UserTopicService:
             m1 = grouped_matrices[x]
             for y in range(x, groups_quantity):
                 m2 = grouped_matrices[y]
-                sum_means, total = cls.multiply_matrices_and_get_mean(m1, m2, x == y)
+                mean, total = cls.multiply_matrices_and_get_mean(m1, m2, x == y)
 
-                mean = sum_means / total
                 means.append(mean)
                 totals.append(total)
 
                 similarities.add_similarity(f"{x}-{y}", mean)
                 cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
-        cls.get_logger().info(f'{similarities.timestamp}')
-        cls.get_logger().info(f'{similarities.similarities}')
+
+        random_mean = cls.get_weighted_mean(means, totals)
+        similarities.add_similarity('random', random_mean)
         SimilarityDAO().insert_similarities(similarities)
+
         cls.get_logger().info('All similarities are calculated correctly.')
 
     @classmethod
@@ -107,10 +108,14 @@ class UserTopicService:
                     partial_totals.append(len(partial_matrix_result[slices[x]: slices[x + 1] - 1].data))
                 del partial_matrix_result
 
+        return cls.get_weighted_mean(partial_means, partial_totals), sum(partial_totals)
+
+    @classmethod
+    def get_weighted_mean(cls, means, totals):
         mean = 0
-        for x in range(len(partial_means)):
-            mean += partial_means[x] * partial_totals[x]
-        return mean, sum(partial_totals)
+        for x in range(len(means)):
+            mean += means[x] * totals[x]
+        return mean / sum(totals)
 
     @classmethod
     def calculate_and_save_users_topics_matrix(cls, date):
