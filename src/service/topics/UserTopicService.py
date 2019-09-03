@@ -35,10 +35,19 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
+        sdate = datetime.datetime(2019, 6, 20)
+        edate = datetime.datetime(2019, 6, 22)
+
+        delta = edate - sdate
+        for i in range(delta.days + 1):
+            cls.get_logger().info(sdate + datetime.timedelta(days=i))
+
+    @classmethod
+    def init_process_with_date(cls, date):
         try:
             cls.get_logger().info("Calculating User-Topic Matrix")
-            cls.calculate_users_similarity(datetime.datetime(2019, 8, 1))
-            # SlackHelper().post_message_to_channel('Similitud calculada correctamente.', '#reports')
+            cls.calculate_users_similarity(date)
+            SlackHelper().post_message_to_channel('Similitud calculada correctamente.', '#reports')
         except NonExistentDataForMatrixError as e:
             cls.get_logger().error("Error Calculating User-Topic Matrix. No data are retrieved.")
             SlackHelper().post_message_to_channel(
@@ -46,7 +55,7 @@ class UserTopicService:
         except Exception as e:
             cls.get_logger().error("Error Calculating User-Topic Matrix")
             cls.get_logger().error(e)
-            # SlackHelper().post_message_to_channel('Fallo el update de follower support.', '#errors')
+            SlackHelper().post_message_to_channel('Fallo el update de follower support.', '#errors')
 
     @classmethod
     def calculate_users_similarity(cls, date):
