@@ -79,6 +79,8 @@ class UserTopicService:
 
                 similarities.add_similarity(f"{x}-{y}", mean)
                 cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
+        cls.get_logger().info(f'{similarities.timestamp}')
+        cls.get_logger().info(f'{similarities.similarities}')
         SimilarityDAO().insert_similarities(similarities)
         cls.get_logger().info('All similarities are calculated correctly.')
 
