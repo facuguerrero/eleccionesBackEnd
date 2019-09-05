@@ -12,7 +12,6 @@ from sklearn.preprocessing import normalize
 from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
-from src.db.dao.SimilarityDAO import SimilarityDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.exception.NonExistentDataForMatrixError import NonExistentDataForMatrixError
 from src.model.Similarities import Similarities
@@ -35,12 +34,7 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        sdate = datetime.datetime(2019, 7, 18)
-        edate = datetime.datetime(2019, 9, 2)
-
-        delta = edate - sdate
-        for i in range(delta.days + 1):
-            cls.init_process_with_date(sdate + datetime.timedelta(days=i))
+        cls.init_process_with_date(datetime.datetime(2019, 8, 17))
 
     @classmethod
     def init_process_with_date(cls, date):
@@ -87,11 +81,12 @@ class UserTopicService:
                 totals.append(total)
 
                 similarities.add_similarity(f"{x}-{y}", mean)
-                # cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
+                cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
 
         random_mean = cls.get_weighted_mean(means, totals)
-        similarities.add_similarity('random', random_mean)
-        SimilarityDAO().insert_similarities(similarities)
+        cls.get_logger().info(f'Similarity random: {random_mean}')
+        # similarities.add_similarity('random', random_mean)
+        # SimilarityDAO().insert_similarities(similarities)
 
         cls.get_logger().info('All similarities are calculated correctly.')
 
