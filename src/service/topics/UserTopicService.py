@@ -34,7 +34,7 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        cls.init_process_with_date(datetime.datetime(2019, 8, 17))
+        cls.init_process_with_date(datetime.datetime(2019, 7, 13))
 
     @classmethod
     def init_process_with_date(cls, date):
@@ -104,17 +104,21 @@ class UserTopicService:
                 # Eliminate similarity between same users
                 if setdiag:
                     partial_matrix_result.setdiag(0)
+
+                # Calculate old_shape because after eliminate 0's a row could disappear
                 old_shape = partial_matrix_result.shape
                 partial_matrix_result.eliminate_zeros()
-                M = partial_matrix_result.shape[0]
+                new_shape = partial_matrix_result.shape[0]
+                slices = cls.get_bounds(new_shape)
 
-                slices = cls.get_bounds(M)
                 for x in range(len(slices) - 1):
-                    aux_matrix = partial_matrix_result[slices[x]: slices[x + 1] - 1]
-                    difference = slices[x + 1] - slices[x]
-                    len_m = len(aux_matrix.data)
-                    partial_means.append(aux_matrix.mean(dtype='float16') * old_shape[1] * difference / len_m)
-                    partial_totals.append(len_m)
+                    sliced_matrix = partial_matrix_result[slices[x]: slices[x + 1] - 1]
+                    rows_quantity = slices[x + 1] - slices[x]
+                    len_sliced_matrix = len(sliced_matrix.data)
+
+                    partial_means.append(
+                        sliced_matrix.mean(dtype='float16') * old_shape[1] * rows_quantity / len_sliced_matrix)
+                    partial_totals.append(len_sliced_matrix)
                 del partial_matrix_result
 
         return cls.get_weighted_mean(partial_means, partial_totals), sum(partial_totals)
