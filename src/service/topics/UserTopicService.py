@@ -35,7 +35,7 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        sdate = datetime.datetime(2019, 6, 23)
+        sdate = datetime.datetime(2019, 6, 24)
         edate = datetime.datetime(2019, 9, 5)
 
         delta = edate - sdate
