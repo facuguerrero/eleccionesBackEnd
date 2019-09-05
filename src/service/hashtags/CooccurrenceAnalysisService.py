@@ -16,17 +16,14 @@ class CooccurrenceAnalysisService:
     START_DAY = datetime.combine(datetime.strptime('2019-01-01', '%Y-%m-%d').date(), datetime.min.time())
 
     @classmethod
-    def analyze(cls, no_accumulate=False, last_day=None):
+    def analyze(cls, last_day=None):
         """ Run cooccurrence analysis for the last day with all its intervals. """
         # Run for previous day
         if not last_day:  # Parameter last_day should be the required day at 00:00:00
             last_day = datetime.combine((datetime.now() - timedelta(days=1)).date(), datetime.min.time())
-        cls.get_logger().info(f'Starting cooccurrence analysis for single day {last_day.date()}.')
-        cls.analyze_cooccurrence_for_window(last_day)
-        cls.get_logger().info('Daily cooccurrence analysis done.')
         # Get last day at 23:59:59
         last_day = last_day + timedelta(days=1) - timedelta(seconds=1)  # This works because Python's sum is immutable
-        # Run for last 3, 7, 10 and 30 days. Ten is for similarities.
+        # Run for last N days.
         for delta in ConfigurationManager().get_list('cooccurrence_deltas'):
             # Calculate start date from delta
             start_date = datetime.combine((last_day - timedelta(days=int(delta))).date(), datetime.min.time())
@@ -34,11 +31,6 @@ class CooccurrenceAnalysisService:
             cls.get_logger().info(f'Starting cooccurrence analysis for last {delta} days.')
             cls.analyze_cooccurrence_for_window(start_date, last_day)
             cls.get_logger().info(f'Cooccurrence analysis for last {delta} days done.')
-        if not no_accumulate:
-            # Run for accumulate TODO: Should be removed when the other intervals are working
-            cls.get_logger().info(f'Starting cooccurrence analysis for full period from first day until yesterday.')
-            cls.analyze_cooccurrence_for_window(cls.START_DAY, last_day)
-            cls.get_logger().info(f'Accumulated cooccurrence analysis done.')
         # Run usage analysis as soon as possible
         HashtagUsageService.calculate_today_topics_hashtag_usage()
 
