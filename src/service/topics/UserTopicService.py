@@ -109,13 +109,17 @@ class UserTopicService:
                 # Eliminate similarity between same users
                 if setdiag:
                     partial_matrix_result.setdiag(0)
+                old_shape = partial_matrix_result.shape
                 partial_matrix_result.eliminate_zeros()
                 M = partial_matrix_result.shape[0]
 
                 slices = cls.get_bounds(M)
                 for x in range(len(slices) - 1):
-                    partial_means.append(partial_matrix_result[slices[x]: slices[x + 1] - 1].mean(dtype='float16'))
-                    partial_totals.append(len(partial_matrix_result[slices[x]: slices[x + 1] - 1].data))
+                    aux_matrix = partial_matrix_result[slices[x]: slices[x + 1] - 1]
+                    difference = slices[x + 1] - slices[x]
+                    len_m = len(aux_matrix.data)
+                    partial_means.append(aux_matrix.mean(dtype='float16') * old_shape[1] * difference / len_m)
+                    partial_totals.append(len_m)
                 del partial_matrix_result
 
         return cls.get_weighted_mean(partial_means, partial_totals), sum(partial_totals)
