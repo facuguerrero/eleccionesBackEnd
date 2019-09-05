@@ -16,4 +16,4 @@ class CooccurrenceAnalysisResource(Resource):
         dates = [init + timedelta(days=i) for i in range((end-init).days + 1)]
         for date in dates:
             CooccurrenceAnalysisService.analyze(last_day=date)
-            SlackHelper.post_message_to_channel(f'Finished cooccurrence graph generation for date {end}.')
+            SlackHelper.post_message_to_channel(f'Finished cooccurrence graph generation for date {date}.')
