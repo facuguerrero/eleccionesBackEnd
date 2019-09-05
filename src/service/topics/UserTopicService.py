@@ -75,7 +75,7 @@ class UserTopicService:
         # Calculate similarity between all groups
         means = []
         totals = []
-        similarities = Similarities(str(date))
+        similarities = Similarities(str(date.year) + str(date.month) + str(date.day))
         groups_quantity = len(grouped_matrices)
         for x in range(groups_quantity):
             m1 = grouped_matrices[x]
