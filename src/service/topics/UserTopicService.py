@@ -156,7 +156,7 @@ class UserTopicService:
             f"Users-Topics clean Matrix Dimentions: {clean_matrix.get_shape()} and users_index {len(new_users_index)}")
 
         # Save matrix
-        cls.save_data(clean_matrix, new_users_index, date)
+        # cls.save_data(clean_matrix, new_users_index, date)
         cls.get_logger().info("Finished process. Data are saved correctly.")
         return clean_matrix, new_users_index
 
