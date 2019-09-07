@@ -23,10 +23,6 @@ SAVE_PATH = f"{abspath(join(dirname(__file__), '../../../../'))}/data/"
 
 
 class UserTopicService:
-    # TODO calcular la similitud random a partir de las similitudes ya calculadas.
-    # Hay que hacer algo parecido a lo que se hace en el algoritmo para multiplicar la matriz.
-    # Calcular la similitud random ponderada, es decir la sumatoria de
-    # la similitud calculada * cantidad de usuarios * cantidad usuarios -1 /2
 
     @classmethod
     def init_update_support_follower(cls):
@@ -35,8 +31,8 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        sdate = datetime.datetime(2019, 6, 24)
-        edate = datetime.datetime(2019, 9, 5)
+        sdate = datetime.datetime(2019, 9, 6)
+        edate = datetime.datetime(2019, 9, 7)
 
         delta = edate - sdate
         for i in range(delta.days + 1):
