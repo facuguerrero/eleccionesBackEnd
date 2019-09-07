@@ -303,14 +303,14 @@ class UserTopicService:
         M = matrix.get_shape()[0]
 
         if M < 20000:
-            # cls.get_logger().info(f'Matrix are not sliced. {M}')
+            cls.get_logger().info(f'Matrix are not sliced. {M}')
             return [matrix]
 
         bounds = cls.get_bounds(M, int(M / 20000))
         sliced_matrix = []
         for x in range(len(bounds) - 1):
             sliced_matrix.append(matrix[bounds[x]: (bounds[x + 1] - 1)])
-            # cls.get_logger().info(f'Matrix bounds {bounds[x]} - {bounds[x + 1] - 1}')
+            cls.get_logger().info(f'Matrix bounds {bounds[x]} - {bounds[x + 1] - 1}')
         return sliced_matrix
 
     @classmethod
