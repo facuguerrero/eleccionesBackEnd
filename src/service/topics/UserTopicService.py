@@ -94,9 +94,10 @@ class UserTopicService:
 
         similarities_wor = {}
         for groups, sim in similarities.similarities.items():
-            splited_key = groups.split('-')
-            new_key = REFERENCE[splited_key[0]] + '-' + REFERENCE[splited_key[1]]
-            similarities_wor[new_key] = sim - random_mean
+            if groups != 'random':
+                sliced_key = groups.split('-')
+                new_key = REFERENCE[sliced_key[0]] + '-' + REFERENCE[sliced_key[1]]
+                similarities_wor[new_key] = sim - random_mean
 
         similarities.set_similarities_wor(similarities_wor)
         SimilarityDAO().insert_similarities(similarities)
@@ -318,14 +319,14 @@ class UserTopicService:
         M = matrix.get_shape()[0]
 
         if M < 20000:
-            cls.get_logger().info(f'Matrix are not sliced. {M}')
+            # cls.get_logger().info(f'Matrix are not sliced. {M}')
             return [matrix]
 
         bounds = cls.get_bounds(M, int(M / 20000))
         sliced_matrix = []
         for x in range(len(bounds) - 1):
             sliced_matrix.append(matrix[bounds[x]: (bounds[x + 1] - 1)])
-            cls.get_logger().info(f'Matrix bounds {bounds[x]} - {bounds[x + 1] - 1}')
+            # cls.get_logger().info(f'Matrix bounds {bounds[x]} - {bounds[x + 1] - 1}')
         return sliced_matrix
 
     @classmethod

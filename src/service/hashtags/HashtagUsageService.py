@@ -6,6 +6,7 @@ from src.db.dao.HashtagUsageDAO import HashtagUsageDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.ShowableGraphDAO import ShowableGraphDAO
 from src.db.dao.TopicUsageDAO import TopicUsageDAO
+from src.service.topics.UserTopicService import UserTopicService
 from src.util.DateUtils import DateUtils
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
@@ -137,6 +138,7 @@ class HashtagUsageService:
             finally:
                 # Always free release the lock
                 ConcurrencyUtils().release_lock(lock_name)
+        UserTopicService().init_update_support_follower()
 
     @classmethod
     def __count_usages_for_topic(cls, topic, start, end, interval):
