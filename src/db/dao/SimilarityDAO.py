@@ -12,5 +12,6 @@ class SimilarityDAO(GenericDAO, metaclass=Singleton):
 
     def insert_similarities(self, similarity_object):
         """ Put new similarity data. """
-        update_dict = {'_id': similarity_object.timestamp, 'similarities': similarity_object.similarities}
+        update_dict = {'_id': similarity_object.timestamp, 'similarities': similarity_object.similarities,
+                       'similarities_without_random': similarity_object.similarities_wor}
         self.insert(update_dict)

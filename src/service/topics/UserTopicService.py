@@ -12,6 +12,7 @@ from sklearn.preprocessing import normalize
 from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
+from src.db.dao.SimilarityDAO import SimilarityDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.exception.NonExistentDataForMatrixError import NonExistentDataForMatrixError
 from src.model.Similarities import Similarities
@@ -19,6 +20,8 @@ from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
 
 SAVE_PATH = f"{abspath(join(dirname(__file__), '../../../../'))}/data/"
+REFERENCE = {'0': 'frentedetodos', '1': 'juntosporelcambio', '2': 'consensofederal', '3': 'frentedespertar',
+             '4': 'frentedeizquierda'}
 
 
 class UserTopicService:
@@ -31,8 +34,12 @@ class UserTopicService:
     @classmethod
     def init_process(cls):
         # cls.init_process_with_date(datetime.datetime.today())
-        cls.init_process_with_date(datetime.datetime(2019, 7, 23))
-        cls.init_process_with_date(datetime.datetime(2019, 8, 15))
+        cls.init_process_with_date(datetime.datetime(2019, 9, 8))
+        cls.init_process_with_date(datetime.datetime(2019, 9, 9))
+        cls.init_process_with_date(datetime.datetime(2019, 9, 10))
+        cls.init_process_with_date(datetime.datetime(2019, 9, 11))
+        # cls.init_process_with_date(datetime.datetime(2019, 7, 23))
+        # cls.init_process_with_date(datetime.datetime(2019, 8, 15))
 
     @classmethod
     def init_process_with_date(cls, date):
@@ -79,13 +86,20 @@ class UserTopicService:
                 totals.append(total)
 
                 similarities.add_similarity(f"{x}-{y}", mean)
-                cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
+                # cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
 
         random_mean = cls.get_weighted_mean(means, totals)
-        cls.get_logger().info(f'Random {random_mean}')
         similarities.add_similarity('random', random_mean)
-        # SimilarityDAO().insert_similarities(similarities)
+        # cls.get_logger().info(f'Random {random_mean}')
 
+        similarities_wor = {}
+        for groups, sim in similarities.similarities.items():
+            splited_key = groups.split('-')
+            new_key = REFERENCE[splited_key[0]] + '-' + REFERENCE[splited_key[1]]
+            similarities_wor[new_key] = sim - random_mean
+
+        similarities.set_similarities_wor(similarities_wor)
+        SimilarityDAO().insert_similarities(similarities)
         cls.get_logger().info('All similarities are calculated correctly.')
 
     @classmethod
@@ -129,7 +143,7 @@ class UserTopicService:
         return mean / sum(totals)
 
     @classmethod
-    def calculate_and_save_users_topics_matrix(cls, date):
+    def calculate_and_save_users_topics_matrix(cls, date, have_to_save=True):
         """ This method calculate the user-topic matrix. """
 
         # Retrieve necessaries data
@@ -156,7 +170,7 @@ class UserTopicService:
             f"Users-Topics clean Matrix Dimentions: {clean_matrix.get_shape()} and users_index {len(new_users_index)}")
 
         # Save matrix
-        # cls.save_data(clean_matrix, new_users_index, date)
+        if have_to_save: cls.save_data(clean_matrix, new_users_index, date)
         cls.get_logger().info("Finished process. Data are saved correctly.")
         return clean_matrix, new_users_index
 
@@ -265,11 +279,12 @@ class UserTopicService:
     def get_grouped_users(cls, users_index):
         """ Return users grouped by candidates' support. """
         # Retrieve users which have tweets
+
+        # para probar {"important": {'$exists': False}}
         active_users = RawFollowerDAO().get_all({
             "$and": [
                 {"probability_vector_support": {"$elemMatch": {"$gte": 0.8}}},
-                {"has_tweets": True},
-                {"important": {'$exists': False}}
+                {"has_tweets": True}
             ]})
         users_by_group = {}
         for user in active_users:
