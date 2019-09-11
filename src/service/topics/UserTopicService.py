@@ -33,11 +33,7 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        # cls.init_process_with_date(datetime.datetime.today())
-        cls.init_process_with_date(datetime.datetime(2019, 9, 8))
-        cls.init_process_with_date(datetime.datetime(2019, 9, 9))
-        cls.init_process_with_date(datetime.datetime(2019, 9, 10))
-        cls.init_process_with_date(datetime.datetime(2019, 9, 11))
+        cls.init_process_with_date(datetime.datetime.today())
         # cls.init_process_with_date(datetime.datetime(2019, 7, 23))
         # cls.init_process_with_date(datetime.datetime(2019, 8, 15))
 
