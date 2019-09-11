@@ -55,7 +55,7 @@ class UserTopicService:
         except Exception as e:
             cls.get_logger().error("Error Calculating User-Topic Matrix")
             cls.get_logger().error(e)
-            SlackHelper().post_message_to_channel('Fallo el update de follower support.', '#errors')
+            SlackHelper().post_message_to_channel(f'Fallo el update de follower support {str(date)}.', '#errors')
 
     @classmethod
     def calculate_users_similarity(cls, date):
