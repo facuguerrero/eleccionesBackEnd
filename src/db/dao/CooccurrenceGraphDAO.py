@@ -26,8 +26,8 @@ class CooccurrenceGraphDAO(GenericDAO, metaclass=Singleton):
         topic_ids = set()
         for graph in graphs:
             topic_ids.add(graph['topic_id'])
-        topics_list = list(topic_ids)
-        return sorted(topics_list)
+        topics_list = sorted(list(topic_ids))
+        return [str(topic) for topic in topics_list]
 
     def create_indexes(self):
         self.logger.info('Creating topic_id index for collection cooccurrence_graphs.')

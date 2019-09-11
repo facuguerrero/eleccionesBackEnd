@@ -19,6 +19,7 @@ class FollowerSupportService:
     def init_process(cls):
         try:
             cls.update_support_follower()
+            SlackHelper().post_message_to_channel('Se actualizo correctamente a quien apoya cada seguidor.', '#reports')
         except Exception as e:
             cls.get_logger().error("FollowerSupport updating failed.")
             cls.get_logger().error(e)
@@ -32,7 +33,7 @@ class FollowerSupportService:
 
         # Get followers which have tweets
         followers_with_tweets = RawFollowerDAO().get_all({'has_tweets': True})
-        cls.get_logger().info("Calculating probability vector support")
+        cls.get_logger().info("Calculating probability vector support.")
         for follower in followers_with_tweets:
             user_id = follower['_id']
             rt_vector = rt_vectors.get(user_id, [0] * groups_quantity)
@@ -49,7 +50,7 @@ class FollowerSupportService:
         """ Get data from db and create users_rt_vectors. """
         # {candidate: index}, [candidate_id]
         candidate_index, candidates_list, candidate_group, candidates_rt_cursor = cls.get_necessary_data()
-        cls.get_logger().info("Candidates and theirs rt are retrieved correctly. ")
+        cls.get_logger().info("Candidates and theirs rt are retrieved correctly.")
         groups_quantity = max(candidate_index.values()) + 1
         rt_vectors = {}
         for tweet in candidates_rt_cursor:
@@ -65,7 +66,17 @@ class FollowerSupportService:
             if sum(user_rt_vector) > 0:
                 rt_vectors[user] = user_rt_vector
 
-        cls.get_logger().info("RT vectors are created correctly. ")
+        users = RawFollowerDAO().get_all({'first_rt_vector': {'$exists': True}})
+        for user in users:
+
+            user_id = user['_id']
+            actual_rt_vector = rt_vectors.get(user_id, None)
+            final_rt_vector = user['first_rt_vector']
+            if actual_rt_vector:
+                final_rt_vector = [x + y for x, y in zip(actual_rt_vector, final_rt_vector)]
+            rt_vectors[user_id] = final_rt_vector
+
+        cls.get_logger().info("RT vectors are created correctly.")
         return rt_vectors, candidate_index, groups_quantity, candidate_group
 
     @classmethod

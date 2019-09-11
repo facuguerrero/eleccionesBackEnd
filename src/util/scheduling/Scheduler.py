@@ -19,25 +19,31 @@ class Scheduler(metaclass=Singleton):
 
     def set_up(self):
         """ Configure scheduler's jobs. """
+
         # Download new followers at 00:00:00 every day
         self.scheduler.add_job(func=FollowerUpdateService.update_followers, trigger='cron', hour=0, minute=0, second=0)
+
         # Adds all new followers
         self.scheduler.add_job(func=FollowersQueueService().add_last_downloaded_followers, trigger='cron', hour=4,
                                minute=0, second=0)
+
         # Adds not updated followers
-        self.scheduler.add_job(func=FollowersQueueService().add_not_updated_followers, trigger='cron', hour=8,
+        self.scheduler.add_job(func=FollowersQueueService().add_not_updated_followers, trigger='cron', hour=12,
                                minute=0, second=0)
-        self.scheduler.add_job(func=FollowersQueueService().add_not_updated_followers, trigger='cron', hour=17,
+        self.scheduler.add_job(func=FollowersQueueService().add_not_updated_followers, trigger='cron', hour=23,
                                minute=0, second=0)
+
         # Analyze cooccurrence at 00:01:00 every day
         self.scheduler.add_job(func=CooccurrenceAnalysisService.analyze, trigger='cron', hour=0, minute=1, second=0)
+
         # Send server status to Slack at 08:30:00 every day
         self.scheduler.add_job(func=SlackHelper.send_server_status, trigger='cron', hour=8, minute=30, second=0)
+
         # Update followers support
         self.scheduler.add_job(func=FollowerSupportService.init_update_support_follower, trigger='cron',
-                               day_of_week='sat', hour=16)
+                               day_of_week='sun', hour=12, minute=30)
         self.scheduler.add_job(func=FollowerSupportService.init_update_support_follower, trigger='cron',
-                               day_of_week='wed', hour=16)
+                               day_of_week='wed', hour=12, minute=30)
         # Add dashboard updating job
         update_hour = ConfigurationManager().get_int('dashboard_updating_time')
         self.scheduler.add_job(func=DashboardService.update_dashboard_data, trigger='cron', hour=update_hour)
