@@ -12,7 +12,6 @@ from sklearn.preprocessing import normalize
 from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
-from src.db.dao.SimilarityDAO import SimilarityDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.exception.NonExistentDataForMatrixError import NonExistentDataForMatrixError
 from src.model.Similarities import Similarities
@@ -33,9 +32,9 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        cls.init_process_with_date(datetime.datetime.today())
-        # cls.init_process_with_date(datetime.datetime(2019, 7, 23))
-        # cls.init_process_with_date(datetime.datetime(2019, 8, 15))
+        # cls.init_process_with_date(datetime.datetime.today())
+        cls.init_process_with_date(datetime.datetime(2019, 7, 23))
+        cls.init_process_with_date(datetime.datetime(2019, 8, 15))
 
     @classmethod
     def init_process_with_date(cls, date):
@@ -82,11 +81,11 @@ class UserTopicService:
                 totals.append(total)
 
                 similarities.add_similarity(f"{x}-{y}", mean)
-                # cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
+                cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
 
         random_mean = cls.get_weighted_mean(means, totals)
         similarities.add_similarity('random', random_mean)
-        # cls.get_logger().info(f'Random {random_mean}')
+        cls.get_logger().info(f'Random {random_mean}')
 
         similarities_wor = {}
         for groups, sim in similarities.similarities.items():
@@ -96,7 +95,7 @@ class UserTopicService:
                 similarities_wor[new_key] = sim - random_mean
 
         similarities.set_similarities_wor(similarities_wor)
-        SimilarityDAO().insert_similarities(similarities)
+        # SimilarityDAO().insert_similarities(similarities)
         cls.get_logger().info('All similarities are calculated correctly.')
 
     @classmethod
@@ -140,7 +139,7 @@ class UserTopicService:
         return mean / sum(totals)
 
     @classmethod
-    def calculate_and_save_users_topics_matrix(cls, date, have_to_save=True):
+    def calculate_and_save_users_topics_matrix(cls, date, have_to_save=False):
         """ This method calculate the user-topic matrix. """
 
         # Retrieve necessaries data
@@ -281,7 +280,8 @@ class UserTopicService:
         active_users = RawFollowerDAO().get_all({
             "$and": [
                 {"probability_vector_support": {"$elemMatch": {"$gte": 0.8}}},
-                {"has_tweets": True}
+                {"has_tweets": True},
+                {"important": False}
             ]})
         users_by_group = {}
         for user in active_users:
