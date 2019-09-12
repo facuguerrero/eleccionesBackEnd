@@ -16,6 +16,7 @@ from src.db.dao.SimilarityDAO import SimilarityDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.exception.NonExistentDataForMatrixError import NonExistentDataForMatrixError
 from src.model.Similarities import Similarities
+from src.util.DateUtils import DateUtils
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
 
@@ -33,7 +34,7 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        cls.init_process_with_date(datetime.datetime.today())
+        cls.init_process_with_date(DateUtils().date_at_first_hour(datetime.datetime.today()))
         # cls.init_process_with_date(datetime.datetime(2019, 7, 23))
         # cls.init_process_with_date(datetime.datetime(2019, 8, 15))
 
@@ -71,7 +72,7 @@ class UserTopicService:
         # Calculate similarity between all groups
         means = []
         totals = []
-        similarities = Similarities(str(date.year) + str(date.month) + str(date.day))
+        similarities = Similarities(date)
         groups_quantity = len(grouped_matrices)
         for x in range(groups_quantity):
             m1 = grouped_matrices[x]
