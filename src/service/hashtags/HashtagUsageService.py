@@ -6,6 +6,7 @@ from src.db.dao.HashtagUsageDAO import HashtagUsageDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.ShowableGraphDAO import ShowableGraphDAO
 from src.db.dao.TopicUsageDAO import TopicUsageDAO
+from src.service.topics.UserTopicService import UserTopicService
 from src.util.DateUtils import DateUtils
 from src.util.concurrency.AsyncThreadPoolExecutor import AsyncThreadPoolExecutor
 from src.util.concurrency.ConcurrencyUtils import ConcurrencyUtils
@@ -70,6 +71,7 @@ class HashtagUsageService:
         cls.calculate_topic_usage(cls.START_DAY, end_time, interval='days')
         # Log finish for time checking
         cls.get_logger().info('Topic usage calculation finished.')
+        UserTopicService().init_update_support_follower()
 
     @classmethod
     def calculate_hashtag_usage(cls, start, end, interval, supporters):
