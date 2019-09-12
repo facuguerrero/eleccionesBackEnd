@@ -71,6 +71,7 @@ class HashtagUsageService:
         cls.calculate_topic_usage(cls.START_DAY, end_time, interval='days')
         # Log finish for time checking
         cls.get_logger().info('Topic usage calculation finished.')
+        UserTopicService().init_update_support_follower()
 
     @classmethod
     def calculate_hashtag_usage(cls, start, end, interval, supporters):
@@ -138,7 +139,6 @@ class HashtagUsageService:
             finally:
                 # Always free release the lock
                 ConcurrencyUtils().release_lock(lock_name)
-        UserTopicService().init_update_support_follower()
 
     @classmethod
     def __count_usages_for_topic(cls, topic, start, end, interval):
