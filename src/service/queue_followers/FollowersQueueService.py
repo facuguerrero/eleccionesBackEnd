@@ -71,7 +71,7 @@ class FollowersQueueService(metaclass=Singleton):
             self.logger.error('There are not followers to update their tweets.')
             raise NoMoreFollowersToUpdateTweetsError()
 
-    def add_followers_to_be_updated(self, timedelta=50):
+    def add_followers_to_be_updated(self, timedelta=45):
         self.logger.info(
             f'Adding new followers to update their tweets. Actual size: {str(len(self.updating_followers))}')
         followers = RawFollowerDAO().get_random_followers_sample(list(self.processing_followers), timedelta)

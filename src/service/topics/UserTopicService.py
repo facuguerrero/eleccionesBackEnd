@@ -16,6 +16,7 @@ from src.db.dao.SimilarityDAO import SimilarityDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.exception.NonExistentDataForMatrixError import NonExistentDataForMatrixError
 from src.model.Similarities import Similarities
+from src.util.DateUtils import DateUtils
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
 
@@ -33,8 +34,8 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        # cls.init_process_with_date(DateUtils().date_at_first_hour(datetime.datetime.today()))
-        cls.init_process_with_date(datetime.datetime(2019, 8, 29))
+        cls.init_process_with_date(DateUtils().date_at_first_hour(datetime.datetime.today()))
+        # cls.init_process_with_date(datetime.datetime(2019, 8, 29))
         # cls.init_process_with_date(datetime.datetime(2019, 8, 15))
 
     @classmethod
