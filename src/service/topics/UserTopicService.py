@@ -35,7 +35,7 @@ class UserTopicService:
     @classmethod
     def init_process(cls):
         cls.init_process_with_date(DateUtils().date_at_first_hour(datetime.datetime.today()))
-        # cls.init_process_with_date(datetime.datetime(2019, 7, 23))
+        # cls.init_process_with_date(datetime.datetime(2019, 8, 29))
         # cls.init_process_with_date(datetime.datetime(2019, 8, 15))
 
     @classmethod
