@@ -1,7 +1,7 @@
 from twython import Twython
 
 
-class TwitterUtils:
+class   TwitterUtils:
 
     @classmethod
     def twitter(cls, credential):

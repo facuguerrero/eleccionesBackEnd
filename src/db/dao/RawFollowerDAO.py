@@ -41,6 +41,17 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
             {'$set': self.get_data_for_private(raw_follower)}
         )
 
+    def mark_as_private(self, user_id):
+        self.upsert(
+            {'_id': user_id},
+            {'$set': {'is_private': True}}
+        )
+
+    def find_non_important_users(self):
+        documents = self.get_all({'important': False}, {'_id': 1})
+        # We need to extract the element from the dictionary
+        return {document['_id'] for document in documents}
+
     def get_complete_data(self, raw_follower):
         data = self.get_partial_data(raw_follower)
         data['has_tweets'] = raw_follower.has_tweets

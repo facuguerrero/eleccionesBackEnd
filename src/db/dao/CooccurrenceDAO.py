@@ -27,9 +27,10 @@ class CooccurrenceDAO(GenericDAO, metaclass=Singleton):
                  'created_at': {'$gt': start_date, '$lt': end_date}}
         return self.get_first(query) is not None
 
-    def find_in_window(self, start_date, end_date):
+    def find_in_window(self, start_date, end_date, ignored_users=[]):
         """ Retrieve all pairs of hashtags in time window. """
-        return self.get_all({'created_at': {'$gt': start_date, '$lt': end_date}}, {'pair': 1, '_id': 0})
+        return self.get_all({'created_at': {'$gt': start_date, '$lt': end_date}, 'user_id': {'$nin': ignored_users}},
+                            {'pair': 1, '_id': 0})
 
     def distinct_users(self, hashtag, start_date, end_date):
         """ Returns a list of all the different users that used the given hashtag in the given window. """

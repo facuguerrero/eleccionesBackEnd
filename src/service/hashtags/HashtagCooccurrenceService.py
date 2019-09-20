@@ -3,6 +3,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from src.db.dao.CooccurrenceDAO import CooccurrenceDAO
+from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.RawTweetDAO import RawTweetDAO
 from src.exception.NoHashtagCooccurrenceError import NoHashtagCooccurrenceError
 from src.service.hashtags.HashtagEntropyService import HashtagEntropyService
@@ -22,8 +23,10 @@ class HashtagCooccurrenceService:
                               f' and ending on {end_date}')
         counts = dict()
         ids = dict()
+        # Get ids of non-important users and ignore their cooccurrences.
+        non_important_users = RawFollowerDAO().find_non_important_users()
         # Retrieve from database
-        documents = CooccurrenceDAO().find_in_window(start_date, end_date)
+        documents = CooccurrenceDAO().find_in_window(start_date, end_date, non_important_users)
         # Iterate and count
         hashtag_entropy_service = HashtagEntropyService()
         for document in documents:
