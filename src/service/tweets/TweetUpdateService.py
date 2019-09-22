@@ -12,6 +12,7 @@ from src.exception.BlockedCredentialError import BlockedCredentialError
 from src.exception.DuplicatedTweetError import DuplicatedTweetError
 from src.exception.NoMoreFollowersToUpdateTweetsError import NoMoreFollowersToUpdateTweetsError
 from src.exception.NonExistentRawFollowerError import NonExistentRawFollowerError
+from src.exception.PreventCredentialError import PreventCredentialError
 from src.model.followers.RawFollower import RawFollower
 from src.service.credentials.CredentialService import CredentialService
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
@@ -43,12 +44,15 @@ class TweetUpdateService:
             self.tweets_update_process(twitter, credential.id)
             self.credential = credential.id
 
-        except BlockedCredentialError:
+        except PreventCredentialError:
             from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
 
             self.get_logger().error(f'credential with id {credential.id} seems to be blocked')
-            time.sleep(ConfigurationManager().get_int('limit_error_sleep_time'))
-            # TweetUpdateServiceInitializer().restart_credential(credential.id)
+            time.sleep(3 * ConfigurationManager().get_int('limit_error_sleep_time'))
+            TweetUpdateServiceInitializer().restart_credential(credential.id)
+
+        except BlockedCredentialError:
+            self.get_logger().error(f'credential with id {credential.id} blocked')
 
         except Exception as e:
             self.get_logger().error(e)
@@ -136,9 +140,9 @@ class TweetUpdateService:
         # If throws twython rate limit_error_sleep_time error 5 times in a row
         # Shut down this credential
         elif self.contiguous_limit_error >= 6:
-            self.shut_down_credential_and_notify('Shut down this credential because is raising '
-                                                 'twython rate limit error frequently.',
-                                                 "Por prevención se freno el update de una credencial.")
+            self.shut_down_with_prevent_credential('Shut down this credential because is raising '
+                                                   'twython rate limit error frequently.',
+                                                   "Por prevención se freno el update de una credencial.")
 
         # If reach rate limit error too fast
         elif 1 <= duration <= 100:
@@ -171,8 +175,8 @@ class TweetUpdateService:
             # If throws this error 100 times in a row
             # Shut down this credential
             if self.contiguous_private_users >= 10:
-                self.shut_down_credential_and_notify('Too many private users. Shut down this credential',
-                                                     "Muchos usuarios privados.")
+                self.shut_down_with_blocked_credential('Too many private users. Shut down this credential',
+                                                       "Muchos usuarios privados.")
             self.contiguous_private_users += 1
             self.update_follower_as_private(follower)
 
@@ -314,11 +318,20 @@ class TweetUpdateService:
         CredentialService().unlock_credential(credential_id, cls.__name__)
 
     @classmethod
+    def shut_down_with_blocked_credential(cls, log_error, slack_error):
+        cls.shut_down_credential_and_notify(log_error, slack_error)
+        raise BlockedCredentialError()
+
+    @classmethod
+    def shut_down_with_prevent_credential(cls, log_error, slack_error):
+        cls.shut_down_credential_and_notify(log_error, slack_error)
+        raise PreventCredentialError()
+
+    @classmethod
     def shut_down_credential_and_notify(cls, log_error, slack_error):
         cls.get_logger().error(log_error)
         SlackHelper().post_message_to_channel(
             slack_error, "#errors")
-        raise BlockedCredentialError()
 
     @classmethod
     def get_logger(cls):
