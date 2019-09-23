@@ -283,7 +283,8 @@ class UserTopicService:
         active_users = RawFollowerDAO().get_all({
             "$and": [
                 {"probability_vector_support": {"$elemMatch": {"$gte": 0.8}}},
-                {"has_tweets": True}
+                {"has_tweets": True},
+                {"important": {'$exists': False}}
             ]})
         users_by_group = {}
         for user in active_users:
