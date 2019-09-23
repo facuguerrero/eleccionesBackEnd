@@ -180,6 +180,11 @@ class TweetUpdateService:
             self.contiguous_private_users += 1
             self.update_follower_as_private(follower)
 
+        elif error and error.error_code and error.error_code >= 503:
+            # Twitter service over capacity
+            self.get_logger().error('Twitter service over capacity, sleep credential.')
+            time.sleep(ConfigurationManager().get_int('limit_error_sleep_time'))
+
         elif not error or not error.error_code or error.error_code < 199 or error.error_code >= 500:
             # Twitter API error
             # More information: https://developer.twitter.com/en/docs/basics/response-codes.html
