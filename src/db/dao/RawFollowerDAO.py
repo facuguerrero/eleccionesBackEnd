@@ -50,7 +50,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
     def find_non_important_users(self):
         documents = self.get_all({'important': False}, {'_id': 1})
         # We need to extract the element from the dictionary
-        return {document['_id'] for document in documents}
+        return [document['_id'] for document in documents]
 
     def get_complete_data(self, raw_follower):
         data = self.get_partial_data(raw_follower)
