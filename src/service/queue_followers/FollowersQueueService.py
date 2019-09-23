@@ -24,9 +24,9 @@ class FollowersQueueService(metaclass=Singleton):
         ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
         self.logger.info(f'Getting followers to update their tweets. Queue\'s size: {len(self.updating_followers)} ')
 
-        # followers_to_update = self.try_to_get_priority_followers()
-        # if len(followers_to_update) == 0:
-        followers_to_update = self.get_followers_with_tweets_to_update()
+        followers_to_update = self.try_to_get_priority_followers()
+        if len(followers_to_update) == 0:
+            followers_to_update = self.get_followers_with_tweets_to_update()
 
         self.processing_followers.update(set(followers_to_update.keys()))
         self.processing_followers = self.processing_followers.difference(followers_to_delete)

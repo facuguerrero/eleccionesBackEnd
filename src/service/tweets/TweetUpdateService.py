@@ -121,7 +121,7 @@ class TweetUpdateService:
 
         except (ProtocolError, ConnectionResetError):
             # ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
-            self.get_logger().error('Connection error. Try again later.')
+            self.get_logger().warning('Connection error. Try again later.')
         return tweets
 
     def handle_twython_rate_limit_error(self):
@@ -182,7 +182,7 @@ class TweetUpdateService:
 
         elif error and error.error_code and error.error_code >= 503:
             # Twitter service over capacity
-            self.get_logger().error('Twitter service over capacity, sleep credential 10 seconds')
+            self.get_logger().warning('Twitter service over capacity, sleep credential 10 seconds')
             time.sleep(10)
 
         elif not error or not error.error_code or error.error_code < 199 or error.error_code >= 500:
