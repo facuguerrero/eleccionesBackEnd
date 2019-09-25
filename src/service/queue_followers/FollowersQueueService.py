@@ -24,9 +24,9 @@ class FollowersQueueService(metaclass=Singleton):
         ConcurrencyUtils().acquire_lock('followers_for_update_tweets')
         self.logger.info(f'Getting followers to update their tweets. Queue\'s size: {len(self.updating_followers)} ')
 
-        # followers_to_update = self.try_to_get_priority_followers()
-        # if len(followers_to_update) == 0:
-        followers_to_update = self.get_followers_with_tweets_to_update()
+        followers_to_update = self.try_to_get_priority_followers()
+        if len(followers_to_update) == 0:
+            followers_to_update = self.get_followers_with_tweets_to_update()
 
         self.processing_followers.update(set(followers_to_update.keys()))
         self.processing_followers = self.processing_followers.difference(followers_to_delete)
@@ -71,7 +71,7 @@ class FollowersQueueService(metaclass=Singleton):
             self.logger.error('There are not followers to update their tweets.')
             raise NoMoreFollowersToUpdateTweetsError()
 
-    def add_followers_to_be_updated(self, timedelta=70):
+    def add_followers_to_be_updated(self, timedelta=100):
         self.logger.info(
             f'Adding new followers to update their tweets. Actual size: {str(len(self.updating_followers))}')
         followers = RawFollowerDAO().get_random_followers_sample(list(self.processing_followers), timedelta)
@@ -85,7 +85,7 @@ class FollowersQueueService(metaclass=Singleton):
     def add_not_updated_followers(self):
         self.logger.info(
             f'Adding not updated followers.')
-        self.add_followers_to_be_updated(55)
+        self.add_followers_to_be_updated(180)
 
     def add_last_downloaded_followers(self):
         self.logger.info('Adding last downloaded followers')

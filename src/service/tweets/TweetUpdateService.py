@@ -48,7 +48,8 @@ class TweetUpdateService:
             from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
 
             self.get_logger().error(f'credential with id {credential.id} seems to be blocked')
-            time.sleep(3 * ConfigurationManager().get_int('limit_error_sleep_time'))
+            # Sleep 2 hour before restart
+            time.sleep(8 * ConfigurationManager().get_int('limit_error_sleep_time'))
             TweetUpdateServiceInitializer().restart_credential(credential.id)
 
         except BlockedCredentialError:
@@ -99,7 +100,7 @@ class TweetUpdateService:
         try:
             # Sleep to avoid (104, 'Connection reset by peer')
             # https://stackoverflow.com/questions/383738/104-connection-reset-by-peer-socket-error-or-when-does-closing-a-socket-resu
-            # time.sleep(0.01)
+            time.sleep(0.01)
             max_tweets_request_parameter = ConfigurationManager().get_int('max_tweets_parameter')
 
             if is_first_request:
@@ -120,7 +121,7 @@ class TweetUpdateService:
 
         except (ProtocolError, ConnectionResetError):
             # ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
-            self.get_logger().error('Connection error. Try again later.')
+            self.get_logger().warning('Connection error. Try again later.')
         return tweets
 
     def handle_twython_rate_limit_error(self):
@@ -129,17 +130,16 @@ class TweetUpdateService:
         # Execution duration is now - init
         duration = (datetime.datetime.today() - self.start_time).seconds
 
-        # If throws twython rate limit error 3 times in a row
+        # If throws twython rate limit error 2 times in a row
         # Sleep by 1 hour
-        if 3 <= self.contiguous_limit_error <= 5:
-            time_to_sleep = ConfigurationManager().get_int('limit_error_sleep_time') * int(
-                self.contiguous_limit_error / 2)
+        if 2 <= self.contiguous_limit_error <= 3:
+            time_to_sleep = ConfigurationManager().get_int('limit_error_sleep_time') * self.contiguous_limit_error
             self.get_logger().warning(f'Sleeping credential by {time_to_sleep} due to frequently rate limit error')
             time.sleep(time_to_sleep)
 
-        # If throws twython rate limit_error_sleep_time error 5 times in a row
+        # If throws twython rate limit_error_sleep_time error 4 times in a row
         # Shut down this credential
-        elif self.contiguous_limit_error >= 6:
+        elif self.contiguous_limit_error >= 4:
             self.shut_down_with_prevent_credential('Shut down this credential because is raising '
                                                    'twython rate limit error frequently.',
                                                    "Por prevención se freno el update de una credencial.")
@@ -179,6 +179,11 @@ class TweetUpdateService:
                                                        "Muchos usuarios privados.")
             self.contiguous_private_users += 1
             self.update_follower_as_private(follower)
+
+        elif error and error.error_code and error.error_code >= 503:
+            # Twitter service over capacity
+            self.get_logger().warning('Twitter service over capacity, sleep credential 10 seconds')
+            time.sleep(10)
 
         elif not error or not error.error_code or error.error_code < 199 or error.error_code >= 500:
             # Twitter API error
