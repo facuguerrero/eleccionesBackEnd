@@ -1,4 +1,5 @@
 import time
+from threading import Thread
 
 from twython import TwythonRateLimitError, TwythonAuthError
 
@@ -20,6 +21,11 @@ class UserNetworkService:
 
     __pool = None
     __active_set = set()
+
+    @classmethod
+    def start(cls):
+        thread = Thread(target=cls.do_retrieval)
+        thread.start()
 
     @classmethod
     def do_retrieval(cls):
@@ -53,13 +59,17 @@ class UserNetworkService:
         """ Retrieve users from database for friend downloading. """
         users_by_party = dict()
         for party in cls.__parties:
-            documents = RawFollowerDAO().get_all({'is_private': False,
-                                                  'has_tweets': True,
-                                                  'retrieved_friends': False,
-                                                  'probability_vector_support': {'$elemMatch': {'$gte': 0.8}},
-                                                  'support': party,
-                                                  'friends_count': {'$and': [{'$gt': 0}, {'$lt': 5000}]}},
-                                                 {'_id': 1})
+            documents = RawFollowerDAO().get_all({
+                '$and': [
+                    {'is_private': False},
+                    {'has_tweets': True},
+                    {'retrieved_friends': {'$exists': False}},
+                    {'friends_count': {'$lt': 5000}},
+                    {'friends_count': {'$gt': 0}},
+                    {'support': party},
+                    {'probability_vector_support': {'$gte': 0.8}}
+                ]},
+                {'_id': 1})
             users_by_party[party] = [document['_id'] for document in documents]
         return users_by_party
 
@@ -79,17 +89,17 @@ class UserNetworkService:
         return cls.__pool.pop()
 
     @classmethod
-    def user_friends(cls, user_id: str, credential: Credential) -> set[str]:
+    def user_friends(cls, user_id: str, credential: Credential) -> set:
         """ Retrieve user friend set. """
         return cls.do_download(user_id, -1, credential)
 
     @classmethod
-    def active_friends(cls, friends: set[str], active_users: set[str]) -> set[str]:
+    def active_friends(cls, friends: set, active_users: set) -> set:
         """ Intersect friends set with active users set. """
         return friends.intersection(active_users)
 
     @classmethod
-    def store_active_friends_set(cls, user, active_friends: set[str]):
+    def store_active_friends_set(cls, user, active_friends: set):
         """ Store set of active friends for given user in database. """
         UsersFriendsDAO().store_friends_for_user(user.data, user.key, active_friends)
 
@@ -99,7 +109,7 @@ class UserNetworkService:
         RawFollowerDAO().update_first({'_id': user_id}, {'$set': {'retrieved_friends': True}})
 
     @classmethod
-    def do_download(cls, user_id: str, cursor: int, credential: Credential) -> set[str]:
+    def do_download(cls, user_id: str, cursor: int, credential: Credential) -> set:
         """ Use Twitter api to get all friends of the given user. """
         twitter = TwitterUtils.twitter(credential)
         try:
@@ -113,7 +123,6 @@ class UserNetworkService:
             return cls.do_download(user_id, cursor, credential)
         except TwythonAuthError:
             # This error means the user is private.
-            RawFollowerDAO().mark_as_private(user_id)
             return set()
         # Extract list of friends
         friends = set(response['ids'])

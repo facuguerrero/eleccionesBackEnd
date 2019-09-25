@@ -13,6 +13,7 @@ from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
 from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
+from src.service.user_network.UserNetworkService import UserNetworkService
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 from src.util.slack.SlackHelper import SlackHelper
@@ -48,10 +49,12 @@ def set_up_context(db_name, authorization, environment):
         create_queue_entries()
 
 
-def init_services():
+def init_services(user_network=False):
     # This is not necessary
     # UserTopicService().init_update_support_follower()
     TweetUpdateServiceInitializer().initialize_tweet_update_service()
+    if user_network:
+        UserNetworkService.start()
 
 
 def parse_arguments():
@@ -61,17 +64,19 @@ def parse_arguments():
     parser.add_argument('--dbname', nargs='?', help='Name of the database to use')
     parser.add_argument('--auth', nargs='?', help='Database authentication data (username:password)')
     parser.add_argument('--env', nargs='?', help='Execution environment [dev; prod]')
+    parser.add_argument('--usernet', nargs='?', help='User network job flag.')
     # Get program arguments
     arguments = parser.parse_args()
     db_name = DBNAME if not arguments.dbname else arguments.dbname
     db_auth = AUTH if not arguments.auth else f'{arguments.auth}@'
     environment = ENV if not arguments.env else arguments.env
-    return db_name, db_auth, environment
+    usernet = False if not arguments.usernet else arguments.usernet
+    return db_name, db_auth, environment, usernet
 
 
 if __name__ == '__main__':
-    db, auth, env = parse_arguments()
+    db, auth, env, usernet = parse_arguments()
     set_up_context(db, auth, env)
     Scheduler().set_up()
-    init_services()
+    init_services(usernet)
     app.run(port=8080, threaded=True)
