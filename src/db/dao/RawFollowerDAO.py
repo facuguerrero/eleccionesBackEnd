@@ -139,6 +139,7 @@ class RawFollowerDAO(GenericDAO, metaclass=Singleton):
                 {"$and": [
                     {"has_tweets": True},
                     {'downloaded_on': {'$lt': date}},
+                    {'important': {'$exists': False}},
                     {'_id': {'$nin': actual_processing}}
                 ]}
             },
