@@ -10,13 +10,6 @@ class UserNetworkAnalysisService:
     users_by_party = dict()
 
     @classmethod
-    def get_vectors_by_party(cls):
-        vectors = dict()
-        for party in cls.__parties:
-            vectors[party] = PartyRelationshipsDAO().last_party_vector(party)
-        return vectors
-
-    @classmethod
     def calculate_relationships(cls):
         cls.populate_users_by_party_dict()
         for party in cls.__parties:
