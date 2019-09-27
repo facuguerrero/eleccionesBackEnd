@@ -124,7 +124,7 @@ class UserNetworkRetrievalService:
     @classmethod
     def mark_as_used(cls, user_id: str):
         """ Update user document in DB to avoid retrieving again. """
-        RawFollowerDAO().update_first({'_id': user_id}, {'$set': {'retrieved_friends': True}})
+        RawFollowerDAO().update_first({'_id': user_id}, {'retrieved_friends': True})
 
     @classmethod
     def do_download(cls, user_id: str, cursor: int, credential: Credential) -> set:
