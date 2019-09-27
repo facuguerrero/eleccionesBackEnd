@@ -11,7 +11,8 @@ class UsersFriendsDAO(GenericDAO, metaclass=Singleton):
         self.logger = Logger(self.__class__.__name__)
 
     def store_friends_for_user(self, user_id, party, friends):
-        self.insert({'_id': user_id, 'friends': friends, 'party': party})
+        self.logger.info(f'Storing {len(friends)} friends for user {user_id} supporting {party}')
+        self.insert({'_id': user_id, 'friends': list(friends), 'party': party})
 
     def get_users_for_party(self, party):
         documents = self.get_all({'party': party}, {'_id': 0, 'friends': 1})
