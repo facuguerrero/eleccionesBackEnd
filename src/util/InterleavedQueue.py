@@ -33,5 +33,8 @@ class InterleavedQueue:
             value = None
         return value
 
+    def to_set(self):
+        return {item.data for item in self.queue}
+
     def __len__(self):
         return len(self.queue)

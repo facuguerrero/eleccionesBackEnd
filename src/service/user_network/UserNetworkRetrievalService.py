@@ -86,12 +86,7 @@ class UserNetworkRetrievalService:
     @classmethod
     def populate_users_set(cls):
         """ Fill the active users set with the universe of users we care about. """
-        documents = RawFollowerDAO().get_all({'is_private': False,
-                                              'has_tweets': True,
-                                              'probability_vector_support': {'$elemMatch': {'$gte': 0.8}},
-                                              'friends_count': {'$and': [{'$gt': 0}, {'$lt': 5000}]}},
-                                             {'_id': 1})
-        cls.__active_set = {document['_id'] for document in documents}
+        cls.__active_set = cls.__pool.to_set()
 
     @classmethod
     def user_from_pool(cls):
