@@ -44,6 +44,7 @@ class UserNetworkRetrievalService:
         cls.populate_users_set()
         cls.get_logger().info(f'User network setup done ({len(cls.__active_set)} users). Starting downloading process.')
         # Run follower update process
+        cls.get_logger().debug(f'Credentials: {[c.id for c in credentials]}')
         AsyncThreadPoolExecutor().run(cls.retrieve_with_credential, credentials)
         cls.get_logger().info('Finished user friends retrieval.')
 
@@ -89,7 +90,17 @@ class UserNetworkRetrievalService:
     @classmethod
     def populate_users_set(cls):
         """ Fill the active users set with the universe of users we care about. """
-        cls.__active_set = cls.__pool.to_set()
+        documents = RawFollowerDAO().get_all({
+            '$and': [
+                {'is_private': False},
+                {'has_tweets': True},
+                {'friends_count': {'$lt': 5000}},
+                {'friends_count': {'$gt': 0}},
+                {'probability_vector_support': {'$gte': 0.8}}
+                ]},
+            {'_id': 1}
+        )
+        cls.__active_set = {document['_id'] for document in documents}
 
     @classmethod
     def user_from_pool(cls):
