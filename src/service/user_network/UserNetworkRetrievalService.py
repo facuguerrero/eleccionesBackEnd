@@ -44,7 +44,6 @@ class UserNetworkRetrievalService:
         cls.populate_users_set()
         cls.get_logger().info(f'User network setup done ({len(cls.__active_set)} users). Starting downloading process.')
         # Run follower update process
-        cls.get_logger().info(f'Credentials: {[c.id for c in credentials]}')
         AsyncThreadPoolExecutor().run(cls.retrieve_with_credential, credentials)
         cls.get_logger().info('Finished user friends retrieval.')
 
@@ -53,10 +52,15 @@ class UserNetworkRetrievalService:
         """ Download users' friends with given credential. """
         cls.get_logger().info(f'Starting user friends retrieval with credential {credential.id}')
         user = cls.user_from_pool()
+        cls.get_logger().info(f'Initial user: {user} | {credential.id}')
         while user:
             try:
-                cls.store_active_friends_set(user, cls.active_friends(cls.user_friends(user.data, credential),
-                                                                      cls.__active_set))
+                cls.get_logger().info(f'Doing retrieval | {credential.id}')
+                friends = cls.user_friends(user.data, credential)
+                cls.get_logger().info(f'Found {len(friends)} friends for user {user.data} | {credential.id}')
+                intersection = cls.active_friends(friends, cls.__active_set)
+                cls.get_logger().info(f'Found {len(intersection)} active friends for user {user.data} | {credential.id}')
+                cls.store_active_friends_set(user, intersection)
             except TwythonAuthError:
                 cls.get_logger().info('Auth error.')
                 user = cls.user_from_pool()
@@ -115,11 +119,13 @@ class UserNetworkRetrievalService:
     @classmethod
     def active_friends(cls, friends: set, active_users: set) -> set:
         """ Intersect friends set with active users set. """
+        cls.get_logger().info(f'Friends: {len(friends)} | Active users {len(active_users)}')
         return friends.intersection(active_users)
 
     @classmethod
     def store_active_friends_set(cls, user, active_friends: set):
         """ Store set of active friends for given user in database. """
+        cls.get_logger().info(f'Storing {len(active_friends)} friends for user {user}.')
         UsersFriendsDAO().store_friends_for_user(user.data, user.key, active_friends)
 
     @classmethod
@@ -133,6 +139,7 @@ class UserNetworkRetrievalService:
         twitter = TwitterUtils.twitter(credential)
         try:
             # Do request
+            cls.get_logger().info(f'Getting friends with twitter instance {twitter} | {credential.id}')
             response = twitter.get_friends_ids(user_id=user_id, stringify_ids=True, cursor=cursor)
         except TwythonRateLimitError:
             cls.get_logger().warning(f'Friends download limit reached for credential {credential.id}. Waiting.')
@@ -141,7 +148,7 @@ class UserNetworkRetrievalService:
             # Once we finished waiting, we try again
             return cls.do_download(user_id, cursor, credential)
         # Extract list of friends
-        cls.get_logger().debug(f'Response: {response}')
+        cls.get_logger().info(f'Response: {response} | {credential.id}')
         friends = set(response['ids'])
         next_cursor = response['next_cursor']
         # Check if there are more friends to download
