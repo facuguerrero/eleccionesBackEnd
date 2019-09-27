@@ -49,12 +49,11 @@ def set_up_context(db_name, authorization, environment):
         create_queue_entries()
 
 
-def init_services(user_network=False):
+def init_services():
     # This is not necessary
     # UserTopicService().init_update_support_follower()
     TweetUpdateServiceInitializer().initialize_tweet_update_service()
-    if user_network:
-        UserNetworkRetrievalService.start()
+    UserNetworkRetrievalService.start()
 
 
 def parse_arguments():
@@ -64,19 +63,17 @@ def parse_arguments():
     parser.add_argument('--dbname', nargs='?', help='Name of the database to use')
     parser.add_argument('--auth', nargs='?', help='Database authentication data (username:password)')
     parser.add_argument('--env', nargs='?', help='Execution environment [dev; prod]')
-    parser.add_argument('--usernet', nargs='?', help='User network job flag.')
     # Get program arguments
     arguments = parser.parse_args()
     db_name = DBNAME if not arguments.dbname else arguments.dbname
     db_auth = AUTH if not arguments.auth else f'{arguments.auth}@'
     environment = ENV if not arguments.env else arguments.env
-    usernet = False if not arguments.usernet else arguments.usernet
-    return db_name, db_auth, environment, usernet
+    return db_name, db_auth, environment
 
 
 if __name__ == '__main__':
-    db, auth, env, usernet = parse_arguments()
+    db, auth, env = parse_arguments()
     set_up_context(db, auth, env)
     Scheduler().set_up()
-    init_services(usernet)
+    init_services()
     app.run(port=8080, threaded=True)
