@@ -8,7 +8,7 @@ from src.util.EnvironmentUtils import EnvironmentUtils
 class Logger:
     LOGGING_FILE_NAME = 'elections.log'
     FORMATTING_STRING = '%(asctime)s - [%(threadName)s] - %(levelname)s - %(name)s - %(message)s'
-    LOGGING_LEVEL = logging.INFO
+    LOGGING_LEVEL = logging.DEBUG
     MAX_BYTES = (1024**2)*100  # 100MB
     BACKUP_COUNT = 5  # Keep up to elections.log.5
 
