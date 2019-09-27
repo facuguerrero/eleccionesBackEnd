@@ -10,6 +10,7 @@ from src.api.CooccurrenceAnalysisResource import CooccurrenceAnalysisResource
 from src.api.FollowerUpdatingResource import FollowerUpdatingResource
 from src.api.PingResource import PingResource
 from src.api.TweetUpdatingResource import TweetUpdatingResource
+from src.api.UserNetworkResource import UserNetworkResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
 from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
