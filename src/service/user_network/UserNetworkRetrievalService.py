@@ -44,21 +44,21 @@ class UserNetworkRetrievalService:
         cls.populate_users_set()
         cls.get_logger().info(f'User network setup done ({len(cls.__active_set)} users). Starting downloading process.')
         # Run follower update process
-        cls.get_logger().debug(f'Credentials: {[c.id for c in credentials]}')
+        cls.get_logger().info(f'Credentials: {[c.id for c in credentials]}')
         AsyncThreadPoolExecutor().run(cls.retrieve_with_credential, credentials)
         cls.get_logger().info('Finished user friends retrieval.')
 
     @classmethod
     def retrieve_with_credential(cls, credential: Credential):
         """ Download users' friends with given credential. """
-        cls.get_logger().debug(f'Starting user friends retrieval with credential {credential.id}')
+        cls.get_logger().info(f'Starting user friends retrieval with credential {credential.id}')
         user = cls.user_from_pool()
         while user:
             try:
                 cls.store_active_friends_set(user, cls.active_friends(cls.user_friends(user.data, credential),
                                                                       cls.__active_set))
             except TwythonAuthError:
-                cls.get_logger().debug('Auth error.')
+                cls.get_logger().info('Auth error.')
                 user = cls.user_from_pool()
                 continue
             cls.mark_as_used(user.data)
