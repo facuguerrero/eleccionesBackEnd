@@ -1,23 +1,23 @@
 from unittest import mock
 
 import mongomock
-from twython import TwythonRateLimitError, TwythonAuthError
+from twython import TwythonRateLimitError
 
 from src.db.Mongo import Mongo
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.model.Credential import Credential
-from src.service.user_network.UserNetworkService import UserNetworkService
+from src.service.user_network.UserNetworkRetrievalService import UserNetworkRetrievalService
 from src.util.twitter.TwitterUtils import TwitterUtils
 from test.meta.CustomTestCase import CustomTestCase
 from test.meta.JsonLoader import JsonLoader
 
 
-class TestUserNetworkService(CustomTestCase):
+class TestUserNetworkRetrievalService(CustomTestCase):
 
     credential = Credential(**{'ID': 'test', 'CONSUMER_KEY': 'key', 'CONSUMER_SECRET': 'secret'})
 
     def setUp(self) -> None:
-        super(TestUserNetworkService, self).setUp()
+        super(TestUserNetworkRetrievalService, self).setUp()
         Mongo().db = mongomock.database.Database(mongomock.MongoClient(), 'elections', _store=None)
 
     class MockedTwython:
@@ -41,7 +41,7 @@ class TestUserNetworkService(CustomTestCase):
         fake_twython = self.MockedTwython(['friends_ids_end'])
         mocked_twitter.return_value = fake_twython
 
-        friends = UserNetworkService.do_download(user_id='12345', cursor=0, credential=self.credential)
+        friends = UserNetworkRetrievalService.do_download(user_id='12345', cursor=0, credential=self.credential)
         assert fake_twython.current_index == 1
 
         fake_twython.current_index = 0
@@ -52,7 +52,7 @@ class TestUserNetworkService(CustomTestCase):
         fake_twython = self.MockedTwython(['friends_ids_cursor0', 'friends_ids_cursor_next', 'friends_ids_end'])
         mocked_twitter.return_value = fake_twython
 
-        friends = UserNetworkService.do_download(user_id='12345', cursor=0, credential=self.credential)
+        friends = UserNetworkRetrievalService.do_download(user_id='12345', cursor=0, credential=self.credential)
         assert fake_twython.current_index == 3
 
         fake_twython.current_index = 0
@@ -69,7 +69,7 @@ class TestUserNetworkService(CustomTestCase):
 
         fake_twython.fail_on_index = 2
         fake_twython.exception = TwythonRateLimitError("", "")
-        friends = UserNetworkService.do_download(user_id='12345', cursor=0, credential=self.credential)
+        friends = UserNetworkRetrievalService.do_download(user_id='12345', cursor=0, credential=self.credential)
         assert fake_twython.current_index == 3
         assert mocked_sleep.call_count == 1
 
@@ -78,17 +78,6 @@ class TestUserNetworkService(CustomTestCase):
         set2 = set(fake_twython.get_friends_ids("", "", "").get('ids'))
         set3 = set(fake_twython.get_friends_ids("", "", "").get('ids'))
         assert friends == set1.union(set2.union(set3))
-
-    @mock.patch.object(TwitterUtils, 'twitter')
-    def test_do_download_with_auth_error(self, mocked_twitter):
-        fake_twython = self.MockedTwython([])
-        mocked_twitter.return_value = fake_twython
-
-        fake_twython.fail_on_index = 0
-        fake_twython.exception = TwythonAuthError("", "")
-        friends = UserNetworkService.do_download(user_id='12345', cursor=0, credential=self.credential)
-        assert fake_twython.current_index == 0
-        assert friends == set()
 
     def test_retrieve_users_by_party(self):
         document = {
@@ -118,7 +107,7 @@ class TestUserNetworkService(CustomTestCase):
             'friends_count': 5001
         }
         RawFollowerDAO().insert(document)
-        result = UserNetworkService.retrieve_users_by_party()
+        result = UserNetworkRetrievalService.retrieve_users_by_party()
         assert len(result['juntosporelcambio']) == 1
         assert result['juntosporelcambio'][0] == '123'
         assert len(result['frentedetodos']) == 1

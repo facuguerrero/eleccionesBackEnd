@@ -12,3 +12,7 @@ class UsersFriendsDAO(GenericDAO, metaclass=Singleton):
 
     def store_friends_for_user(self, user_id, party, friends):
         self.insert({'_id': user_id, 'friends': friends, 'party': party})
+
+    def get_users_for_party(self, party):
+        documents = self.get_all({'party': party}, {'_id': 0, 'friends': 1})
+        return [document['friends'] for document in documents]

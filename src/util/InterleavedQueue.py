@@ -32,3 +32,6 @@ class InterleavedQueue:
         except IndexError:
             value = None
         return value
+
+    def __len__(self):
+        return len(self.queue)

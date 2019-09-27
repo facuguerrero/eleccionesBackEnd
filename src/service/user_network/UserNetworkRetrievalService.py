@@ -15,7 +15,7 @@ from src.util.logging.Logger import Logger
 from src.util.twitter.TwitterUtils import TwitterUtils
 
 
-class UserNetworkService:
+class UserNetworkRetrievalService:
 
     __parties = ['juntosporelcambio', 'frentedetodos', 'frentedespertar', 'consensofederal', 'frentedeizquierda']
 
@@ -39,8 +39,10 @@ class UserNetworkService:
             return
         # Fill pool with users
         cls.__pool = InterleavedQueue(cls.retrieve_users_by_party())
+        cls.get_logger().info(f'Populated user pool with {len(cls.__pool)} users.')
         # Fill set of active users
         cls.populate_users_set()
+        cls.get_logger().info('User network setup done. Starting downloading process.')
         # Run follower update process
         AsyncThreadPoolExecutor().run(cls.retrieve_with_credential, credentials)
         cls.get_logger().info('Finished user friends retrieval.')
@@ -50,9 +52,14 @@ class UserNetworkService:
         """ Download users' friends with given credential. """
         user = cls.user_from_pool()
         while user:
-            cls.store_active_friends_set(user, cls.active_friends(cls.user_friends(user.data, credential), cls.__active_set))
+            try:
+                cls.store_active_friends_set(user, cls.active_friends(cls.user_friends(user.data, credential),
+                                                                      cls.__active_set))
+            except TwythonAuthError:
+                continue
             cls.mark_as_used(user.data)
             user = cls.user_from_pool()
+        cls.get_logger().info(f'Finished user friends retrieval with credential {credential.id}')
 
     @classmethod
     def retrieve_users_by_party(cls) -> dict:
@@ -69,7 +76,10 @@ class UserNetworkService:
                     {'support': party},
                     {'probability_vector_support': {'$gte': 0.8}}
                 ]},
-                {'_id': 1})
+                {'_id': 1, 'followers_count': 1})
+            # Sort here to avoid creating an index in the database
+            documents = sorted(documents, key=lambda d: d.get('followers_count', 0), reverse=True)
+            # Store list in party dictionary
             users_by_party[party] = [document['_id'] for document in documents]
         return users_by_party
 
@@ -121,9 +131,6 @@ class UserNetworkService:
             cls.get_logger().info(f'Friends download waiting done for credential {credential.id}. Resuming.')
             # Once we finished waiting, we try again
             return cls.do_download(user_id, cursor, credential)
-        except TwythonAuthError:
-            # This error means the user is private.
-            return set()
         # Extract list of friends
         friends = set(response['ids'])
         next_cursor = response['next_cursor']
