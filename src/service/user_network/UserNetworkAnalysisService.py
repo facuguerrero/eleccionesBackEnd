@@ -7,28 +7,26 @@ class UserNetworkAnalysisService:
 
     __parties = ['juntosporelcambio', 'frentedetodos', 'frentedespertar', 'consensofederal', 'frentedeizquierda']
 
-    users_by_party = dict()
-
     @classmethod
     def calculate_relationships(cls):
-        cls.populate_users_by_party_dict()
+        users_by_party = cls.populate_users_by_party_dict()
         for party in cls.__parties:
             # Get normalized vector for the given party
-            result_vector = cls.calculate_relationships_for_party(party)
+            result_vector = cls.calculate_relationships_for_party(party, users_by_party)
             # Store party vector for today
             PartyRelationshipsDAO().store(party, result_vector)
 
     @classmethod
-    def calculate_relationships_for_party(cls, party):
+    def calculate_relationships_for_party(cls, party, users_by_party):
         friends_lists = UsersFriendsDAO().get_users_for_party(party)
         # List of user vectors
         vectors = list()
         # Iterate all lists of friends and set number of known users it follows
-        for friends_lists in friends_lists:
+        for friends_list in friends_lists:
             user_vector = list()
             # Add the count of users from each party this user follows
             for party in cls.__parties:
-                user_vector.append(len(cls.users_by_party[party].intersection(set(friends_lists))))
+                user_vector.append(len(users_by_party[party].intersection(set(friends_list))))
             # Add user vector to the party's vector
             vectors.append(user_vector)
         # Sum all vector's values
@@ -40,6 +38,7 @@ class UserNetworkAnalysisService:
 
     @classmethod
     def populate_users_by_party_dict(cls):
+        users_by_party = dict()
         for party in cls.__parties:
             documents = RawFollowerDAO().get_all({
                 '$and': [
@@ -48,5 +47,5 @@ class UserNetworkAnalysisService:
                 ]},
                 {'_id': 1})
             # Store list in party dictionary
-            cls.users_by_party[party] = {document['_id'] for document in documents}
-        return cls.users_by_party
+            users_by_party[party] = {document['_id'] for document in documents}
+        return users_by_party
