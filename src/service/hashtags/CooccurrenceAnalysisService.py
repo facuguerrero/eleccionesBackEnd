@@ -32,7 +32,7 @@ class CooccurrenceAnalysisService:
             cls.analyze_cooccurrence_for_window(start_date, last_day)
             cls.get_logger().info(f'Cooccurrence analysis for last {delta} days done.')
         # Run usage analysis as soon as possible
-        HashtagUsageService.calculate_today_topics_hashtag_usage()
+        HashtagUsageService.calculate_topics_hashtag_usage(last_day)
 
     @classmethod
     def analyze_cooccurrence_for_window(cls, start_date, end_date=None):

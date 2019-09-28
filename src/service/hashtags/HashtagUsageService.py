@@ -29,13 +29,14 @@ class HashtagUsageService:
         return end_date
 
     @classmethod
-    def calculate_today_topics_hashtag_usage(cls):
+    def calculate_topics_hashtag_usage(cls, end_date=None):
         """ Calculate the usage of all hashtags in today showable topics and the total usage of the topic itself. """
         supporters = cls.__generate_supporters_map()
+        date = DateUtils.today() if not end_date else end_date + timedelta(days=1)
         # End time is yesterday at 23:59:59
-        end_time = DateUtils.today() - timedelta(seconds=1)
+        end_time = date - timedelta(seconds=1)
         # Start time is yesterday at 00:00:00
-        start_time = DateUtils.today() - timedelta(days=1)
+        start_time = date - timedelta(days=1)
         cls.get_logger().info('Starting daily hashtag usage calculation.')
         # Calculate daily data
         cls.calculate_hashtag_usage(start_time, end_time, interval='hours', supporters=supporters)
