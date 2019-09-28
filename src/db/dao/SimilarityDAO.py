@@ -16,6 +16,5 @@ class SimilarityDAO(GenericDAO, metaclass=Singleton):
         update_dict = {'_id': str(date.year) + str(date.month) + str(date.day),
                        'similarities': similarity_object.similarities,
                        'similarities_without_random': similarity_object.similarities_wor,
-                       'date': date,
-                       'method': 'other'}
+                       'date': date}
         self.insert(update_dict)

@@ -1,7 +1,10 @@
+from datetime import timedelta
+
+
 class Similarities:
 
     def __init__(self, date):
-        self.timestamp = date
+        self.timestamp = date - timedelta(days=1)
         self.similarities = {}
         self.similarities_wor = None
 
