@@ -17,7 +17,6 @@ from src.util.logging.Logger import Logger
 class HashtagUsageService:
     """ Service designated to the calculation of the usage of hashtags in a given window of time. """
     # TODO: Move this to a single place (it is duplicated now)
-    START_DAY = datetime.combine(datetime.strptime('2019-01-01', '%Y-%m-%d').date(), datetime.min.time())
     __parties = ['juntosporelcambio', 'frentedetodos', 'frentedespertar', 'consensofederal', 'frentedeizquierda']
 
     @classmethod
@@ -35,11 +34,6 @@ class HashtagUsageService:
         date = DateUtils.today() if not end_date else end_date + timedelta(days=1)
         # End time is yesterday at 23:59:59
         end_time = date - timedelta(seconds=1)
-        # Start time is yesterday at 00:00:00
-        start_time = date - timedelta(days=1)
-        cls.get_logger().info('Starting daily hashtag usage calculation.')
-        # Calculate daily data
-        cls.calculate_hashtag_usage(start_time, end_time, interval='hours', supporters=supporters)
         # Run for different intervals of dates
         for delta in ConfigurationManager().get_list('showable_cooccurrence_deltas'):
             # Calculate start date from delta
@@ -49,16 +43,10 @@ class HashtagUsageService:
             cls.calculate_hashtag_usage(start_date, end_time, interval='days', supporters=supporters)
             # Log finish for time checking
             cls.get_logger().info(f'Hashtag usage calculation finished for {delta} days window.')
-        # Calculate accumulated data
-        cls.get_logger().info('Starting accumulated hashtag usage calculation.')
-        cls.calculate_hashtag_usage(cls.START_DAY, end_time, interval='days', supporters=supporters)
         # Log finish for time checking
         cls.get_logger().info('Hashtag usage calculation finished.')
         # Once we've analyzed hashtags, topic usage calculations are just additions
-        cls.get_logger().info('Starting daily topic usage calculation.')
-        # Daily
-        cls.calculate_topic_usage(start_time, end_time, interval='hours')
-        cls.get_logger().info('Starting accumulated topic usage calculation.')
+        cls.get_logger().info('Starting topic usage calculation.')
         # Run for different intervals of dates
         for delta in ConfigurationManager().get_list('showable_cooccurrence_deltas'):
             # Calculate start date from delta
@@ -68,8 +56,6 @@ class HashtagUsageService:
             cls.calculate_topic_usage(start_date, end_time, interval='days')
             # Log finish for time checking
             cls.get_logger().info(f'Topic usage calculation finished for {delta} days window.')
-        # Accumulated
-        cls.calculate_topic_usage(cls.START_DAY, end_time, interval='days')
         # Log finish for time checking
         cls.get_logger().info('Topic usage calculation finished.')
         UserTopicService().init_update_support_follower()
