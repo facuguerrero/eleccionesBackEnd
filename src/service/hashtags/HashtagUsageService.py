@@ -72,7 +72,7 @@ class HashtagUsageService:
         cls.calculate_topic_usage(cls.START_DAY, end_time, interval='days')
         # Log finish for time checking
         cls.get_logger().info('Topic usage calculation finished.')
-        UserTopicService().init_update_support_follower()
+        UserTopicService().init_process_with_date(date)
 
     @classmethod
     def calculate_hashtag_usage(cls, start, end, interval, supporters):
