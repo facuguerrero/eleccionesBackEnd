@@ -2,6 +2,7 @@ import datetime
 
 from src.db.Mongo import Mongo
 from src.db.dao.GenericDAO import GenericDAO
+from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.util.DateUtils import DateUtils
 from src.util.logging.Logger import Logger
 from src.util.meta.Singleton import Singleton
@@ -35,10 +36,17 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
 
     def retrieve_last_10_days_data(self, date):
         """ Get iterator of last 10 days user-hashtags. """
+        users_to_be_discarded = RawFollowerDAO().get_all({'important': False}, {'_id': 1})
+        ids = []
+        for user in users_to_be_discarded:
+            ids.append(user['_id'])
+        self.logger.info(f'Users discarded: {len(ids)}')
+
         init_first_hour, yesterday_last_hour = self.get_init_and_end_dates(date)
         return self.get_all({'$and': [
             {'timestamp': {'$gte': init_first_hour}},
-            {'timestamp': {'$lte': yesterday_last_hour}}
+            {'timestamp': {'$lte': yesterday_last_hour}},
+            {'user': {'$nin': ids}}
         ]})
 
     @staticmethod

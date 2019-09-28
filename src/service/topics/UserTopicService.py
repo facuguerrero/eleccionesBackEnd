@@ -181,15 +181,15 @@ class UserTopicService:
         user_index are the user's row position in user_hashtag_matrix
         """
 
-        # Retrieve last 3 days hashtags list sorted alphabetically
-        last_3_days_hashtags, users_with_hashtags = UserHashtagDAO().get_last_10_days_hashtags(date)
-        hashtags_quantity = len(last_3_days_hashtags)
+        # Retrieve last 10 days hashtags list sorted alphabetically
+        last_10_days_hashtags, users_with_hashtags = UserHashtagDAO().get_last_10_days_hashtags(date)
+        hashtags_quantity = len(last_10_days_hashtags)
         users_quantity = len(users_with_hashtags)
         cls.get_logger().info(
             f"All hashtags from 10 days ago are retrieved. They are {hashtags_quantity} from {users_quantity} users.")
 
         # Get an auxiliary structure
-        hashtags_index = cls.get_hashtags_index(last_3_days_hashtags)
+        hashtags_index = cls.get_hashtags_index(last_10_days_hashtags)
 
         # Get users-hashtags data and users index structure {user: matrix_index}
         # Users_index are the user's row in matrix
@@ -204,7 +204,7 @@ class UserTopicService:
         topics_quantity = len(all_topics_sorted)
         cls.get_logger().info(f"All topics retrieved. They are {topics_quantity}.")
 
-        hashtags_topics_data = HashtagsTopicsDAO().get_required_hashtags(last_3_days_hashtags, hashtags_index, date)
+        hashtags_topics_data = HashtagsTopicsDAO().get_required_hashtags(last_10_days_hashtags, hashtags_index, date)
         if len(hashtags_topics_data) == 0: raise NonExistentDataForMatrixError("Hashtag-Topic")
         hashtags_topics_matrix = cls.get_matrix_from_data_with_dtype(hashtags_topics_data, hashtags_quantity,
                                                                      topics_quantity)
@@ -279,7 +279,6 @@ class UserTopicService:
         """ Return users grouped by candidates' support. """
         # Retrieve users which have tweets
 
-        # para probar {"important": {'$exists': False}}
         active_users = RawFollowerDAO().get_all({
             "$and": [
                 {"probability_vector_support": {"$elemMatch": {"$gte": 0.8}}},
