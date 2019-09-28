@@ -13,7 +13,8 @@ from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.api.UserNetworkResource import UserNetworkResource
 from src.db.Mongo import Mongo
 from src.db.db_initialization import create_indexes, create_base_entries, create_queue_entries
-from src.service.topics.UserTopicService import UserTopicService
+from src.service.tweets.TweetUpdateServiceInitializer import TweetUpdateServiceInitializer
+from src.service.user_network.UserNetworkRetrievalService import UserNetworkRetrievalService
 from src.util.logging.Logger import Logger
 from src.util.scheduling.Scheduler import Scheduler
 from src.util.slack.SlackHelper import SlackHelper
@@ -52,9 +53,9 @@ def set_up_context(db_name, authorization, environment):
 
 def init_services():
     # This is not necessary
-    UserTopicService().init_update_support_follower()
-    # TweetUpdateServiceInitializer().initialize_tweet_update_service()
-    # UserNetworkRetrievalService.start()
+    # UserTopicService().init_update_support_follower()
+    TweetUpdateServiceInitializer().initialize_tweet_update_service()
+    UserNetworkRetrievalService.start()
 
 
 def parse_arguments():
