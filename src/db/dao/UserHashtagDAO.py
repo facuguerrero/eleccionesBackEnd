@@ -39,7 +39,7 @@ class UserHashtagDAO(GenericDAO, metaclass=Singleton):
         users_to_be_discarded = RawFollowerDAO().get_all({'important': False}, {'_id': 1})
         ids = []
         for user in users_to_be_discarded:
-            ids.append(user['user'])
+            ids.append(user['_id'])
         self.logger.info(f'Users discarded: {len(ids)}')
 
         init_first_hour, yesterday_last_hour = self.get_init_and_end_dates(date)
