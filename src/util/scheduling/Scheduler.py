@@ -5,6 +5,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from src.service.dashboard.DashboardService import DashboardService
 from src.service.followers.FollowerSupportService import FollowerSupportService
 from src.service.followers.FollowerUpdateService import FollowerUpdateService
+from src.service.hashtags.CooccurrenceAnalysisService import CooccurrenceAnalysisService
 from src.service.queue_followers.FollowersQueueService import FollowersQueueService
 from src.service.user_network.UserNetworkAnalysisService import UserNetworkAnalysisService
 from src.util.config.ConfigurationManager import ConfigurationManager
@@ -34,7 +35,7 @@ class Scheduler(metaclass=Singleton):
                                minute=0, second=0)
 
         # Analyze cooccurrence at 00:01:00 every day
-        # self.scheduler.add_job(func=CooccurrenceAnalysisService.analyze, trigger='cron', hour=0, minute=1, second=0)
+        self.scheduler.add_job(func=CooccurrenceAnalysisService.analyze, trigger='cron', hour=0, minute=1, second=0)
 
         # Send server status to Slack at 08:30:00 every day
         self.scheduler.add_job(func=SlackHelper.send_server_status, trigger='cron', hour=8, minute=30, second=0)
