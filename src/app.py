@@ -34,6 +34,7 @@ api.add_resource(FollowerUpdatingResource, '/followers/update')
 api.add_resource(TweetUpdatingResource, '/tweets')
 api.add_resource(CooccurrenceAnalysisResource, '/cooccurrence')
 api.add_resource(UserNetworkResource, '/user_network')
+api.add_resource(HashtagUsageResource, '/hashtag_usage')
 
 
 def set_up_context(db_name, authorization, environment):
