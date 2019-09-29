@@ -13,7 +13,7 @@ class CooccurrenceAnalysisResource(Resource):
         # date = datetime.combine(datetime.strptime(request.args.get('date'), '%Y-%m-%d').date(), datetime.min.time())
         # CooccurrenceAnalysisService.analyze(last_day=date)
         # SlackHelper.post_message_to_channel(f'Finished cooccurrence graph generation for date {date}.')
-        init = datetime.combine(datetime.strptime('2019-06-22', '%Y-%m-%d').date(), datetime.min.time())
+        init = datetime.combine(datetime.strptime('2019-08-04', '%Y-%m-%d').date(), datetime.min.time())
         end = datetime.combine(datetime.strptime('2019-09-29', '%Y-%m-%d').date(), datetime.min.time())
         dates = [init + timedelta(days=i) for i in range((end - init).days + 1)]
         for date in dates:
