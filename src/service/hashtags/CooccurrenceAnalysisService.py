@@ -7,6 +7,8 @@ from src.db.dao.ShowableGraphDAO import ShowableGraphDAO
 from src.service.hashtags.HashtagCooccurrenceService import HashtagCooccurrenceService
 from src.service.hashtags.HashtagUsageService import HashtagUsageService
 from src.service.hashtags.OSLOMService import OSLOMService
+from src.service.topics.UserTopicService import UserTopicService
+from src.util.DateUtils import DateUtils
 from src.util.config.ConfigurationManager import ConfigurationManager
 from src.util.graphs.GraphUtils import GraphUtils
 from src.util.logging.Logger import Logger
@@ -33,6 +35,7 @@ class CooccurrenceAnalysisService:
             cls.get_logger().info(f'Cooccurrence analysis for last {delta} days done.')
         # Run usage analysis as soon as possible
         HashtagUsageService.calculate_topics_hashtag_usage(last_day)
+        UserTopicService().init_process_with_date(DateUtils.today() if not last_day else last_day + timedelta(days=1))
 
     @classmethod
     def analyze_cooccurrence_for_window(cls, start_date, end_date=None):
