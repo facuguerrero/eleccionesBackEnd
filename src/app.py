@@ -8,6 +8,7 @@ from flask_restful import Api
 from src.api.CSVLoadingResource import CSVLoadingResource
 from src.api.CooccurrenceAnalysisResource import CooccurrenceAnalysisResource
 from src.api.FollowerUpdatingResource import FollowerUpdatingResource
+from src.api.HashtagUsageResource import HashtagUsageResource
 from src.api.PingResource import PingResource
 from src.api.TweetUpdatingResource import TweetUpdatingResource
 from src.api.UserNetworkResource import UserNetworkResource
