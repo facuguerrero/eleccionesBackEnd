@@ -49,8 +49,8 @@ def set_up_context(db_name, authorization, environment):
     SlackHelper.initialize(environment)
     with app.app_context():
         create_indexes()
-        create_base_entries()
-        create_queue_entries()
+        # create_base_entries()
+        # create_queue_entries()
 
 
 def init_services():
@@ -78,6 +78,6 @@ def parse_arguments():
 if __name__ == '__main__':
     db, auth, env = parse_arguments()
     set_up_context(db, auth, env)
-    Scheduler().set_up()
-    init_services()
+    # Scheduler().set_up()
+    # init_services()
     app.run(port=8080, threaded=True)

@@ -1,10 +1,10 @@
 from src.db.dao.PartyRelationshipsDAO import PartyRelationshipsDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
 from src.db.dao.UsersFriendsDAO import UsersFriendsDAO
+from src.util.logging.Logger import Logger
 
 
 class UserNetworkAnalysisService:
-
     __parties = ['juntosporelcambio', 'frentedetodos', 'frentedespertar', 'consensofederal', 'frentedeizquierda']
 
     @classmethod
@@ -34,18 +34,19 @@ class UserNetworkAnalysisService:
         # Get sum of values to normalize
         total_edges = sum(summed_vector)
         # Normalize vector and return
-        return [x/total_edges for x in summed_vector]
+        return [x / total_edges for x in summed_vector]
 
     @classmethod
     def populate_users_by_party_dict(cls):
         users_by_party = dict()
         for party in cls.__parties:
             documents = RawFollowerDAO().get_all({
-                '$and': [
-                    {'support': party},
-                    {'probability_vector_support': {'$gte': 0.8}}
-                ]},
-                {'_id': 1})
+                '$and': [{'probability_vector_support': {'$elemMatch': {'$gte': 0.8}}}, {'support': party}]
+            })
             # Store list in party dictionary
             users_by_party[party] = {document['_id'] for document in documents}
         return users_by_party
+
+    @classmethod
+    def get_logger(cls):
+        return Logger(cls.__name__)

@@ -19,6 +19,7 @@ class SlackHelper(metaclass=Singleton):
 
     @classmethod
     def send_server_status(cls):
+        return
         if not EnvironmentUtils.is_prod(cls.__env): return
         yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
         followers_updated = RawFollowerDAO().get_users_updated_since_date(yesterday)
@@ -30,6 +31,7 @@ class SlackHelper(metaclass=Singleton):
 
     @classmethod
     def post_message_to_channel(cls, message, channel="#reports"):
+        return
         if not EnvironmentUtils.is_prod(cls.__env): return
         cls.web_client.api_call(
             api_method="chat.postMessage",
