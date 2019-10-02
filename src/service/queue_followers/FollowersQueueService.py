@@ -90,7 +90,7 @@ class FollowersQueueService(metaclass=Singleton):
     def add_not_updated_followers_1(self):
         self.logger.info(
             f'Adding not updated followers.')
-        self.add_followers_to_be_updated(100)
+        self.add_followers_to_be_updated(115)
 
     def add_last_downloaded_followers(self):
         self.logger.info('Adding last downloaded followers')
