@@ -12,10 +12,10 @@ from sklearn.preprocessing import normalize
 from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
+from src.db.dao.SimilarityDAO import SimilarityDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.exception.NonExistentDataForMatrixError import NonExistentDataForMatrixError
 from src.model.Similarities import Similarities
-from src.util.DateUtils import DateUtils
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
 
@@ -33,9 +33,13 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        cls.init_process_with_date(DateUtils().date_at_first_hour(datetime.datetime.today()))
-        # cls.init_process_with_date(datetime.datetime(2019, 8, 29))
-        # cls.init_process_with_date(datetime.datetime(2019, 8, 15))
+        sdate = datetime.datetime(2019, 6, 23)
+        edate = datetime.datetime(2019, 10, 5)
+
+        delta = edate - sdate
+        for i in range(delta.days + 1):
+            cls.init_process_with_date(sdate + datetime.timedelta(days=i))
+        # cls.init_process_with_date(datetime.datetime.today())
 
     @classmethod
     def init_process_with_date(cls, date):
@@ -83,11 +87,11 @@ class UserTopicService:
                 totals.append(total)
 
                 similarities.add_similarity(f"{x}-{y}", mean)
-                cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
+                # cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
 
         random_mean = cls.get_weighted_mean(means, totals)
         similarities.add_similarity('random', random_mean)
-        cls.get_logger().info(f'Random {random_mean}')
+        # cls.get_logger().info(f'Random {random_mean}')
 
         similarities_wor = {}
         for groups, sim in similarities.similarities.items():
@@ -98,6 +102,7 @@ class UserTopicService:
 
         similarities.set_similarities_wor(similarities_wor)
         # SimilarityDAO().insert_similarities(similarities)
+        SimilarityDAO().delete_and_insert(similarities)
         cls.get_logger().info('All similarities are calculated correctly.')
 
     @classmethod
@@ -142,7 +147,7 @@ class UserTopicService:
         return mean / sum(totals)
 
     @classmethod
-    def calculate_and_save_users_topics_matrix(cls, date, have_to_save=False):
+    def calculate_and_save_users_topics_matrix(cls, date, have_to_save=True):
         """ This method calculate the user-topic matrix. """
 
         # Retrieve necessaries data
