@@ -12,7 +12,6 @@ from sklearn.preprocessing import normalize
 from src.db.dao.CooccurrenceGraphDAO import CooccurrenceGraphDAO
 from src.db.dao.HashtagsTopicsDAO import HashtagsTopicsDAO
 from src.db.dao.RawFollowerDAO import RawFollowerDAO
-from src.db.dao.SimilarityDAO import SimilarityDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.exception.NonExistentDataForMatrixError import NonExistentDataForMatrixError
 from src.model.Similarities import Similarities
@@ -84,11 +83,11 @@ class UserTopicService:
                 totals.append(total)
 
                 similarities.add_similarity(f"{x}-{y}", mean)
-                # cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
+                cls.get_logger().info(f'Similarity between {x} - {y}: {mean}')
 
         random_mean = cls.get_weighted_mean(means, totals)
         similarities.add_similarity('random', random_mean)
-        # cls.get_logger().info(f'Random {random_mean}')
+        cls.get_logger().info(f'Random {random_mean}')
 
         similarities_wor = {}
         for groups, sim in similarities.similarities.items():
@@ -98,7 +97,7 @@ class UserTopicService:
                 similarities_wor[new_key] = sim - random_mean
 
         similarities.set_similarities_wor(similarities_wor)
-        SimilarityDAO().insert_similarities(similarities)
+        # SimilarityDAO().insert_similarities(similarities)
         cls.get_logger().info('All similarities are calculated correctly.')
 
     @classmethod
@@ -128,8 +127,9 @@ class UserTopicService:
                     len_sliced_matrix = len(sliced_matrix.data)
 
                     partial_means.append(
-                        sliced_matrix.mean(dtype='float16') * old_shape[1] * rows_quantity / len_sliced_matrix)
-                    partial_totals.append(len_sliced_matrix)
+                        sliced_matrix.mean(dtype='float16') * old_shape[1] * (rows_quantity - 1) / len_sliced_matrix)
+                    lsma = len_sliced_matrix if setdiag else 2 * len_sliced_matrix
+                    partial_totals.append(lsma)
                 del partial_matrix_result
 
         return cls.get_weighted_mean(partial_means, partial_totals), sum(partial_totals)
@@ -142,7 +142,7 @@ class UserTopicService:
         return mean / sum(totals)
 
     @classmethod
-    def calculate_and_save_users_topics_matrix(cls, date, have_to_save=True):
+    def calculate_and_save_users_topics_matrix(cls, date, have_to_save=False):
         """ This method calculate the user-topic matrix. """
 
         # Retrieve necessaries data
