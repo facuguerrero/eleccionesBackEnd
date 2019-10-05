@@ -101,8 +101,8 @@ class UserTopicService:
                 similarities_wor[new_key] = sim - random_mean
 
         similarities.set_similarities_wor(similarities_wor)
-        # SimilarityDAO().insert_similarities(similarities)
-        SimilarityDAO().delete_and_insert(similarities)
+        SimilarityDAO().insert_similarities(similarities)
+        # SimilarityDAO().delete_and_insert(similarities)
         cls.get_logger().info('All similarities are calculated correctly.')
 
     @classmethod
