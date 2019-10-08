@@ -18,3 +18,9 @@ class SimilarityDAO(GenericDAO, metaclass=Singleton):
                        'similarities_without_random': similarity_object.similarities_wor,
                        'date': date}
         self.insert(update_dict)
+
+    def delete_and_insert(self, similarity_object):
+        date = similarity_object.timestamp
+        name = str(date.year) + str(date.month) + str(date.day)
+        self.delete_first({'_id': name})
+        self.insert_similarities(similarity_object)

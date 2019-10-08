@@ -29,9 +29,13 @@ class Scheduler(metaclass=Singleton):
                                minute=0, second=0)
 
         # Adds not updated followers
-        self.scheduler.add_job(func=FollowersQueueService().add_not_updated_followers, trigger='cron', hour=10,
+        self.scheduler.add_job(func=FollowersQueueService().add_not_updated_followers_1, trigger='cron', hour=21,
                                minute=0, second=0)
-        self.scheduler.add_job(func=FollowersQueueService().add_not_updated_followers, trigger='cron', hour=20,
+        self.scheduler.add_job(func=FollowersQueueService().add_not_updated_followers_2, trigger='cron', hour=1,
+                               minute=0, second=0)
+        self.scheduler.add_job(func=FollowersQueueService().add_not_updated_followers_1, trigger='cron', hour=11,
+                               minute=0, second=0)
+        self.scheduler.add_job(func=FollowersQueueService().add_not_updated_followers_2, trigger='cron', hour=15,
                                minute=0, second=0)
 
         # Analyze cooccurrence at 00:01:00 every day

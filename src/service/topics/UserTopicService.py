@@ -16,7 +16,6 @@ from src.db.dao.SimilarityDAO import SimilarityDAO
 from src.db.dao.UserHashtagDAO import UserHashtagDAO
 from src.exception.NonExistentDataForMatrixError import NonExistentDataForMatrixError
 from src.model.Similarities import Similarities
-from src.util.DateUtils import DateUtils
 from src.util.logging.Logger import Logger
 from src.util.slack.SlackHelper import SlackHelper
 
@@ -34,9 +33,13 @@ class UserTopicService:
 
     @classmethod
     def init_process(cls):
-        cls.init_process_with_date(DateUtils().date_at_first_hour(datetime.datetime.today()))
-        # cls.init_process_with_date(datetime.datetime(2019, 8, 29))
-        # cls.init_process_with_date(datetime.datetime(2019, 8, 15))
+        sdate = datetime.datetime(2019, 6, 23)
+        edate = datetime.datetime(2019, 10, 5)
+
+        delta = edate - sdate
+        for i in range(delta.days + 1):
+            cls.init_process_with_date(sdate + datetime.timedelta(days=i))
+        # cls.init_process_with_date(datetime.datetime.today())
 
     @classmethod
     def init_process_with_date(cls, date):
@@ -99,6 +102,7 @@ class UserTopicService:
 
         similarities.set_similarities_wor(similarities_wor)
         SimilarityDAO().insert_similarities(similarities)
+        # SimilarityDAO().delete_and_insert(similarities)
         cls.get_logger().info('All similarities are calculated correctly.')
 
     @classmethod
@@ -128,8 +132,9 @@ class UserTopicService:
                     len_sliced_matrix = len(sliced_matrix.data)
 
                     partial_means.append(
-                        sliced_matrix.mean(dtype='float16') * old_shape[1] * rows_quantity / len_sliced_matrix)
-                    partial_totals.append(len_sliced_matrix)
+                        sliced_matrix.mean(dtype='float16') * old_shape[1] * (rows_quantity - 1) / len_sliced_matrix)
+                    lsma = len_sliced_matrix if setdiag else 2 * len_sliced_matrix
+                    partial_totals.append(lsma)
                 del partial_matrix_result
 
         return cls.get_weighted_mean(partial_means, partial_totals), sum(partial_totals)
