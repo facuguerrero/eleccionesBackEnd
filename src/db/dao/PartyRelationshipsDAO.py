@@ -12,10 +12,11 @@ class PartyRelationshipsDAO(GenericDAO, metaclass=Singleton):
         super(PartyRelationshipsDAO, self).__init__(Mongo().get().db.party_relationships)
         self.logger = Logger(self.__class__.__name__)
 
-    def store(self, party, normalized_vector, summed_vector):
+    def store(self, party, normalized_vector, summed_vector, users_count):
         self.insert({'party': party,
                      'vector': summed_vector,
                      'normalized_vector': normalized_vector,
+                     'users_count': users_count,
                      'date': datetime.combine(datetime.now().date(), datetime.min.time())})
 
     def last_party_vector(self, party):

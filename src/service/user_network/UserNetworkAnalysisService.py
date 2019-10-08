@@ -12,9 +12,9 @@ class UserNetworkAnalysisService:
         users_by_party = cls.populate_users_by_party_dict()
         for party in cls.__parties:
             # Get normalized vector for the given party
-            normalized_vector, summed_vector = cls.calculate_relationships_for_party(party, users_by_party)
+            normalized_vector, summed_vector, users_count = cls.calculate_relationships_for_party(party, users_by_party)
             # Store party vector for today
-            PartyRelationshipsDAO().store(party, normalized_vector, summed_vector)
+            PartyRelationshipsDAO().store(party, normalized_vector, summed_vector, users_count)
 
     @classmethod
     def calculate_relationships_for_party(cls, party, users_by_party):
@@ -34,7 +34,7 @@ class UserNetworkAnalysisService:
         # Get sum of values to normalize
         total_edges = sum(summed_vector)
         # Normalize vector and return
-        return [x / total_edges for x in summed_vector], summed_vector
+        return [x / total_edges for x in summed_vector], summed_vector, len(friends_lists)
 
     @classmethod
     def populate_users_by_party_dict(cls):
