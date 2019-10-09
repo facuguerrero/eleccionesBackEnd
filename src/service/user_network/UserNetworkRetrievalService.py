@@ -1,3 +1,4 @@
+import random
 import time
 from threading import Thread
 
@@ -51,9 +52,10 @@ class UserNetworkRetrievalService:
     def retrieve_with_credential(cls, credential: Credential):
         """ Download users' friends with given credential. """
         user = cls.user_from_pool()
+        twitter = TwitterUtils.twitter(credential)
         while user:
             try:
-                friends = cls.user_friends(user.data, credential)
+                friends = cls.user_friends(user.data, credential, twitter)
                 intersection = cls.active_friends(friends, cls.__active_set)
                 cls.store_active_friends_set(user, intersection)
             except TwythonAuthError:
@@ -104,12 +106,13 @@ class UserNetworkRetrievalService:
     @classmethod
     def user_from_pool(cls):
         """ Get a user id from the pool to retrieve data. """
+        time.sleep(random.random()/10)
         return cls.__pool.pop()
 
     @classmethod
-    def user_friends(cls, user_id: str, credential: Credential) -> set:
+    def user_friends(cls, user_id: str, credential: Credential, twitter) -> set:
         """ Retrieve user friend set. """
-        return cls.do_download(user_id, -1, credential)
+        return cls.do_download(user_id, -1, credential, twitter)
 
     @classmethod
     def active_friends(cls, friends: set, active_users: set) -> set:
@@ -127,9 +130,8 @@ class UserNetworkRetrievalService:
         RawFollowerDAO().update_first({'_id': user_id}, {'retrieved_friends': True})
 
     @classmethod
-    def do_download(cls, user_id: str, cursor: int, credential: Credential) -> set:
+    def do_download(cls, user_id: str, cursor: int, credential: Credential, twitter) -> set:
         """ Use Twitter api to get all friends of the given user. """
-        twitter = TwitterUtils.twitter(credential)
         try:
             # Do request
             response = twitter.get_friends_ids(user_id=user_id, stringify_ids=True, cursor=cursor)
@@ -138,7 +140,7 @@ class UserNetworkRetrievalService:
             time.sleep(ConfigurationManager().get_int('follower_download_sleep_seconds'))
             cls.get_logger().info(f'Friends download waiting done for credential {credential.id}. Resuming.')
             # Once we finished waiting, we try again
-            return cls.do_download(user_id, cursor, credential)
+            return cls.do_download(user_id, cursor, credential, twitter)
         # Extract list of friends
         friends = set(response['ids'])
         next_cursor = response['next_cursor']
