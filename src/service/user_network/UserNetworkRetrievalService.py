@@ -1,4 +1,3 @@
-import random
 import time
 from threading import Thread
 
@@ -55,8 +54,10 @@ class UserNetworkRetrievalService:
         twitter = TwitterUtils.twitter(credential)
         while user:
             try:
+                cls.get_logger().info(f'Downloading friends for new user {user}.')
                 friends = cls.user_friends(user.data, credential, twitter)
                 intersection = cls.active_friends(friends, cls.__active_set)
+                cls.get_logger().info(f'Storing friends for {user}.')
                 cls.store_active_friends_set(user, intersection)
             except TwythonAuthError:
                 cls.get_logger().info('Auth error.')
@@ -106,7 +107,6 @@ class UserNetworkRetrievalService:
     @classmethod
     def user_from_pool(cls):
         """ Get a user id from the pool to retrieve data. """
-        time.sleep(random.random()/10)
         return cls.__pool.pop()
 
     @classmethod
@@ -134,6 +134,7 @@ class UserNetworkRetrievalService:
         """ Use Twitter api to get all friends of the given user. """
         try:
             # Do request
+            cls.get_logger().info(f'Doing download for {user_id}.')
             response = twitter.get_friends_ids(user_id=user_id, stringify_ids=True, cursor=cursor)
         except TwythonRateLimitError:
             cls.get_logger().warning(f'Friends download limit reached for credential {credential.id}. Waiting.')
