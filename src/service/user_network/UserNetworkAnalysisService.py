@@ -46,7 +46,7 @@ class UserNetworkAnalysisService:
             # Store list in party dictionary
             users_by_party[party] = {document['_id'] for document in documents}
         # Get the users we don't know which party they support
-        documents = RawFollowerDAO().get_all({'probability_vector_support': {'$elemMatch': {'$lt': 0.8}}})
+        documents = RawFollowerDAO().get_all({'probability_vector_support': {'$not': {'$elemMatch': {'$gte': 0.8}}}})
         users_by_party['unknown'] = {document['_id'] for document in documents}
         return users_by_party
 
