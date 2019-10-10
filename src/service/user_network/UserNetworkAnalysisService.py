@@ -12,9 +12,9 @@ class UserNetworkAnalysisService:
         users_by_party = cls.populate_users_by_party_dict()
         for party in cls.__parties:
             # Get normalized vector for the given party
-            normalized_vector, summed_vector, users_count = cls.calculate_relationships_for_party(party, users_by_party)
+            norm_vector, sum_vector, users, party_count = cls.calculate_relationships_for_party(party, users_by_party)
             # Store party vector for today
-            PartyRelationshipsDAO().store(party, normalized_vector, summed_vector, users_count)
+            PartyRelationshipsDAO().store(party, norm_vector, sum_vector, users, party_count)
 
     @classmethod
     def calculate_relationships_for_party(cls, party, users_by_party):
@@ -25,7 +25,7 @@ class UserNetworkAnalysisService:
         for friends_list in friends_lists:
             user_vector = list()
             # Add the count of users from each party this user follows
-            for party in cls.__parties + ['unknown']:
+            for party in cls.__parties:
                 user_vector.append(len(users_by_party[party].intersection(set(friends_list))))
             # Add user vector to the party's vector
             vectors.append(user_vector)
@@ -34,7 +34,7 @@ class UserNetworkAnalysisService:
         # Get sum of values to normalize
         total_edges = sum(summed_vector)
         # Normalize vector and return
-        return [x / total_edges for x in summed_vector], summed_vector, len(friends_lists)
+        return [x / total_edges for x in summed_vector], summed_vector, len(friends_lists), len(users_by_party[party])
 
     @classmethod
     def populate_users_by_party_dict(cls):
@@ -45,9 +45,6 @@ class UserNetworkAnalysisService:
             })
             # Store list in party dictionary
             users_by_party[party] = {document['_id'] for document in documents}
-        # Get the users we don't know which party they support
-        documents = RawFollowerDAO().get_all({'probability_vector_support': {'$not': {'$elemMatch': {'$gte': 0.8}}}})
-        users_by_party['unknown'] = {document['_id'] for document in documents}
         return users_by_party
 
     @classmethod
