@@ -99,3 +99,31 @@ What we did here was, for each party, count the number of other users (in total)
 and, from that number, get the proportion of follows that were "outside" of the party the user in question supported.
 This allowed us to analyze how polarized our universe of users was because we knew exactly how tight were the connections
 between users with the same ideology and how loose between those with different political views.
+
+## Technologies used
+
+This application was developed as a Python Flask server, with a MongoDB as a database management service. The decision
+was made based on the simplicity of Flask and the non relational characteristics of our data. Although it was not
+necessary for this application to be a web server, it simplified the process of activating a deactivating some features
+by simply making requests.
+
+To simplify our work, we used some already developed libraries that made our job easier in some aspects. To mention a
+few:
+
+* `APScheduler` was used to start analysis jobs every day, to analyze the collected data and generate new metrics. This
+library allowed us to set the time of start for each of our processes, which ran periodically.
+* `Twython` allowed us to retrieve all the data we needed from Twitter services.
+* `numpy`, `pandas`, `scipy` and `sklearn` were all used to handle large data sets and large matrix multiplications, and
+mainly used for similarity calculations.
+* `mongomock` allowed us to develop tests where we wanted to simulate the access to our database.
+* `SlackClient` was used as a communication tool; it let us send messages to Slack rooms when certain situations we
+were particularly interested in presented.
+
+## How to run the server
+
+In order to run the server locally, first make sure you have installed:
+
+* `Python 3.6`
+* `mongo` running in the port 27017
+
+Once that is ready, you can start the server by running `make prepare` and `make run` in the project's root.
